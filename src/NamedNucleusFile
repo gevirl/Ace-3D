@@ -1,0 +1,68 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.dispim.nucleus;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.util.TreeMap;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+
+/**
+ *
+ * @author gevirl
+ */
+public class NamedNucleusFile extends LinkedNucleusFile {
+    public NamedNucleusFile(File xml){
+        super(xml);
+    }
+    public NamedNucleusFile(BHCTreeDirectory bhc){
+        super(bhc);
+    }
+    @Override
+    public void open() throws Exception {
+        this.opening = true;
+        JsonReader reader = Json.createReader(new FileReader(file));
+        JsonObject obj = reader.readObject();
+        
+        this.bhcTreeDir = new BHCTreeDirectory(new File(obj.getJsonString("BHC").getString()));
+        
+        JsonArray jsonTimes = obj.getJsonArray("Times");
+        for (int t=0 ; t<jsonTimes.size() ; ++t){
+            JsonObject timeObj = jsonTimes.getJsonObject(t);
+            int nucTime = timeObj.getJsonNumber("Time").intValue();
+
+            JsonArray jsonNucs = timeObj.getJsonArray("Nuclei");
+            for (int n=0 ; n<jsonNucs.size() ; ++n){
+                JsonObject jsonNuc = jsonNucs.getJsonObject(n);
+                Nucleus nuc = new Nucleus(jsonNuc);
+                this.addNucleusRecursive(nuc);
+            }            
+        }
+
+        reader.close();
+        this.opening = false;
+        this.notifyListeners();
+    }
+
+    @Override
+    public void save() throws Exception {
+        PrintWriter writer = new PrintWriter(file);
+        PrettyWriter pretty = new PrettyWriter(writer);
+        pretty.writeObject(this.asJson().build(), 0);
+        writer.close();
+    }
+
+    @Override
+    public void saveAs(File file) throws Exception {
+        this.file = file;
+        save();
+    }    
+}
+

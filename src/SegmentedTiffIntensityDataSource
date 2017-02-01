@@ -1,0 +1,239 @@
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.dispim.datasource;
+
+import org.rhwlab.dispim.datasource.TiffDataSource;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
+import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
+import org.apache.commons.math3.ml.distance.DistanceMeasure;
+import org.apache.commons.math3.ml.distance.ManhattanDistance;
+import org.jdom2.Element;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
+
+/**
+ *
+ * @author gevirl
+ */
+// Segmented TIFF augmented with intensities from originating TIFF
+// the segmented TIFF intensity values are replaced with the intensities from the orginating TIFF
+public class SegmentedTiffIntensityDataSource extends SegmentedTiffDataSource implements SegmentedDataSource {
+    public SegmentedTiffIntensityDataSource(String tiff,String segmentedTiff,int bck){
+        super(segmentedTiff,bck);
+        tiffSource = new TiffDataSource(tiff);
+        
+        // the tiff and the segmented tiff must have the same dimensions
+        if (dims.length != tiffSource.dims.length){
+            return;
+        }
+        for (int d=0 ; d<this.dims.length ; ++d){
+            if (dims[d] != tiffSource.dims[d]){
+                return;
+            }
+        }
+        
+        // compute total intensity of all the voxels in the tiff
+        long total = 0;
+        for (long i=0 ; i<tiffSource.getN() ; ++i){
+            Voxel tiffVox = tiffSource.get(i);
+            total = total + tiffVox.intensity;
+        }
+
+        // compute background intensity and save segment voxel intensties
+        long sum = 0;
+        long backCount = tiffSource.getN();  // number of voxels in background
+        long totalBack = total;
+        for (Integer segment : this.segmentIndex.keySet()){
+            long segTotal = 0;
+            List<Long> voxIndexList = this.segmentIndex.get(segment);
+            for (long i : voxIndexList){
+                Voxel vox = this.get(i);
+                Voxel tiffVox = tiffSource.get(i);
+                vox.intensity = tiffVox.intensity;
+                segTotal = segTotal + vox.intensity;
+            }
+            this.totalIntensity.put(segment, segTotal);
+            totalBack = totalBack - segTotal;
+            backCount = backCount - voxIndexList.size();
+        }
+        this.backGround = (int)((double)totalBack/(double)backCount);
+        
+        // compute adjusted intensities
+        for (Integer segment : this.segmentIndex.keySet()){
+            List<Long> voxIndexList = this.segmentIndex.get(segment);
+            double num = getN(segment);
+            double totI = totalIntensity.get(segment);
+            double avg = totI/num -backGround ;   // average intensity of the segment above background           
+            for (long i : voxIndexList){
+                Voxel vox = this.get(i);
+                double I = Math.max(0, vox.getIntensity() - backGround);
+                vox.setAdjusted(I/avg);
+            }   
+        }
+
+    }
+    public ClusteredDataSource densityCluster(int segment,double eps,int minPts,int nPartitions)throws Exception {
+        // partition the voxels into separate lists
+        int mx = (int)Math.pow(nPartitions,getD());
+        ArrayList<Voxel>[] lists = new ArrayList[mx];
+        for (int i=0 ; i<lists.length ; ++i){
+            lists[i] = new ArrayList();
+        } 
+        for (int i=0 ; i<getN(segment) ; ++i){
+            Voxel vox = get(i, segment);
+            List<Integer> indexes = regions(vox.getPoint(), nPartitions,20,mx);
+            for (int index : indexes){
+                lists[index].add(vox);
+            }
+        } 
+        // build the clustering threads
+        VoxelClusterer[] clusterers = new VoxelClusterer[lists.length];
+        for (int i=0 ; i<lists.length ; ++i){
+            if (!lists[i].isEmpty()){
+                DistanceMeasure measure = new ManhattanDistance();
+                DBSCANClusterer clusterer = new DBSCANClusterer(eps,minPts,measure);
+                clusterers[i] = new VoxelClusterer(lists[i],clusterer);
+            }
+        }
+        
+        // do the clustering
+        for (int i=0 ; i<lists.length ; ++i){
+            if (!lists[i].isEmpty())
+                clusterers[i].start();
+                clusterers[i].join();
+                int iausdfuis=0;
+        }
+/*        
+        // wait for them all to finish
+        for (int i=0 ; i<lists.length ; ++i){
+            if (!lists[i].isEmpty())
+                clusterers[i].join();
+        } 
+*/
+        return new ClusteredDataSource(clusterers,this.backGround,this.getD());
+
+    }
+
+
+    // determine all the regions that a voxel could be in
+    private List<Integer> regions(double[] p,int nPart,int overlap,int mx){
+        ArrayList<Integer> ret = new ArrayList<>();
+        
+        List<Integer>[] dimList = new List[p.length];
+        for (int d=0 ; d<p.length ; ++d){
+            int delta = (int)(maxs[d]-mins[d]-(nPart-1)*overlap)/nPart;
+            dimList[d] = regions(p[d]-mins[d],delta,overlap,nPart);
+        }
+        for (Integer x : dimList[0]){
+            for (Integer y : dimList[1]){
+                for (Integer z : dimList[2]){
+                    int r = p.length*(p.length*z +y)+x;
+                    ret.add(r);
+                    if (r >= mx){
+                        int iudhfiu=0;
+                    }
+                }
+            }
+        }
+        
+        return ret;
+    }
+    private List<Integer> regions(double p,int d,int w,int nPart){
+        ArrayList<Integer> ret = new ArrayList<>();
+        int start = 0;
+        int end = d+w;
+        int i = 0;
+        while (p >= start){
+            if (p<=end){
+                if (i >= nPart){
+                    i = nPart-1;
+                }
+                ret.add(i);
+            }
+            start = end-w;
+            end = end + d + w;
+            ++i;
+        }
+        return ret;
+    }
+
+    // return the ith voxel in the given segment
+    @Override
+    public Voxel get(int i,int segment){
+        // get the voxel from this tiff data source
+        Voxel ret = this.tiffSource.get(segmentIndex.get(segment).get(i));
+/*        
+        double I = Math.max(0, ret.getIntensity() - backGround);
+        double num = getN(segment);
+        double totI = totalIntensity.get(segment);
+        double avg = totI/num -backGround ;
+        ret.setAdjusted(I/avg);
+*/
+        return ret;
+    }
+    public int getBackground(){
+        return this.backGround;
+    }
+    public void saveAsXML(String file)throws Exception {
+        OutputStream stream = new FileOutputStream(file);
+        Element root = new Element("Segmented");
+        root.setAttribute("NumberOfPoints",Long.toString(this.getN()));
+        root.setAttribute("NumberOfSegments", Integer.toString(segmentIndex.size()));
+        root.setAttribute("BackgroundIntensity", Integer.toString(backGround));
+        for (Integer seg : segmentIndex.keySet()){
+            List<Long> indexes = segmentIndex.get(seg);
+            Element segment = new Element("Segment");
+            segment.setAttribute("PointsInSegment",Integer.toString(indexes.size()));
+            segment.setAttribute("TotalIntensity",Double.toString(totalIntensity.get(seg)));
+            for (long n : indexes){
+                Element pointEle = new Element("Point");
+                Voxel vox = super.get(n);
+                double[] point = vox.coords.toArray();
+                int intensity = vox.intensity;
+                double adjusted = vox.adjustedIntensity;
+                pointEle.setAttribute("Intensity", Integer.toString(intensity));
+                pointEle.setAttribute("Adjusted", Double.toString(adjusted));
+                StringBuilder builder = new StringBuilder();
+                for (int d=0 ; d<point.length ; ++d){
+                    if (d > 0 ){
+                        builder.append(" ");
+                    }
+                    builder.append((int)point[d]);
+                } 
+                pointEle.addContent(builder.toString());
+                segment.addContent(pointEle);
+            }            
+            root.addContent(segment);
+        }
+        XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+        out.output(root, stream);
+        stream.close();
+        
+    }
+    TiffDataSource tiffSource;
+    int backGround;
+    HashMap<Integer,Long> totalIntensity = new HashMap<>();  // sum of all voxel intensities for the voxels in each segment
+    
+    static public void main(String[] args)throws Exception {
+        SegmentedTiffIntensityDataSource source = new SegmentedTiffIntensityDataSource("/nfs/waterston/pete/Segmentation/Cherryimg350.tif",              
+                "/nfs/waterston/pete/Segmentation/Cherryimg350_SimpleSegmentation.tiff",1);  // background is seg=1
+        
+ //       source.densityCluster(2,2.0,10,4);
+        
+//        source.saveAsXML("/nfs/waterston/pete/Segmentation/Cherryimg_SimpleSegmentation0075.xml");
+
+        ClusteredDataSource clSource = source.kMeansCluster(2, 6000, 4);  // cluster segment=2, 2 partitions, 6000 clusters
+        clSource.saveAsXML("/nfs/waterston/pete/Segmentation/Cherryimg_SimpleSegmentation3partMulti0350.xml");
+        int iusdfus=0;
+    }
+}

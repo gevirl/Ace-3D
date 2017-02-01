@@ -1,0 +1,322 @@
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.BHC;
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.math3.dfp.Dfp;
+import org.apache.commons.math3.dfp.DfpField;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.FieldVector;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.special.Gamma;
+import org.jdom2.Element;
+import org.rhwlab.dispim.datasource.MicroCluster;
+
+/**
+ *
+ * @author gevirl
+ */
+abstract public class StdNode extends  NodeBase {
+    public StdNode(){
+        
+    }
+    public StdNode(MicroCluster micro) throws ArithmeticException {
+        this.micro = micro;
+        this.left = null;
+        this.right = null;
+        this.parent = null;
+        
+        d = alpha;
+        pi = 1.0;
+        onePi = 0.0;
+        posterior();
+    } 
+    public StdNode(StdNode l,StdNode r) throws ArithmeticException {
+        this.micro = null;
+        this.left = l;
+        this.right = r; 
+        ((NodeBase)this.left).parent = this;
+        ((NodeBase)this.right).parent = this;
+        posterior();
+    }
+ /*   
+    public StdNode(Element ele,Node par){
+        this.parent = par;
+        this.label = Integer.valueOf(ele.getAttributeValue("label"));
+        this.realR = Double.valueOf(ele.getAttributeValue("posterior"));
+        String centerStr = ele.getAttributeValue("center");
+        if (centerStr == null){
+            List<Element> children = ele.getChildren("Node");
+            this.left = new StdNode(children.get(0),this);
+            this.right = new StdNode(children.get(1),this);
+        } else {
+            this.micro = new MicroCluster(ele);
+        }
+    }
+*/
+    // the likelihood of the data in this node/cluster only - given the priors
+    public double marginalLikelihood(List<RealVector> data) throws ArithmeticException {
+
+        int n = data.size();
+        if (n >maxN){
+            return 0.0;
+        }
+        int D = data.get(0).getDimension();
+        double rP = beta + n;
+        double nuP = nu + n;       
+        
+        RealMatrix C = new Array2DRowRealMatrix(D,D);
+        RealVector X = new ArrayRealVector(D);  // a vector of zeros    
+        for (RealVector v : data){
+            X = X.add(v);
+            RealMatrix v2 = v.outerProduct(v);
+            C = C.add(v2);
+        }  
+        
+        RealVector mP = (m.mapMultiply(beta).add(X)).mapDivide(rP);
+        RealMatrix Sp = C.add(S);
+        
+        RealMatrix rmmP = mP.outerProduct(mP).scalarMultiply(rP);
+        Sp = Sp.add(rmm).subtract(rmmP);  
+        
+        LUDecomposition ed = new LUDecomposition(Sp);
+        if (!ed.getSolver().isNonSingular()){
+            throw new ArithmeticException();
+        }
+        double detSp = Math.pow(ed.getDeterminant(),nuP/2.0);   
+        if (!Double.isFinite(detSp )){
+            throw new ArithmeticException();
+        }
+/*        
+        double gamma = 1.0;
+        double gammaP = 1.0;
+        for (int i=1 ; i<=D ; ++i){
+            gamma = gamma * Gamma.gamma((nu+1-i)/2.0);
+            gammaP = gammaP * Gamma.gamma((nuP+1-i)/2.0);
+            if (!Double.isFinite(gamma)){
+                throw new ArithmeticException();
+            }
+            if (!Double.isFinite(gammaP)){
+                throw new ArithmeticException();
+            }
+        }  
+ */       
+        double t1 = Math.pow(Math.PI, -n*D/2.0);
+        if (!Double.isFinite(t1)){
+            throw new ArithmeticException();
+        }         
+        double t2 = Math.pow(beta/rP,D/2.0);  
+        if (!Double.isFinite(t2)){
+            throw new ArithmeticException();
+        }         
+        double t3 = detS/detSp;
+        if (!Double.isFinite(t3)){
+            throw new ArithmeticException();
+        }        
+//        double t4 = gammaP/gamma;
+        double t4 = ratio.getRatio(n);
+        if (!Double.isFinite(t4)){
+            throw new ArithmeticException();
+        }         
+        double ret = t1*t2*t3*t4; 
+        if (!Double.isFinite(ret)){
+            throw new ArithmeticException();
+        }
+
+        return ret;
+    }
+    
+    //the likelihood of this node and all consistent subtrees
+    public double DPMLikelihood(int n)throws ArithmeticException {       
+        StdNode stdLeft = (StdNode)left;
+        StdNode stdRight = (StdNode)right;
+        double second = 0.0;
+        if (left != null && right != null){
+            double gn = Gamma.gamma(n);
+            if (!Double.isFinite(gn))            {
+                throw new ArithmeticException();
+            }
+            this.d  = alpha*gn + stdLeft.d * stdRight.d;
+            if (!Double.isFinite(d))            {
+                throw new ArithmeticException();
+            }            
+            this.pi = alpha*gn/this.d;
+            if (!Double.isFinite(pi))            {
+                throw new ArithmeticException();
+            }            
+            this.onePi = 1.0 - pi;
+            second = onePi * stdLeft.dpm * stdRight.dpm;
+            if (!Double.isFinite(second))            {
+                throw new ArithmeticException();
+            }             
+        }
+        return this.pi * this.likelihood + second;
+    }
+
+    // calculate the posterior of a non terminal node
+    public void  posterior()throws ArithmeticException {
+        List<RealVector> data = new ArrayList<>();
+        this.getDataAsRealVector(data); 
+        this.likelihood = this.marginalLikelihood(data);
+        
+        dpm = this.DPMLikelihood(data.size());
+            if (!Double.isFinite(dpm))            {
+                throw new ArithmeticException();
+            }        
+        realR = this.pi * this.likelihood / dpm;
+//        dfpR = field.newDfp(realR);
+    }
+/*
+    public Dfp getPosteriorDfp(){
+        return dfpR;
+    }
+*/
+    public double getPosterior(){
+        return this.realR;
+    }
+    static public void setAlpha(double a){
+        alpha = a;
+        lnAlpha = Utils.eln(alpha);
+    }
+
+    @Override
+    public void print(PrintStream stream){
+        List<RealVector> data = new ArrayList<>();
+        this.getDataAsRealVector(data);
+        stream.printf("Size=%d\n", data.size());
+/*        
+        for (RealVector vec : data){
+            stream.print(vectorAsString(vec));
+        }
+        stream.println();
+        */
+        stream.printf("like=%s\n", Double.toString(likelihood));
+        stream.printf("d=%s\n", Double.toString(d));
+        stream.printf("dpm=%s\n", Double.toString(dpm));
+        stream.printf("pi=%s\n", Double.toString(pi));
+        stream.printf("post=%s\n", Double.toString(realR));
+    }    
+    
+    public String vectorAsString(RealVector v){
+        boolean first = true;
+        StringBuilder builder = new StringBuilder();
+        builder.append("(");
+        for (int i=0 ; i<v.getDimension() ; ++i){
+            
+            if (!first){
+                builder.append(",");
+            }
+            builder.append(String.format("%.2f",v.getEntry(i)));
+            first = false;
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+/*
+    @Override
+    public Node mergeWith(Node other) {
+        if (other instanceof StdNode){
+            StdNode std = (StdNode)other;
+{
+                DfpNode dfp = new DfpNode(this,std);
+                return dfp;
+            }
+        }else {
+            DfpNode dfp = new DfpNode(this,(DfpNode)other);
+            return dfp;
+        }
+    }
+
+    @Override
+    public Node mergeWith(Node other) {
+        if (other instanceof StdNode){
+            StdNode std = (StdNode)other;
+            try {
+                StdNode mrged = new StdNode(this,std);
+                if (mrged.getN() <=20 ){
+                    return mrged;
+                }else {
+                    return new DfpNode(this, std);
+                }                
+            } catch (ArithmeticException exc){
+                return new DfpNode(this, std);
+            }
+        }else {
+            DfpNode dfp = new DfpNode(this,(DfpNode)other);
+            return dfp;
+        }
+    }
+
+    @Override
+    public void getDataAsFieldVector(List<FieldVector> list) {
+        if (micro != null){
+            list.add(micro.asDfpVector());
+            return;
+        }
+        left.getDataAsFieldVector(list);
+        right.getDataAsFieldVector(list);
+    }
+*/
+
+   
+    static void setParameters(int n,double beta,double[] mu,double[] s){
+        StdNode.nu = n;
+        
+        StdNode.S = new Array2DRowRealMatrix(s.length,s.length);
+        for (int i=0 ; i<s.length ; ++i){
+            S.setEntry(i, i, s[i]);
+        }
+        LUDecomposition ed = new LUDecomposition(S);
+        detS = Math.pow(ed.getDeterminant(),nu/2.0);
+        logdetSnu = Utils.eln(detS);        
+
+        StdNode.beta = beta;
+        lnBeta = Utils.eln(beta);
+        StdNode.m = new ArrayRealVector(mu);
+        rmm = m.outerProduct(m).scalarMultiply(beta);
+        ratio = new GammaRatio(mu.length,n);
+    }   
+    static public void setS(RealMatrix s0){
+        S = s0;
+        LUDecomposition ed = new LUDecomposition(S);
+        detS = Math.pow(ed.getDeterminant(),nu/2.0);
+        logdetSnu = Utils.eln(detS);    
+        System.out.printf("detS=%e\n", detS);
+    }    
+    public double getd(){
+        return this.d;
+    }
+    public double getdpm(){
+        return this.dpm;
+    }
+    public double getLikelihood(){
+        return this.likelihood;
+    }
+    
+    public int addContent(Element ele){
+        return micro.addContent(ele);
+    }
+    
+    MicroCluster micro; 
+    double likelihood;
+    double d;
+    double pi;
+    double onePi;  // 1.0 - pi;   
+    double dpm;
+//    Dfp dfpR;
+    
+    static double alpha;
+    static double detS;
+    static GammaRatio ratio;
+
+}

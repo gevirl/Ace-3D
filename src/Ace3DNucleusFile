@@ -1,0 +1,931 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.dispim.nucleus;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import javafx.beans.InvalidationListener;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import org.jdom2.Element;
+import org.rhwlab.BHC.BHCTree;
+import org.rhwlab.ace3d.SelectedNucleusFrame;
+import org.rhwlab.ace3d.SynchronizedMultipleSlicePanel;
+
+/**
+ *
+ * @author gevirl
+ */
+public class Ace3DNucleusFile implements NucleusFile,javafx.beans.Observable   {
+    public Ace3DNucleusFile(){
+        
+    }
+    public Ace3DNucleusFile(SynchronizedMultipleSlicePanel panel,SelectedNucleusFrame frame){
+        this.panel = panel;
+        this.frame = frame;        
+    }
+    public Ace3DNucleusFile(File file,SynchronizedMultipleSlicePanel panel,SelectedNucleusFrame frame){
+        this(panel,frame);
+        this.file =file;
+
+    }
+    @Override
+    public void open() throws Exception {
+        this.opening = true;
+        JsonReader reader = Json.createReader(new FileReader(file));
+        JsonObject obj = reader.readObject();
+        this.bhcNucDir = new BHCNucleusDirectory(new File(obj.getJsonString("BHC").getString()));
+        this.bhcTreeDir = new BHCTreeDirectory(new File(obj.getJsonString("BHC").getString()));
+        JsonArray jsonTimes = obj.getJsonArray("Times");
+        for (int t=0 ; t<jsonTimes.size() ; ++t){
+            JsonObject timeObj = jsonTimes.getJsonObject(t);
+            int nucTime = timeObj.getJsonNumber("Time").intValue();
+            double cut = timeObj.getJsonNumber("TreeCut").doubleValue();
+            this.cutPosteriors.put(nucTime,cut);
+            JsonArray jsonNucs = timeObj.getJsonArray("Nuclei");
+            for (int n=0 ; n<jsonNucs.size() ; ++n){
+                JsonObject jsonNuc = jsonNucs.getJsonObject(n);
+                Nucleus nuc = new Nucleus(new BHCNucleusData(jsonNuc));
+                this.addNucleus(nuc,false);
+            }            
+        }
+
+        JsonArray jsonRoots = obj.getJsonArray("Roots");
+        for (int n=0 ; n<jsonRoots.size() ; ++n){
+            JsonObject rootObj  = jsonRoots.getJsonObject(n);
+            Cell root = new Cell(rootObj,null,this.byName);
+            this.addRoot(root,false);
+        }
+        reader.close();
+        this.opening = false;
+        this.notifyListeners();
+    }
+    public void addBHC(BHCNucleusFile bhc){
+        for (BHCNucleusData bhcNuc : bhc.getNuclei()){
+            Nucleus rootNuc = new Nucleus(bhcNuc);
+            this.addNucleus(rootNuc,false);
+            Cell rootCell = new Cell(rootNuc.getName());
+            rootCell.addNucleus(rootNuc);
+            this.addRoot(rootCell,false);
+        }   
+        this.cutPosteriors.put(bhc.time, bhc.cutThreshold);
+    }
+    public void addRoot(Cell cell){
+        addRoot(cell,true);
+    }
+    public void addRoot(Cell cell,boolean notify){
+        int t = cell.firstTime();
+        Set<Cell> rootSet = roots.get(t);
+        if(rootSet == null){
+            rootSet = new TreeSet<Cell>();
+            roots.put(t,rootSet);
+        }
+        rootSet.add(cell);
+        addCell(cell);
+        cell.parent = null;
+        if (notify)        {
+            this.notifyListeners();
+        }
+    }
+    private void addCell(Cell cell){
+        cellMap.put(cell.getName(),cell);
+        for (Cell child : cell.getChildren()){
+            addCell(child);
+        }
+    }
+    // add a new nucleus with no cell links
+    @Override
+    public void addNucleus(Nucleus nuc){
+        addNucleus(nuc,true);
+    }    
+
+    public void addNucleus(Nucleus nuc,boolean notify){
+        if (nuc.getTime() == 209){
+            int sadfhuisd=0;
+        }
+        TreeSet<Nucleus> timeSet = byTime.get(nuc.getTime());
+        if (timeSet == null){
+            timeSet = new TreeSet<Nucleus>();
+            byTime.put(nuc.getTime(), timeSet);
+        }
+        timeSet.add(nuc);
+        byName.put(nuc.getName(), nuc);
+        if (notify){
+            this.notifyListeners();
+        }
+    }
+ 
+    // unkink a cell from its children
+    public void unLinkCellFromChildren(Cell cell,boolean notify){
+        Cell[] children = cell.getChildren();
+        for (Cell child : children){
+            this.addRoot(child,false);
+        }
+        cell.clearChildren();
+        if (notify){
+            this.notifyListeners();
+        }
+    }
+    // unlink all the nuclei in a gven time
+    public void unlinkTime(int t){
+//        System.out.print("Before unlinking\n");
+//        report(System.out,t);
+//        System.out.printf("Unlinking time: %d\n", t);
+        TreeSet<Nucleus> nucs = this.getNuclei(t);
+        for (Nucleus nuc : nucs.descendingSet()){
+            this.unlink(nuc,false);
+//            System.out.printf("After unlinking nucleus: %s\n",nuc.getName());
+//            this.report(System.out, t);
+//            System.out.printf("Roots at time %d\n",t+1);
+
+        }
+        this.notifyListeners();
+    }
+
+    // completely unlink a nucleus from any children (in time or due to division)
+    public void unlink(Nucleus nuc,boolean notify){
+        Nucleus[] children = nuc.nextNuclei();
+        
+        if (children.length == 0){
+            return ;  // nothing to unlink, the nucleus is the last nuc in an unlnked cell
+        }
+        
+        Cell cell = nuc.getCell();
+        if (children.length==1){
+            // not a division - nucleus is interior of cell
+            // split the cell and make a new root with the next nucleus
+            Cell splitCell = cell.split(children[0]);
+            this.addRoot(splitCell,false);
+        } else {
+            // unlinking a division - 
+            for (Cell child : cell.getChildren()){
+                this.addRoot(child, notify);
+            }
+            cell.clearChildren();
+        }
+        if (notify){
+            this.notifyListeners();
+        }
+    }
+    public void linkInTime(Nucleus from,Nucleus to){
+        Cell fromCell = from.getCell();
+        Cell toCell = to.getCell();
+        if (fromCell == null){
+            if (toCell == null){
+                // make a new cell with the two unlinked nuclei
+                Cell cell = new Cell(from.getName());
+                cell.addNucleus(from);
+                cell.addNucleus(to);
+                this.addRoot(cell,false);
+            } else {
+                // put the fromNuc into the toCell
+                toCell.addNucleus(from);
+            }
+        }else {
+            if (toCell == null){
+                // add the toNuc to the fromCell
+                fromCell.addNucleus(to);
+            } else {
+                // both fromNuc and toNuc are in cells - combine the two cells
+                Set<Cell> rootSet = roots.get(toCell.firstTime());
+                rootSet.remove(toCell);
+                fromCell.combineWith(toCell);
+                cellMap.remove(toCell.getName());
+            }
+        }
+        this.notifyListeners();
+    }
+ /*   
+    // create a new division by linking a nucleus to a parent nucleus that is already linked in time
+    public void linkDivision(Nucleus from,Nucleus to){
+        if (from.getTime() != to.getTime()-1) return; // can only link nuclei separated by one unit of time
+        
+        Cell fromCell = from.getCell();
+        Cell toCell = to.getCell();
+        if (fromCell.getName().equals(toCell.getName())) return; // can only link nuclei in different cells
+        
+        
+        // split the from cell
+        Cell splitCell = fromCell.split(to.getTime());
+        fromCell.addChild(splitCell);
+        fromCell.addChild(toCell);
+
+        // to cell is no longer a root
+        int time = to.getTime();
+        Set<Cell> rootCells = roots.get(time);
+        rootCells.remove(toCell);
+        
+        this.notifyListeners(); 
+    }
+ */   
+   public void linkDivision(Nucleus from,Nucleus to1,Nucleus to2){
+        
+        Cell fromCell = from.getCell();
+        if (fromCell == null){
+            fromCell = new Cell(from.getName());
+            fromCell.addNucleus(from);
+            this.addRoot(fromCell,false);
+        }
+        Cell to1Cell = to1.getCell();
+        if (to1Cell == null){
+            to1Cell = new Cell(to1.getName());
+            to1Cell.addNucleus(to1);
+        }
+        Cell to2Cell = to2.getCell();
+        if (to2Cell == null){
+            to2Cell = new Cell(to2.getName());
+            to2Cell.addNucleus(to2);
+        }
+        
+        fromCell.addChild(to1Cell);
+        fromCell.addChild(to2Cell);
+        int time = to1.getTime();
+        Set<Cell> rootCells = roots.get(time);
+        rootCells.remove(to1Cell);
+        rootCells.remove(to2Cell);
+        this.notifyListeners(); 
+    }
+    @Override
+    public void saveAs(File file)throws Exception {
+        this.file = file;
+        this.save();
+    }
+    @Override
+    public void save()throws Exception {
+        PrintWriter writer = new PrintWriter(file);
+      
+       PrettyWriter pretty = new PrettyWriter(writer);
+        pretty.writeObject(this.asJson().build(), 0);
+
+       writer.close();
+    }
+    @Override
+    public TreeSet<Nucleus> getNuclei(int time){
+        TreeSet<Nucleus> ret = (TreeSet)byTime.get(time);
+        if (ret == null){
+            ret = new TreeSet<Nucleus>();
+            byTime.put(time, ret);
+        }
+        return ret;
+    }
+    @Override
+    public File getFile(){
+        return file;
+    }
+    public JsonObjectBuilder asJson(){
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        builder.add("BHC", this.bhcNucDir.getTypicalFile().getPath());
+        builder.add("Times", this.timesAsJson());
+        builder.add("Roots",this.rootsAsJson());
+        return builder;
+    }    
+    public JsonArrayBuilder timesAsJson(){
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        for (Integer time : byTime.navigableKeySet()){
+            builder.add(timeAsJson(time));
+        } 
+        return builder;
+    }
+    public JsonObjectBuilder timeAsJson(int t){
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        builder.add("Time",t);
+        try {
+        builder.add("TreeCut",this.cutPosteriors.get(t));
+        } catch (Exception exc){
+            int ajsdfhuisd=0;
+        }
+        builder.add("Nuclei", nucleiAsJson(t));
+        return builder;
+    }
+    public JsonArrayBuilder nucleiAsJson(int t){
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        Set<Nucleus> nucs = byTime.get(t);
+        for (Nucleus nuc : nucs){
+            builder.add(nuc.asJson());
+        }
+        return builder;
+    }   
+    public JsonArrayBuilder rootsAsJson(){
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        for (Integer t : roots.navigableKeySet()){
+            Set<Cell> rootSet = roots.get(t);
+            for (Cell root : rootSet){
+                builder.add(root.asJson());
+            }
+        }
+        return builder;
+    }
+    @Override
+    public Cell getCell(String name){
+        return cellMap.get(name);
+    }
+    @Override
+    public List<Nucleus> linkedForward(Nucleus nuc) {
+        ArrayList ret = new ArrayList<>();
+        Cell cell = cellMap.get(nuc.getCell().getName());
+        if (cell != null){
+            Nucleus nextNuc = cell.getNucleus(nuc.getTime()+1);
+            if (nextNuc != null){
+                ret.add(nextNuc);
+            } else {
+                for (Cell child : cell.getChildren()){
+                    ret.add(child.firstNucleus());
+                }
+            }
+        }
+        return ret;
+    }  
+    @Override
+    public Nucleus linkedBack(Nucleus nuc) {
+        Nucleus ret = null;
+        Cell cell = cellMap.get(nuc.getCell().getName());
+        if (cell != null){
+            Nucleus nextNuc = cell.getNucleus(nuc.getTime()-1);
+            if (nextNuc != null){
+                ret = nextNuc;
+            } else {
+                Cell parent = cell.getParent();
+                if (parent != null){
+                    ret = parent.getNucleus(nuc.getTime()-1);
+                }
+            }
+        }        
+        return ret;
+    }    
+    // return the sister nucleus of the given nucleus
+    // returns null if nucleus is not in a cell or is in a root cell
+    public Nucleus sister(Nucleus nuc){
+        Cell cell = nuc.getCell();
+        if (cell == null){
+            return null;
+        }
+        Cell sisterCell = cell.getSister();
+        if (sisterCell == null){
+            return null;
+        }
+        return sisterCell.getNucleus(nuc.getTime());
+    }
+    @Override
+    // get the roots at a given time
+    public Set<Cell> getRoots(int time) {
+        return roots.get(time);
+    }    
+
+    public Set<Cell> getAllRoots(){
+        HashSet<Cell> ret = new HashSet<>();
+        for (int t : roots.keySet()){
+            ret.addAll(roots.get(t));
+        }
+        return ret;
+    }
+    // find dead cells at a given time
+    public Set<Nucleus> getDeadNuclei(int t){
+        HashSet<Nucleus> ret = new HashSet<>();
+        for (Nucleus nuc : this.getNuclei(t)){
+            if (nuc.nextNuclei().length==0){
+                ret.add(nuc);
+            }
+        }
+        return ret;
+    }
+    @Override
+    public void addListener(InvalidationListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(InvalidationListener listener) {
+        listeners.remove(listener);
+    }
+    
+    public void notifyListeners(){
+        if (opening){
+            return;
+        }
+        for (InvalidationListener listener : listeners){
+            if (listener != null){
+                listener.invalidated(this);
+            }
+        }
+    }
+    @Override
+    public Set<Integer> getAllTimes(){
+        return this.byTime.keySet();
+    }
+    @Override
+    public Nucleus getNucleus(String name) {
+        return byName.get(name);
+    }  
+/*
+    @Override
+    public void setSelected(int time, String name) {
+        Nucleus toSelect = byName.get(name);
+        if (toSelect != null && toSelect.getTime()==time){
+            Set<Nucleus> nucs = byTime.get(time);
+            for (Nucleus nuc : nucs){
+                if (nuc.getName().equals(name)){
+                    setSelected(nuc);
+                    return;
+                }
+            }
+        }
+    }
+ */   
+    @Override
+    public void setSelected(Nucleus toSelect){
+        this.selectedNucleus = toSelect;
+        if (panel != null) {
+            panel.changeTime(toSelect.getTime());
+            panel.changePosition(toSelect.getCenter());
+        }
+        if (frame != null){
+            frame.stateChanged(null);
+        }
+    //    this.notifyListeners();
+    }
+    @Override
+    public Nucleus getSelected(){
+        return this.selectedNucleus;
+    }
+    public int removeNucleiAtTime(int time){
+        // make sure all nuclei are unlinked BHC nuclei
+        Nucleus[] nuclei = this.byTime.get(time).toArray(new Nucleus[0]);
+        for (Nucleus nuc : nuclei){
+            removeNucleus(nuc,false);
+        }
+        this.notifyListeners(); 
+        return nuclei.length;
+    }   
+
+    public void removeNucleus(Nucleus nuc,boolean notify){
+        int time = nuc.getTime();
+        Cell cell = nuc.getCell();
+        String cellName = nuc.getCell().getName();
+        
+        this.unlink(nuc, false);
+        // afer unlinking nucleus, it is now the last Nucleus in an unlinked cell
+        
+        // remove the nucleus from the cell
+        cell.removeNucleus(time);
+
+        // remove the nucleus from indexes
+        String nucName = nuc.getName();
+        byName.remove(nucName);
+        Set<Nucleus> nucs = byTime.get(time);
+        nucs.remove(nuc);
+        
+        // if the cell is empty, remove the cell
+        if (cell.allNuclei().length ==0){
+            Set<Cell> rootCellsAtTime = this.roots.get(time);
+            if (rootCellsAtTime.contains(cell)){
+                rootCellsAtTime.remove(cell);
+                this.cellMap.remove(cellName);
+            }else {
+                // merge sister cell with parent cell
+                Cell sisterCell = cell.getSister();
+                sisterCell.mergeWithParent();
+                String sisterName = sisterCell.getName();
+                this.cellMap.remove(cellName);
+                this.cellMap.remove(sisterName);
+                        
+            }
+        }       
+
+        if (notify){
+            this.notifyListeners();
+        }
+    }
+
+    public void linkTimePointAdjustable(int fromTime,BHCTree bhcTree){
+        if (fromTime==29){
+            int shdfuisd=0;
+        }
+        linkTimePoint(fromTime);
+        
+        int nextTime = fromTime + 1;
+        int rootsAtNextTime = roots.get(nextTime).size();
+        int deathsAtFromTime = this.getDeadNuclei(fromTime).size();
+        if (rootsAtNextTime == 0){
+            return;  // can't make it any better by resegmenting
+        }
+        
+        boolean finished = false;
+        while (!finished){
+            if (rootsAtNextTime > 0){
+            // try reducing the segmentation of next time
+                this.unlinkTime(fromTime);
+                int removed = this.removeNucleiAtTime(nextTime);
+                double cut = this.cutPosteriors.get(nextTime);
+                TreeSet<Double> posts = bhcTree.allPosteriors();
+                
+                // find the next lower cutPosterior 
+                int n;
+                Element ele;
+                while(true) {
+                    double nextCut = posts.lower(cut);
+                    ele = bhcTree.cutTreeAtThreshold(nextCut);
+                    n  = ele.getChildren("GaussianMixtureModel").size();
+                    if (n < removed){
+                        break;
+                    }
+                    cut = nextCut;
+                } 
+                
+                BHCNucleusFile bhcNucFile = new BHCNucleusFile(ele);
+                this.addBHC(bhcNucFile);
+                this.linkTimePoint(fromTime);  // relink the time point
+                
+                if (roots.get(nextTime).size()==0){
+                    finished=true;
+                } else if (roots.get(nextTime).size() >= rootsAtNextTime) {
+                    // revert to previous cut
+                    this.unlinkTime(fromTime);
+                    removed = this.removeNucleiAtTime(nextTime);    
+                    ele = bhcTree.cutTreeAtThreshold(cut);
+                    bhcNucFile = new BHCNucleusFile(ele);
+                    this.addBHC(bhcNucFile);
+                    this.linkTimePoint(fromTime);                     
+                    finished = true;
+                }
+            }
+        }
+
+    }
+    public void linkTimePoint(int fromTime){
+        TreeSet<Nucleus> fromSet = (TreeSet<Nucleus>)byTime.get(fromTime).clone();
+        Nucleus[] fromNucs = fromSet.toArray(new Nucleus[0]);
+        TreeSet<Nucleus> toSet = (TreeSet<Nucleus>)byTime.get(fromTime+1).clone();
+        Nucleus[] toNucs = toSet.toArray(new Nucleus[0]);
+        
+        HashMap<Nucleus,Division> best = Division.bestDivisions(fromNucs, toNucs);
+        // link the best divisions, if any
+        for (Division div : best.values()){
+            this.linkDivision(div.parent, div.child1, div.child2);
+            fromSet.remove(div.parent);
+            toSet.remove(div.child1);
+            toSet.remove(div.child2);
+        }
+        
+        // compute all pairwise distance between nuclei in the two adjacent time points
+        fromNucs = fromSet.toArray(new Nucleus[0]);
+        toNucs = toSet.toArray(new Nucleus[0]);
+        double[][] dist = new double[fromNucs.length][];
+        for (int r=0 ; r<dist.length ; ++r){
+            dist[r] = new double[toNucs.length];
+            for (int c=0 ; c<toNucs.length ; ++c){
+                dist[r][c] = fromNucs[r].distance(toNucs[c]);
+            }
+        }
+        
+        // use Hungarian Algorithm to assign linking
+        HungarianAlgorithm hungarian = new HungarianAlgorithm(dist);
+        int[] linkage = hungarian.execute();
+        
+        // link the nuclei
+        for (int i=0 ; i<linkage.length ; ++i){
+            if (linkage[i]!=-1){
+                this.linkInTime(fromNucs[i], toNucs[linkage[i]]);
+            }
+        }
+    }
+/*    
+    public void linkTimePoint(int fromTime){
+System.out.printf("Linking time: %d\n", fromTime);
+if (fromTime == 86){
+    int iasfbhisa=0;
+}
+        Nucleus[] fromNucs = byTime.get(fromTime).toArray(new Nucleus[0]);
+        Integer[] fromNN = new Integer[fromNucs.length];
+        Set<Nucleus> toNucsSet = byTime.get(fromTime+1);
+        if (toNucsSet == null || toNucsSet.isEmpty()){
+            return;
+        }
+        Nucleus[] toNucs = byTime.get(fromTime+1).toArray(new Nucleus[0]);
+        Integer[] toNN = new Integer[toNucs.length];
+
+        HashMap<Nucleus,Division> best = Division.bestDivisions(fromNucs, toNucs);
+        
+        double[][] dist = new double[fromNucs.length][];
+        double[][] shape = new double[fromNucs.length][];
+        int fromRemaining = fromNucs.length;
+        int toRemaining = toNucs.length;
+        
+        // compute all pairwise distance and shape difference between nuclei in the two adjacent time points
+        for (int r=0 ; r<dist.length ; ++r){
+            dist[r] = new double[toNucs.length];
+            shape[r] = new double[toNucs.length];
+            for (int c=0 ; c<toNucs.length ; ++c){
+                if (r == 5 && c==3){
+                    int sfduisd=0;
+                }
+                shape[r][c] = fromNucs[r].shapeDistance(toNucs[c]);
+                dist[r][c] = fromNucs[r].distance(toNucs[c]);
+            }
+        }
+        boolean changed = true;
+        while (fromRemaining>0 && toRemaining >0 && changed){
+            changed = false;
+            
+            // find the nearest neighbor for each nucleus in both time points
+            for (int r=0 ; r<fromNucs.length ; ++r){
+                fromNN[r] = null;
+                if (fromNucs[r]!=null){
+                    
+                    double minD = Double.MAX_VALUE;
+                    for (int c=0 ; c<toNucs.length ; ++c){
+                        if (toNucs[c]!=null){
+                            if (minD > dist[r][c] && shape[r][c]<=shapeThreshold){
+                                minD = dist[r][c];
+                                fromNN[r] = c;
+                            }
+                        }
+                    }
+                }
+            }
+            for (int c=0 ; c<toNucs.length ; ++c){
+                toNN[c] = null;
+                if (toNucs[c]!=null){
+                    toNN[c] = null;
+                    double minD = Double.MAX_VALUE;
+                    for (int r=0 ; r<fromNucs.length ; ++r){
+                        if (fromNucs[r]!=null){
+                            if (minD > dist[r][c] && shape[r][c]<=shapeThreshold){
+                                minD = dist[r][c];
+                                toNN[c] = r;
+                            }
+                        }
+                    }
+                }
+            } 
+ 
+            
+            // link the closely associated nuclei
+            for (int r=0 ; r<fromNucs.length ; ++r){
+                if (fromNucs[r] != null) {
+                    Integer toIndex = fromNN[r];
+                    // is this nearest neighbor unique - no other from Nucleus points to it
+                    for (int i=0 ; i<fromNN.length ;++i){
+                        if (fromNN[i] != null){
+                            if (i != r){
+                                if (fromNN[i] == toIndex){
+                                    // not unique - cannot be linked
+                                    toIndex = -1;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (toIndex !=-1  && toNN[toIndex]==r){
+                        // make sure the from Nucleus is not a nearest neighbor of any other to Nucleus
+                        boolean linkable = true;
+                        for (int i=0 ; i<toNN.length ; ++i){
+                            if (toNN[i] != null){
+                                if (i != toIndex){
+                                    if (toNN[i] == r){
+                                        // not unique
+                                        linkable = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (linkable && dist[r][toIndex]<= distanceThreshold){
+                            if (r==5){
+                                int suhdfs=0;
+                            }
+                            this.linkInTime(fromNucs[r], toNucs[toIndex]);
+                            fromNucs[r] = null;
+                            fromNN[r] = null;
+                            toNucs[toIndex] = null;
+                            toNN[toIndex]=null;
+                            --fromRemaining;
+                            --toRemaining;
+                            changed = true;
+                        }
+                    }
+                }
+            }
+
+            if (toRemaining <= fromRemaining){
+                // see if there is a non-exclusive close association
+                for (int r=0 ; r<fromNucs.length ; ++r){
+                    if (fromNucs[r] != null) {
+                        Integer toIndex = fromNN[r];
+                        if (toIndex != -1 && toNN[toIndex]!=null && toNN[toIndex] == r && dist[r][toIndex]<=distanceThreshold){
+                            // can be linked
+                            this.linkInTime(fromNucs[r], toNucs[toIndex]);
+                            fromNucs[r] = null;
+                            fromNN[r] = null;
+                            toNucs[toIndex] = null;
+                            toNN[toIndex]=null;
+                            --fromRemaining;
+                            --toRemaining;
+                            changed = true;
+                        }
+                    }
+                }
+                
+            }
+            
+            // resolve the divisions
+            if (toRemaining > fromRemaining){
+                int nd = Math.min(fromRemaining,toRemaining-fromRemaining);
+                int divisions = this.linkDivisions(fromNucs, toNucs,nd ,areaThreshold);
+                toRemaining = toRemaining - 2*divisions;
+                fromRemaining = fromRemaining -divisions;
+                if (divisions>0 ){
+                    changed = true;
+                }
+            }             
+        }
+    }
+    // try to link a given number of divisions - must meet area threshold criteria
+    // return the number of divisions linked
+    public int linkDivisions(Nucleus[] fromNucs,Nucleus[] toNucs,int nDivisions,double areaThreshold){
+        int ret = 0;
+        // try to form nDivisions
+        for (int n=0 ;n<nDivisions ; ++n){
+        
+            // compute the area of triangles
+            TreeMap<Double,Integer[]> map = new TreeMap<>();
+            for (int k=0 ; k<fromNucs.length ; ++k){
+                Nucleus from = fromNucs[k];
+                if (from != null){
+                    for (int i=0 ; i<toNucs.length ; ++i){
+                        if (toNucs[i] != null){
+                            for (int j=i+1 ; j<toNucs.length ; ++j){
+                                if (toNucs[j] != null){
+                                    double a = from.distance(toNucs[i]);
+                                    double b = from.distance(toNucs[j]);
+                                    double c = toNucs[i].distance(toNucs[j]);
+                                    if (a <=distanceThreshold && b <=distanceThreshold){
+//System.out.printf("from:%d to:%d to%d a=%f b=%f c=%f \n",k,i,j,a,b,c);                                    
+//                                    double area = HeronFormula(a,b,c);
+
+                                        Integer[] division = new Integer[3];
+                                        division[0] = k;
+                                        division[1] = i;
+                                        division[2] = j;
+                                        map.put(a+b+c,division);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        
+            // link the divsions with minimal area
+            Double area = map.firstKey();
+            if (area <=areaThreshold){
+                Integer[] division = map.get(area);
+                this.linkDivision(fromNucs[division[0]], toNucs[division[1]], toNucs[division[2]]);
+                fromNucs[division[0]] = null;
+                toNucs[division[1]] = null;
+                toNucs[division[2]] = null;
+                ++ret;
+                if (ret == nDivisions ){
+                    return ret;
+                }
+            }
+        }
+        return ret;
+    }
+*/
+    // stable calculation of the area of a triangle given the length of the sides
+    static double HeronFormula(double a,double b,double c){
+        double s = (a + b + c)/2.0;
+        double sa = s-a;
+        double sb = s-b;
+        double sc = s-c;
+        double a2 = s*sa*sb*sc;
+        double area = Math.sqrt(a2);
+        
+        System.out.printf("s=%f s-a=%f s-b=%f s-c=%f a2=%f area=%f\n\n",s,sa,sb,sc,a2,area);
+        return area;
+/*        
+        double[] x = new double[3];
+        x[0] = a;
+        x[1] = b;
+        x[2] = c;
+        Arrays.sort(x);
+        double s = (x[0]+(x[1]+x[2])) * (x[2]-(x[0]-x[1])) * (x[2]+(x[0]-x[1])) * (x[0]+(x[1]-x[2])) ;
+        return 0.25*Math.sqrt(s);
+*/
+    }
+    //report all connections at a given time 
+    public void report(PrintStream stream,int time){
+        stream.printf("Reporting Time:%d\n",time);
+        // report the roots
+        Set<Cell> rootCells = roots.get(time);
+        if (rootCells.isEmpty()){
+            stream.println("No root cells");
+        }else {
+            for (Cell root : roots.get(time)){
+                root.report(stream);
+            }
+        }
+        for (Nucleus nuc : byTime.get(time)){
+            nuc.report(stream);
+        }
+    }
+    // rename the cell containing the selected nucleus
+    public void renameCell(String newName){
+        Cell selectedCell = selectedNucleus.getCell();
+        String oldName = selectedCell.name;
+        selectedCell.setName(newName);
+        cellMap.put(newName, selectedCell);
+        cellMap.remove(oldName);
+    }
+    public void setBHC(BHCNucleusDirectory bhc){
+        this.bhcNucDir = bhc;
+    }
+    public BHCNucleusDirectory getBHC(){
+        return this.bhcNucDir;
+    }
+    public int getLastTime(){
+        return byTime.lastKey();
+    }
+    @Override
+    public Ace3DNucleusFile clone() throws CloneNotSupportedException{
+        Ace3DNucleusFile ret = new Ace3DNucleusFile();
+        ret.bhcNucDir = this.bhcNucDir;
+        ret.bhcTreeDir = this.bhcTreeDir;
+        ret.panel = this.panel;
+        ret.frame = this.frame;
+        ret.file = this.file;
+        
+        // clone all the roots, this will end up cloning all the cells and nuclei by recursion
+        for (Entry<Integer,Set<Cell>> entry : this.roots.entrySet()){
+            for (Cell r : entry.getValue()){
+                Cell clone = r.clone();
+                ret.addRoot(clone, false);
+                ret.indexNuclei(clone);
+            }
+        }
+        
+        // clone the cutPosteriors
+        ret.cutPosteriors.putAll(this.cutPosteriors);
+        return ret;
+    }
+    private void indexNuclei(Cell cell){
+        for (Nucleus nuc : cell.allNuclei()){
+            this.addNucleus(nuc,false);
+        }
+        for (Cell child : cell.children){
+            this.indexNuclei(child);
+        }
+    }
+    public void replaceTime(BHCNucleusFile bhc){
+        int t = bhc.getTime();
+        unlinkTime(t);
+        unlinkTime(t-1);
+        removeNucleiAtTime(t);
+        try {
+            addBHC(bhc);
+        } catch (Exception exc){
+            exc.printStackTrace();
+        }
+//            nucleusFile.linkTimePoint(t-1);
+//            nucleusFile.linkTimePoint(t);
+        notifyListeners();        
+    }
+
+    BHCNucleusDirectory bhcNucDir;
+    BHCTreeDirectory bhcTreeDir;
+    SynchronizedMultipleSlicePanel panel;
+    SelectedNucleusFrame frame;
+    boolean opening = true;
+    File file;
+    Nucleus selectedNucleus;
+    
+    TreeMap<Integer,Set<Cell>> roots = new TreeMap<>();  // root cells indexed by time
+    TreeMap<String,Cell> cellMap = new TreeMap<>();  // map of the all the cells by name
+    TreeMap<Integer,TreeSet<Nucleus>> byTime = new TreeMap<>();  // all the nuclei present at a given time
+    TreeMap<String,Nucleus> byName = new TreeMap<>();  // map of nuclei indexed by name, map indexed by time
+    TreeMap<Integer,Double> cutPosteriors = new TreeMap<>();
+    
+    ArrayList<InvalidationListener> listeners = new ArrayList<>();
+
+    static double shapeThreshold=25;
+    static double areaThreshold=200;
+    static double distanceThreshold = 50.0;
+}
+

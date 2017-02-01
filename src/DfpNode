@@ -1,0 +1,340 @@
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.BHC;
+
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.math3.FieldElement;
+import org.apache.commons.math3.dfp.Dfp;
+import org.apache.commons.math3.dfp.DfpField;
+import org.apache.commons.math3.linear.Array2DRowFieldMatrix;
+import org.apache.commons.math3.linear.ArrayFieldVector;
+import org.apache.commons.math3.linear.FieldLUDecomposition;
+import org.apache.commons.math3.linear.FieldMatrix;
+import org.apache.commons.math3.linear.FieldVector;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.special.Gamma;
+import org.jdom2.Element;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
+
+
+/**
+ *
+ * @author gevirl
+ */
+public class DfpNode extends NodeBase{
+    public DfpNode(StdNode n1,StdNode n2){
+        this.left = n1;
+        this.right = n2;
+        posterior();
+    }
+    public DfpNode(StdNode n1,DfpNode n2){
+        this.left = n1;
+        this.right = n2; 
+        posterior();
+    }    
+
+    public DfpNode(DfpNode lef,DfpNode rig){
+        this.left = lef;
+        this.right = rig;
+        posterior();
+    }
+    public Dfp marginalLikelihood(List<FieldVector> data){    
+        int n = data.size();
+        if (n > maxN){
+            return field.getZero();
+        }
+        int D = data.get(0).getDimension();
+        Dfp rP = beta.add(n);
+//        System.out.printf("rP=%s\n",rP.toString());
+        double nuP = nu + n;
+//        System.out.printf("nuP=%e\n", nuP);
+        FieldMatrix C = new Array2DRowFieldMatrix(field,D,D);
+        for (int row=0 ; row<C.getRowDimension() ; ++row){
+            for (int col=0 ; col<C.getColumnDimension() ; ++col){
+                C.setEntry(row, col, field.getZero());
+            }
+        }
+        FieldVector X = new ArrayFieldVector(field,D);  // a vector of zeros
+        for (int j=0 ; j<X.getDimension() ; ++j){
+            X.setEntry(0, field.getZero());
+        }
+        for (FieldVector v : data){
+            X  = X.add(v);
+            FieldMatrix v2 = v.outerProduct(v);
+            C = C.add(v2);
+        }
+
+        FieldVector mP = (m.mapMultiply(beta).add(X)).mapDivide(rP);
+        FieldMatrix Sp = C.add(S);
+        
+        FieldMatrix rmmP = mP.outerProduct(mP).scalarMultiply(rP);
+        Sp = Sp.add(rmm).subtract(rmmP);
+        
+        FieldLUDecomposition ed = new FieldLUDecomposition(Sp);
+        if (!ed.getSolver().isNonSingular()){
+            System.exit(99);
+        }
+        Dfp det = (Dfp)ed.getDeterminant();       
+        Dfp detSp = det.pow(field.newDfp(nuP/2.0));
+        if (detSp.isInfinite()){
+            System.exit(88);
+        }
+        
+        Dfp t1 = field.getPi().pow( -n*D/2.0);
+        if (t1.isInfinite()){
+            System.exit(111);
+        }
+        
+        Dfp t2 = beta.divide(rP).pow(D/2.0);
+        if (t2.isInfinite()){
+            System.exit(222);
+        }
+        
+        Dfp t3 = detS.divide(detSp);
+        if (t3.isInfinite()){
+            System.exit(333);
+        }
+        
+        Dfp t4 = field.newDfp(ratio.getRatio(n));
+        if (t4.isInfinite()){
+            System.exit(444);
+        }
+        
+        Dfp lk = t1.multiply(t2).multiply(t3).multiply(t4);
+        if (lk.isInfinite()){
+            System.exit(555);
+        }
+/*        
+        Dfp t1 = field.getPi().pow( -n*D/2.0);
+        Dfp prod = t1.multiply(detS).divide(detSp);
+//        Dfp gammaRatio = field.newDfp(ratio.getRatio(n));
+//        prod = prod.multiply(gammaRatio);
+       
+        for (int i=1 ; i<=D ; ++i){
+            Dfp G = field.newDfp(Gamma.logGamma((nuP+1-i)/2.0)).exp();
+            if (G.isInfinite()){
+                System.exit(106);
+            }
+            prod = prod.multiply(G);
+            prod = prod.divide(Gamma.gamma((nu+1-i)/2.0));
+            if (prod.isInfinite()){
+                System.exit(101);
+            }
+        }
+
+        Dfp t2 = beta.divide(rP).pow(D/2.0);
+        Dfp lk = prod.multiply(t2);  
+        if (lk.isInfinite()){
+            System.out.printf("nuP=%e\n",nuP);
+            System.exit(99);
+        }
+*/        
+        return lk;
+        
+    }
+
+    
+    //the likelihood of this node and all consistent subtrees
+    public void  DPMLikelihood(int n){ 
+        Dfp dLeft;
+        Dfp dRight;
+        Dfp dpmLeft;
+        Dfp dpmRight;
+        if (left instanceof StdNode){
+            dLeft = field.newDfp(((StdNode)left).getd());
+            dpmLeft = field.newDfp(((StdNode)left).getdpm());
+        }else {
+            dLeft = ((DfpNode)left).d;
+            dpmLeft = ((DfpNode)left).dpm;
+            
+        }
+        if (right instanceof StdNode){
+            dRight = field.newDfp(((StdNode)right).getd());
+            dpmRight = field.newDfp(((StdNode)right).getdpm());
+        }else {
+            dRight = ((DfpNode)right).d;
+            dpmRight = ((DfpNode)right).dpm;
+        }   
+        
+        // calculate pi and d
+        double logG = Gamma.logGamma(n);
+        Dfp G = field.newDfp(logG).exp();
+        if (G.isInfinite()){
+            System.exit(200);
+        }
+        Dfp d2 = dLeft.multiply(dRight);
+        if (d2.isInfinite()){
+            System.exit(205);
+        }
+        Dfp ag = alpha.multiply(G);
+        if (ag.isInfinite()){
+            System.exit(210);
+        }
+        this.d = ag.add(d2);
+        this.pi = ag.divide(d);
+
+        // caluclate dpm
+        dpm = dpmLeft.multiply(dpmRight);
+        Dfp diff = this.likelihood.subtract(dpm);
+        dpm = pi.multiply(diff).add(dpm);
+ /*       
+        Dfp first = pi.multiply(this.likelihood);
+        Dfp onePi = field.getOne().subtract(pi);
+        Dfp second = onePi.multiply(dpmLeft.multiply(dpmRight));
+        if (second.isInfinite()){
+            System.exit(222);
+        }
+        dpm = first.add(second);
+*/
+ if (dpm.isInfinite() ) {     
+this.left.print(System.out);
+this.right.print(System.out); 
+System.out.printf("n=%d\n", n);
+System.out.printf("logG = %e\n",logG);
+System.out.printf("G=%s\n",G.toString());  
+System.out.printf("ag=%s\n",ag.toString());
+System.out.printf("dleft=%s\n",dLeft.toString());
+System.out.printf("dright=%s\n",dRight.toString());
+System.out.printf("d2=%s\n",d2.toString());        
+System.out.printf("d=%s\n",d.toString());         
+System.out.printf("pi=%s\n",pi.toString()); 
+System.out.printf("like=%s\n",likelihood.toString()); 
+System.out.printf("dpmLeft=%s\n",dpmLeft.toString());
+System.out.printf("dpmRight=%s\n",dpmRight.toString());
+System.out.printf("dpm=%s\n",dpm.toString()); 
+System.exit(77);
+int iuasfs =0;
+ }        
+    }
+
+    private Dfp posterior(){
+        List<FieldVector> data = new ArrayList<>();
+        this.getDataAsFieldVector(data); 
+        this.likelihood = this.marginalLikelihood(data);  
+        
+        this.DPMLikelihood(data.size());
+        
+        r = this.pi.multiply(likelihood.divide(dpm));
+
+        realR = r.getReal();
+        if (realR == 0.0){
+            int asfdhs=0;
+        }
+        return r;
+    }
+
+    public Dfp getPosteriorDfp(){
+        return this.r;
+    }
+    public double getPosterior(){
+        return this.realR;
+    }
+    static public void setAlpha(double a){
+        alpha = field.newDfp(a);
+    }
+    public void print(PrintStream stream){
+        List<RealVector> data = new ArrayList<>();
+        this.getDataAsRealVector(data);
+        stream.printf("Size=%d\n", data.size());
+        for (RealVector vec : data){
+            stream.print(vectorAsString(vec));
+        }
+        stream.println();
+        stream.printf("like=%s\n", this.likelihood.toString());
+        stream.printf("dpm=%s\n", this.dpm.toString());
+        stream.printf("pi=%s\n", this.pi.toString());
+        stream.printf("d=%s\n", this.d.toString());
+        stream.printf("post=%s\n", this.r.toString());
+    }
+    public String vectorAsString(RealVector v){
+        boolean first = true;
+        StringBuilder builder = new StringBuilder();
+        builder.append("(");
+        for (int i=0 ; i<v.getDimension() ; ++i){
+            
+            if (!first){
+                builder.append(",");
+            }
+            builder.append(String.format("%d",(int)v.getEntry(i)));
+            first = false;
+        }
+        builder.append(")");
+        return builder.toString();
+    }    
+ 
+    
+
+
+    @Override
+    public Node mergeWith(Node cl) {
+        if (cl instanceof DfpNode){
+            return new DfpNode(this,(DfpNode)cl);
+        } else {
+            return new DfpNode((StdNode)cl,this);
+        }
+    }
+
+    @Override
+    public void getDataAsFieldVector(List<FieldVector> list) {
+        this.left.getDataAsFieldVector(list);
+        this.right.getDataAsFieldVector(list);
+    }
+
+    @Override
+    public void getDataAsRealVector(List<RealVector> list) {
+        this.left.getDataAsRealVector(list);
+        this.right.getDataAsRealVector(list);
+    }
+
+    static void setParameters(int n,double beta,double[] mean,double s){
+        DfpNode.nu = n;
+        DfpNode.S = new Array2DRowFieldMatrix(field,mean.length,mean.length);
+        for (int i=0 ; i<mean.length ; ++i){
+            S.setEntry(i, i, field.newDfp(s));
+        }
+        DfpNode.beta = field.newDfp(beta);
+        Dfp[] mu = new Dfp[mean.length];
+        for (int i=0 ;  i<mu.length ; ++i){
+            mu[i] = field.newDfp(mean[i]);
+        }        
+        DfpNode.m = new ArrayFieldVector(field,mu);
+        
+        FieldLUDecomposition ed = new FieldLUDecomposition(S);
+        detS = ((Dfp)ed.getDeterminant());
+        System.out.printf("detS=%s\n", detS.toString());
+        detS = detS.pow(nu/2.0);
+        System.out.printf("detSnu=%s\n",detS.toString() );
+        rmm = m.outerProduct(m).scalarMultiply(field.newDfp(beta));
+        ratio = new GammaRatio(mean.length,n);
+    }    
+
+    Dfp likelihood;
+    Dfp d;
+    Dfp pi;
+
+    Dfp dpm;  //likelihood of this cluster/subtree - all tree consistent groupings of data considered
+    
+    static double nu;
+    static Dfp beta;
+    static FieldVector m;
+    static FieldMatrix S;  
+    static Dfp detS;
+    static FieldMatrix rmm;
+    static Dfp alpha;
+    
+    static GammaRatio ratio;
+    
+ 
+    static Dfp zero = field.getZero();
+    static Dfp one = field.getOne();
+
+}

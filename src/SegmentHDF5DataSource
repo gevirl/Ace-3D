@@ -1,0 +1,79 @@
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.dispim.datasource;
+
+import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.HDF5ObjectType;
+import ch.systemsx.cisd.hdf5.IHDF5FileLevelReadOnlyHandler;
+import ch.systemsx.cisd.hdf5.IHDF5ObjectReadOnlyInfoProviderHandler;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5ReferenceReader;
+import java.io.File;
+import java.util.List;
+/**
+ *
+ * @author gevirl
+ */
+public class SegmentedHDF5DataSource extends ByteHDF5DataSource implements SegmentedDataSource {
+    public SegmentedHDF5DataSource(File hdFile,String hdDataSet){
+        super(hdFile,hdDataSet);
+    }
+    @Override
+    public ClusteredDataSource kMeansCluster(int segment, int nClusters, int nPartitions) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int getN(int segment) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Voxel get(int i, int segment) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    static public void main(String[] args){
+        File hd5 = new File("/net/waterston/vol9/diSPIM/20161207_tbx-9_OP636/MVR_STACKS","TP142_Ch2_Ill0_Ang0,90_Simple Segmentation.h5");
+        IHDF5Reader reader = HDF5Factory.openForReading(hd5);
+        
+        List<String> groups = reader.object().getGroupMembers("/");
+        HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation("/exported_data");
+        List<HDF5LinkInformation> infos = reader.object().getGroupMemberInformation("/", true);
+        for (HDF5LinkInformation info : infos){
+            String name = info.getName();
+            String path = info.getPath();
+            HDF5ObjectType type =info.getType();
+            if (type == HDF5ObjectType.DATASET){
+                int iusdfiu=0;
+            }
+        }
+        
+        IHDF5ObjectReadOnlyInfoProviderHandler hand = reader.object();
+        
+        IHDF5FileLevelReadOnlyHandler fileHand = reader.file();
+        IHDF5ReferenceReader refReader = reader.reference();
+        MDByteArray mdArray = reader.uint8().readMDArray("/exported_data");
+        int[] dims = mdArray.dimensions();
+        
+        int i = mdArray.get(133,160,116);
+        byte ib = mdArray.get(133,160,116);
+        int j = mdArray.get(134,160,116);
+        byte jb = mdArray.get(134,160,116);
+        if (jb == 2){
+            int kjfds=0;
+        }
+        int k = mdArray.get(145,163,116);
+        int l = mdArray.get(156,164,116);
+        int iaosdfiosd=0;
+    }
+
+}

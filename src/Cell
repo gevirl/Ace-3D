@@ -1,0 +1,488 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.rhwlab.dispim.nucleus;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+
+/**
+ *
+ * @author gevirl
+ */
+public class Cell  implements Comparable {
+    public Cell(String name,Nucleus nuc){
+        this.name = name;
+        addNucleus(nuc);
+    }
+    public Cell(String name){
+        this.name = name;
+        if (divisionMap == null){
+            divisionMap = new TreeMap<>();
+            InputStream s = this.getClass().getClassLoader().getResourceAsStream("NewRules.txt");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(s));
+            try {
+                String line = reader.readLine();
+                line = reader.readLine();
+                while (line != null){
+                    String[] tokens = line.split("\t");
+                    double[] v = new double[3];
+                    v[0] = Double.valueOf(tokens[4]);
+                    v[1] = Double.valueOf(tokens[5]);
+                    v[2] = Double.valueOf(tokens[6]);
+                    Division div = new Division(tokens[2],tokens[3],v);
+                    divisionMap.put(tokens[0],div);
+                    line = reader.readLine();
+                }
+            } catch (Exception exc){
+                exc.printStackTrace();
+            } 
+        }
+    }
+
+    public Cell(JsonObject jsonObj,Cell parent,Map<String,Nucleus> nucMap){
+        this(jsonObj.getJsonString("Name").getString()); 
+        this.parent = parent;
+        
+        JsonObject child = jsonObj.getJsonObject("Child0");
+        if (child != null){
+            children.add(new Cell(child,this,nucMap));
+        }
+        child = jsonObj.getJsonObject("Child1");
+        if (child != null){
+            children.add(new Cell(child,this,nucMap));
+        }
+        JsonArray jsonNuclei = jsonObj.getJsonArray("Nuclei");
+        for (int i=0 ; i<jsonNuclei.size() ; ++i){
+            String nucID = ((JsonString)jsonNuclei.get(i)).getString();
+            Nucleus nuc = nucMap.get(nucID);
+            if (nuc != null){
+                nuclei.put(nuc.getTime(),nuc);
+            }
+
+        }
+    }
+    // name the children using the supplied embryo orientatation rotation matrix
+    // if R == null ,compute the orientation vector with children flipped and then name children
+    // if R != null name the children using the embryo orientation matrix 
+    public void nameChildren(RealMatrix r){
+        if (this.children.isEmpty()) return ;  // no children - no naming can be performed
+        Division div = divisionMap.get(this.name);
+        if (div == null) return ; // cannot name an unknown cell
+        
+        RealMatrix R = r;
+        if (R == null){
+            // flip the children
+            ArrayList<Cell> temp = new ArrayList<>();
+            for (int i=children.size()-1 ; i>=0 ; --i){
+                temp.add(children.get(i));
+            }
+            children = temp;
+            Vector3D A = divisionDirection();
+            Vector3D B = div.getV();
+            R = rotationMatrix(A,B);
+            double[] op = R.operate(A.toArray());
+            int uisadfuihsd=0;
+        }
+
+        Vector3D direction = divisionDirection();
+        double c0 = new Vector3D(R.operate(direction.toArray())).dotProduct(div.getV());
+        double c1 = new Vector3D(R.operate(direction.scalarMultiply(-1.0).toArray())).dotProduct(div.getV());
+        if (c0 > c1){
+            children.get(0).name = div.child1;
+            children.get(1).name = div.child2;
+        }
+        else {
+            children.get(1).name = div.child1;
+            children.get(0).name = div.child2;            
+        }
+        children.get(0).nameChildren(R);
+        children.get(1).nameChildren(R);
+        
+    }
+    public Vector3D divisionDirection(){
+        double[] p0 = children.get(0).lastNucleus().getCenter();
+        Vector3D v0 = new Vector3D(p0[0],p0[1],p0[2]);
+        
+        double[] p1 = children.get(1).lastNucleus().getCenter();
+        Vector3D v1 = new Vector3D(p1[0],p1[1],p1[2]);
+
+        return v1.subtract(v0)        ;
+    }
+    //find the rotation matrix that rotates the A vector onto the B vector
+    static public RealMatrix rotationMatrix(Vector3D A,Vector3D B){
+        Vector3D a = A.normalize();
+        Vector3D b = B.normalize();
+        Vector3D v = a.crossProduct(b);
+        
+        double s = v.getNormSq();
+        double c = a.dotProduct(b);
+        
+        RealMatrix vx = MatrixUtils.createRealMatrix(3, 3);
+        vx.setEntry(1, 0, v.getZ());
+        vx.setEntry(0, 1, -v.getZ());
+        vx.setEntry(2, 0, -v.getY());
+        vx.setEntry(0, 2, v.getY());
+        vx.setEntry(2, 1, v.getX());
+        vx.setEntry(1, 2, -v.getX());  
+
+        RealMatrix vx2 = vx.multiply(vx);
+        RealMatrix scaled = vx2.scalarMultiply((1.0-c)/s);
+        
+        RealMatrix ident = MatrixUtils.createRealIdentityMatrix(3);
+        RealMatrix sum = vx.add(scaled);
+        RealMatrix ret = ident.add(sum);
+
+        return ret;
+    }
+    public JsonObjectBuilder asJson(){
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        builder.add("Name", name);
+        if (parent != null){
+            builder.add("Parent", parent.name);
+        }
+   
+        if (children != null){
+            for (int i=0 ; i<children.size() ; ++i){
+                builder.add(String.format("Child%d",i), children.get(i).asJson());
+            }
+        }
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        for (Nucleus nuc : nuclei.values()){
+            arrayBuilder.add(nuc.getName());
+        }
+        builder.add("Nuclei", arrayBuilder);
+        return builder;
+    }
+    public String getName(){
+        return this.name;
+    }
+    public Cell getParent(){
+        return this.parent;
+    }
+    public boolean isRoot(){
+        return this.parent==null;
+    }
+    public Cell[] getChildren(){
+        return children.toArray(new Cell[0]);
+    }
+    // add the given nucleus recursively to this cell
+    // entire cell tree is constructed under this cell if needed
+    public void addNucleus(Nucleus nuc){
+        nuclei.put(nuc.getTime(),nuc);
+        
+        Nucleus[] childrenNucs = nuc.nextNuclei();
+        if (childrenNucs.length==0){
+            return;  // no further nuclei to add
+        }
+        if (childrenNucs.length == 1){
+            addNucleus(childrenNucs[0]);
+            return;
+        } else{
+            Cell cell1 = new Cell(childrenNucs[0].getName(),childrenNucs[0]);
+            Cell cell2 = new Cell(childrenNucs[1].getName(),childrenNucs[1]);
+            this.children.add(cell1);
+            this.children.add(cell2);
+            cell1.parent = this;
+            cell2.parent = this;
+        }
+        
+    }
+    public void addChild(Cell child){
+        children.add(child);
+        child.setParent(this);
+    }
+    public void setParent(Cell parent){
+        this.parent = parent;
+    }
+    public Nucleus getNucleus(int time){
+        return nuclei.get(time);
+    }
+/*    
+    // split this cell into two at the given time
+    // the nucleus at the given time begins the later cell
+    // return the later cell
+    public Cell split(Nucleus nuc){
+        int time = nuc.getTime();
+        
+        // put all the distal nuclei into the new cell
+        Cell ret = new Cell(nuc.getName());
+        for (int t=time ; t<=lastTime() ; ++t){
+            Nucleus distal = getNucleus(t);
+            if (distal != null){
+                ret.addNucleus(distal);
+            }
+        }
+        
+        // remake the proximal cell list of nuclei
+        TreeMap<Integer,Nucleus> prox = new TreeMap<>();
+        for (int t=this.firstTime() ; t<time ; ++t){
+            Nucleus proxNuc = getNucleus(t);
+            if (proxNuc != null){
+                prox.put(t,proxNuc);
+            }
+        }
+        nuclei = prox;
+        
+        // relink children cells to the new distal cell
+        for (Cell child : children){
+            ret.addChild(child);
+        }
+        this.children.clear();
+        
+        return ret;
+    }
+*/
+    // the time of the last nucleus in the cell
+    public int lastTime(){
+        return nuclei.lastKey();
+    }
+    public void clearChildren(){
+        children.clear();
+    }
+    public int firstTime(){
+        return nuclei.firstKey();
+    }
+    public Nucleus firstNucleus(){
+        return nuclei.firstEntry().getValue();
+    }
+    public Nucleus lastNucleus(){
+        return nuclei.lastEntry().getValue();
+    }
+/*    
+    // unlink this cell from its parent
+    public void unlink(){
+        if (parent != null){
+            Cell[] parentsChildren = parent.getChildren();
+            parent.clearChildren();
+            for (Cell child : parentsChildren){
+                if (!child.getName().equals(this.getName())){
+                    parent.addChild(child);
+                }
+            }
+        }
+        this.parent = null;
+    }
+    public void combineWith(Cell other){
+        for (Nucleus nuc : other.nuclei.values()){
+            this.addNucleus(nuc);
+        }
+        for (Cell child : other.getChildren()){
+            this.addChild(child);
+        }
+        other.clearChildren();
+        
+    }
+*/
+    public Cell getSister(){
+        Cell ret = null;
+        if (parent != null){
+            for (Cell c : parent.children){
+                if (c.getName() != this.name){
+                    ret = c;
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+    // the maximum time this cell and its descents reach
+    public int maxTime(){
+        if (children.isEmpty()){
+            return this.lastTime();
+        } else {
+            int ret = Integer.MIN_VALUE;
+            for (Cell child : children){
+                int t = child.maxTime();
+                if (t >ret){
+                    ret = t;
+                }
+            }
+            return ret;
+        }
+    }
+    // all the leaves of this cell
+    public List<Cell> leaves(){
+        ArrayList<Cell> ret = new ArrayList<>();
+        if (!this.children.isEmpty()){
+            for (Cell child : children){
+                ret.addAll(child.leaves());
+            }
+        }
+        ret.add(this);
+        return ret;
+    }
+
+    // find the leaves of a cell up to a max time
+    public List<Cell> leaves(int maxTime){
+        ArrayList<Cell> ret = new ArrayList<>();
+        if (this.lastTime() >= maxTime || this.isLeaf()){
+            ret.add(this);
+        }
+        else if (!this.children.isEmpty()){
+            for (Cell child : children){
+                ret.addAll(child.leaves(maxTime));
+            }
+        }
+        
+        return ret;        
+    }
+    public int getMaxExpression(){
+        int ret = Integer.MIN_VALUE;
+        for (Cell child : children){
+            int v = child.getMaxExpression();
+            if (v > ret){
+                ret = v;
+            }
+        }
+        for (Nucleus nuc : nuclei.values()){
+            int v = (int)nuc.getExpression();
+            if (v > ret){
+                ret = v;
+            }
+        }
+        return ret;
+    }
+    public int getMinExpression(){
+        int ret = Integer.MAX_VALUE;
+        for (Cell child : children){
+            int v = child.getMinExpression();
+            if (v < ret){
+                ret = v;
+            }
+        }
+        for (Nucleus nuc : nuclei.values()){
+            int v = (int)nuc.getExpression();
+            if (v < ret){
+                ret = v;
+            }
+        }
+        return ret;        
+    }
+    @Override
+    public int compareTo(Object o) {
+        return name.compareTo(((Cell)o).name);
+    }  
+    public boolean isLeaf(){
+        return children.isEmpty();
+    }
+    public void setName(String name){
+        this.name = name;
+    }
+    // get the nuclei in this cell only
+    public Nucleus[] allNuclei(){
+        return nuclei.values().toArray(new Nucleus[0]);
+    }
+    public void report(PrintStream stream){
+        stream.printf("Cell:%s\n", name);
+        if (parent== null){
+            stream.println("Parent:null");
+        }else {
+            stream.printf("\tparent:%s\n", parent.getName());
+        }
+        for (Cell child : children){
+            stream.printf("\tChild:%s\n", child.getName());
+        }
+        for (Integer time : nuclei.keySet()){
+            Nucleus nuc = nuclei.get(time);
+            stream.printf("\tNucleus: %d,%s\n",time,nuc.getName());
+        }
+    }
+    public void removeNucleus(int time){
+        nuclei.remove(time);
+    }
+    /*
+    // merge this cell with its parent
+    public void mergeWithParent(){
+        parent.children = this.children;
+        for (Nucleus nuc : this.allNuclei()){
+            parent.addNucleus(nuc);
+        }
+        
+    }
+*/
+    // return the root cell of this cell
+    public Cell getRoot(){
+        if (this.parent == null){
+            return this;
+        }
+        return this.parent.getRoot();
+    }
+    @Override
+    public String toString(){
+        return this.getName();
+    }
+    public Cell findChild(String childName){
+        if (this.getName().equals(childName)){
+            return this;
+        }
+        if (this.isLeaf()){
+            return null;
+        }
+        for (Cell child : this.children){
+            Cell ret = child.findChild(childName);
+            if (ret != null){
+                return ret;
+            }
+        }
+        return null;
+    }
+    /*
+    public Cell clone(){
+        Cell ret = new Cell(this.name);
+        // clone all the children cells
+        for (Cell child : this.children){
+            Cell c = child.clone();
+            ret.children.add(c);
+            c.parent = ret;
+        }
+        
+        // clone the nuclei
+        for (Entry<Integer,Nucleus> entry : nuclei.entrySet()){
+            Nucleus nucClone = entry.getValue().clone();
+            nucClone.setCell(ret.name);
+            ret.nuclei.put(entry.getKey(), nucClone);
+        }
+        return ret;
+    }
+*/
+    String name;
+    boolean userNamed = false;
+    Cell parent;  // the parent cell - can be null
+    List<Cell> children = new ArrayList<>();  // children after division of this cell - can be empty
+    TreeMap<Integer,Nucleus> nuclei =  new TreeMap<>();  // the time-linked nuclei in this cell
+    
+    static TreeMap<String,Division> divisionMap;
+
+    class Division{
+        public Division(String d1,String d2,double[] v){
+            this.child1 = d1;
+            this.child2 = d2;
+            this.v = v;
+        }
+        public Vector3D getV(){
+            return new Vector3D(v);
+        }
+        String child1;
+        String child2;
+        double[] v;
+    }
+}
+
