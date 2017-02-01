@@ -176,7 +176,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         fileMenu.addSeparator();
-        
+/*        
         JMenuItem virtStack = new JMenuItem("Open Lineaging TIFF Virtual Stack");
         virtStack.addActionListener(new ActionListener(){
             @Override
@@ -235,7 +235,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         });
         fileMenu.add(bhcOpen); 
         fileMenu.addSeparator();
-        
+ */       
         JMenuItem session = new JMenuItem("Open Existing Session");
         fileMenu.add(session);
         session.addActionListener(new ActionListener(){
@@ -367,7 +367,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         fileMenu.add(exit);
-      
+/*      
         JMenu navigate = new JMenu("Navigate");
         JMenuItem toTime = new JMenuItem("To Time Point");
         toTime.addActionListener(new ActionListener(){
@@ -379,7 +379,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         navigate.add(toTime);
         
         menuBar.add(navigate);
-        
+ */       
         JMenu segmenting = new JMenu("Segmenting");
         menuBar.add(segmenting);
         
@@ -395,7 +395,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });       
         segmenting.add(cutItem); 
-        
+/*        
         JMenuItem autoSeg = new JMenuItem("Auto - Between Curations");
         segmenting.add(autoSeg);
         autoSeg.addActionListener(new ActionListener(){
@@ -408,7 +408,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 }
             }
         });
-
+*/
         segmenting.addSeparator();
      
         JMenuItem scatter = new JMenuItem("Intensity/Volume Plot");
@@ -1043,7 +1043,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 Interpreter.batchMode=true;
                 ImageJ ij = new ImageJ(ImageJ.NO_SHOW);
                 try {
-                    Ace3D_Frame frame = new Ace3D_Frame();
+                    Ace3D_Frame   frame = new Ace3D_Frame();
                     
                     frame.run(null);
                 } catch (Exception exc){

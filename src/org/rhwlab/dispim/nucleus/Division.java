@@ -314,7 +314,7 @@ public class Division {
     static double eccThresh = 0.5;
     static double parentEccThresh = .85;
     static double divDistanceThresh = 70.0;
-    static double parentToChildDistance = 25;
+    static double parentToChildDistance = 27;
     static double cosThresh = .8;
     static double volumeThresh = 4.0;
     static double legRatio = 10.0;

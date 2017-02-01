@@ -61,7 +61,7 @@ public class NucleusPropertiesPanel extends JPanel implements InvalidationListen
         this.add(root);        
         this.add(new JLabel("BHC Node"));
         this.add(sourceNode);
-        this.add(new JLabel("Log Prob"));
+        this.add(new JLabel("BHC Prob"));
         this.add(probability);
         cell.addActionListener(new ActionListener(){
             @Override
