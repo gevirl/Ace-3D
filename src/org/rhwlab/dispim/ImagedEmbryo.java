@@ -267,6 +267,7 @@ public class ImagedEmbryo implements Observable {
     @Override
     public void addListener(InvalidationListener listener) {
         listeners.add(listener);
+        nucFile.addListener(listener);
     }
 
     @Override

@@ -214,25 +214,27 @@ public class SynchronizedMultipleSlicePanel extends JPanel implements ChangeList
     }
     @Override
     public void invalidated(Observable observable) {
-        ImagedEmbryo emb = (ImagedEmbryo)observable;
-        this.embryo = emb;
         ChangeEvent e = new ChangeEvent(observable);
-        time = emb.getMinTime();
-        timePointImage = emb.getImage(time);
-        double[] minPosition = timePointImage.getMinPosition();
-        double[] maxPosition = timePointImage.getMaxPosition();        
-        for (int d=0 ; d<position.length ; ++d){
-                position[d] = (long)(0.5*(minPosition[d]+maxPosition[d]));
-        } 
-        for (int d=0 ; d<nDims ; ++d){
-            SingleSlicePanel panel = panels[d];
-            panel.setEmbryo(emb);
-            panel.setExtent(minPosition[d],maxPosition[d]);
-            panel.setImage(timePointImage, position);
+        if (observable instanceof ImagedEmbryo){
+            ImagedEmbryo emb = (ImagedEmbryo)observable;
+            this.embryo = emb;
+            time = emb.getMinTime();
+            timePointImage = emb.getImage(time);
+            double[] minPosition = timePointImage.getMinPosition();
+            double[] maxPosition = timePointImage.getMaxPosition();        
+            for (int d=0 ; d<position.length ; ++d){
+                    position[d] = (long)(0.5*(minPosition[d]+maxPosition[d]));
+            } 
+            for (int d=0 ; d<nDims ; ++d){
+                SingleSlicePanel panel = panels[d];
+                panel.setEmbryo(emb);
+                panel.setExtent(minPosition[d],maxPosition[d]);
+                panel.setImage(timePointImage, position);
+            }
+            slider.setMinimum(emb.getMinTime());
+            slider.setMaximum(emb.getMaxTime());
+            slider.setValue( (emb.getMinTime()));  
         }
-        slider.setMinimum(emb.getMinTime());
-        slider.setMaximum(emb.getMaxTime());
-        slider.setValue( (emb.getMinTime()));        
         for (SingleSlicePanel p : panels){
             p.stateChanged(e);
         }

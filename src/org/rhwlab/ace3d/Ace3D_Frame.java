@@ -101,7 +101,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 }
             }
         });
-        imagedEmbryo.getNucleusFile().addListener(navFrame);
+//        imagedEmbryo.getNucleusFile().addListener(navFrame);
         imagedEmbryo.getNucleusFile().addSelectionOberver(selectedNucFrame);
         imagedEmbryo.getNucleusFile().addSelectionOberver(panel); 
         
