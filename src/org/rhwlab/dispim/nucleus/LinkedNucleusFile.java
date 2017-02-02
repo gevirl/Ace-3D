@@ -610,10 +610,18 @@ System.out.println("Division by sister")                            ;
                                     Division div = new Division(nuc,next[0],availNuc);
                                     if (div.isPossible()){
 System.out.println("Division by available");
+                                        avail.markedAsUsed();
                                         toList.add(availNuc);
                                         this.addNucleus(availNuc);
                                         nuc.linkTo(availNuc);
 
+                                    } else if (availNuc.getVolume() > 2500) {
+                                        TreeMap<String,Nucleus> remnantMap  =this.remnants.get(t);
+                                        if (remnantMap == null){
+                                            remnantMap = new TreeMap<>();
+                                            remnants.put(t,remnantMap);
+                                        }
+                                        remnantMap.put(availNuc.getName(),availNuc);                                        
                                     }
                                 }
                             }
@@ -621,6 +629,8 @@ System.out.println("Division by available");
                     }
                 }
                 
+                // create more nuclei fromthe remaining supervoxels if volume > 3000
+  
                 toNucs = toList.toArray(new Nucleus[0]);
                 fromNucs = toNucs; 
                 
@@ -880,19 +890,40 @@ System.out.println("Division by available");
     public Integer getThresholdProb(int time){
         return thresholdProbs.get(time);
     }
+    public void activateRemnant(int time,long[] pos){
+        TreeMap<String,Nucleus> rems = remnants.get(time);
+        Nucleus closest = null;
+        double d = Double.MAX_VALUE;
+        if (rems != null){
+            for (Nucleus rem : rems.values()){
+                double[] center = rem.getCenter();
+                double sum = 0.0;
+                for (int i=0 ; i<pos.length ; ++i){
+                    double del = center[i] - pos[i];
+                    sum = sum + del*del;
+                }
+                if (sum < d){
+                    d = sum;
+                    closest = rem;
+                }
+            }
+            this.addNucleus(closest);
+            this.notifyListeners();
+        }
+    }
     
     File file;
     TreeMap<Integer,TreeMap<String,Nucleus>> byTime=new TreeMap<>();  // all the nuclei indexed by time and name
     TreeSet<Integer> curatedSet = new TreeSet<>();  //curated times
     TreeMap<Integer,Integer> thresholdProbs = new TreeMap<>();  // the thresholds probs for each time used to construct nuclei from bhc trees
-
+    TreeMap<Integer,TreeMap<String,Nucleus>> remnants = new TreeMap<>(); // nuclei made from supervoxels that are left after auto linking -  may be false negatives
     
     ArrayList<InvalidationListener> listeners = new ArrayList<>();
     SelectedNucleus selectedNucleus = new SelectedNucleus();
     BHCDirectory bhcTreeDir;
     
     boolean opening = false;
-    static double threshold= 1.0E-11;
+//    static double threshold= 1.0E-11;
 
 
 
