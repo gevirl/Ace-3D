@@ -40,6 +40,7 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         for (int t : timeEleMap.descendingKeySet()){
             TreeMap<String,Nucleus> nucMap = new TreeMap<>();
+            TreeMap<String,Nucleus> remMap = new TreeMap<>();
             Element timeEle = timeEleMap.get(t);
             if (Boolean.valueOf(timeEle.getAttributeValue("curated"))){
                 this.curatedSet.add(t);
@@ -51,24 +52,31 @@ public class LinkedNucleusFile implements NucleusFile {
 
             for (Element nucEle : timeEle.getChildren("Nucleus")){
                 BHCNucleusData bhcNuc = new BHCNucleusData(nucEle);             
-                Nucleus nuc = new Nucleus(bhcNuc);
-                nuc.setCellName(nucEle.getAttributeValue("cell"), Boolean.valueOf(nucEle.getAttributeValue("usernamed")));
-                nucMap.put(nuc.getName(), nuc);
-                
-                // link children
-                String c1 = nucEle.getAttributeValue("child1");
-                if (c1 != null){
-                    TreeMap<String,Nucleus> nextNucs = byTime.get(t+1);
-                    Nucleus child1Nuc = nextNucs.get(c1);
-                    Nucleus child2Nuc = null;
-                    String c2 = nucEle.getAttributeValue("child2");
-                    if (c2 != null){
-                        child2Nuc = nextNucs.get(c2);
+                Nucleus nuc = new Nucleus(bhcNuc);  
+                String active = nucEle.getAttributeValue("active");
+                if (active==null || active.equals("true")){
+
+                    nuc.setCellName(nucEle.getAttributeValue("cell"), Boolean.valueOf(nucEle.getAttributeValue("usernamed")));
+                    nucMap.put(nuc.getName(), nuc);
+
+                    // link children
+                    String c1 = nucEle.getAttributeValue("child1");
+                    if (c1 != null){
+                        TreeMap<String,Nucleus> nextNucs = byTime.get(t+1);
+                        Nucleus child1Nuc = nextNucs.get(c1);
+                        Nucleus child2Nuc = null;
+                        String c2 = nucEle.getAttributeValue("child2");
+                        if (c2 != null){
+                            child2Nuc = nextNucs.get(c2);
+                        }
+                        nuc.setDaughters(child1Nuc, child2Nuc);
                     }
-                    nuc.setDaughters(child1Nuc, child2Nuc);
+                }else {
+                    remMap.put(nuc.getName(), nuc);
                 }
             }
             this.byTime.put(t, nucMap);
+            this.remnants.put(t, remMap);
         }
     }
     
@@ -94,8 +102,19 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         
         for (Nucleus nuc : byTime.get(time).values()){
-            ret.addContent(nuc.asXML());
+            Element nucEle = nuc.asXML();
+            nucEle.setAttribute("active", "true");
+            ret.addContent(nucEle);
         }
+        TreeMap<String,Nucleus> rems = this.remnants.get(time);
+        if (rems != null){
+            for (Nucleus nuc : rems.values()){
+                Element nucEle = nuc.asXML();
+                nucEle.setAttribute("active", "false");
+                ret.addContent(nucEle);                
+            }
+        }
+        
         return ret;
     }
     public JsonObjectBuilder asJson(){
@@ -890,7 +909,8 @@ System.out.println("Division by available");
     public Integer getThresholdProb(int time){
         return thresholdProbs.get(time);
     }
-    public void activateRemnant(int time,long[] pos){
+    
+    public Nucleus activateRemnant(int time,long[] pos){
         TreeMap<String,Nucleus> rems = remnants.get(time);
         Nucleus closest = null;
         double d = Double.MAX_VALUE;
@@ -909,7 +929,9 @@ System.out.println("Division by available");
             }
             this.addNucleus(closest);
             this.notifyListeners();
+            return closest;
         }
+        return null;
     }
     
     File file;

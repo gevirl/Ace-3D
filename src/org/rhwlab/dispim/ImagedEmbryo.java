@@ -464,7 +464,10 @@ public class ImagedEmbryo implements Observable {
         this.setSelectedNucleus(sel);
     }
     public void activateRemnant(int time,long[] pos){
-        nucFile.activateRemnant(time,pos);
+        Nucleus activated = nucFile.activateRemnant(time,pos);
+        if (activated != null){
+            this.setSelectedNucleus(activated);
+        }
     }
    
     NucleusFile nucFile;
