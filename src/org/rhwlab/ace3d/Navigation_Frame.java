@@ -92,7 +92,6 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         });
         JScrollPane nucsScroll = new JScrollPane(nucsTree);
         Dimension prefdim = nucsScroll.getPreferredSize();
-        //prefdim.setSize(2*prefdim.width, prefdim.height);
         prefdim.setSize(200, 100);
         nucsScroll.setPreferredSize(prefdim);
         
@@ -292,7 +291,6 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 } else {
                     comp.setForeground(Color.black);
                 } 
-                int asjdfui=0;
             }            
             return comp;
         }

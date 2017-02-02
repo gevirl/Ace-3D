@@ -9,6 +9,7 @@ import ij.process.LUT;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
@@ -114,9 +115,10 @@ public class CellImage {
     }
     private void labelCell(String label, double x,double y){
         g2.setColor(Color.BLACK);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         AffineTransform save = g2.getTransform();
         AffineTransform xform = (AffineTransform)save.clone();
-       
+        
         xform.translate(5.0+x,y);
         xform.rotate(-Math.PI/4.0);
         g2.setTransform(xform);
