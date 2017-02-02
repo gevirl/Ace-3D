@@ -923,7 +923,6 @@ System.out.println("Division by available");
     BHCDirectory bhcTreeDir;
     
     boolean opening = false;
-//    static double threshold= 1.0E-11;
 
 
 
