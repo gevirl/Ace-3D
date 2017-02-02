@@ -266,7 +266,7 @@ public class LinkedNucleusFile implements NucleusFile {
     }
     
     @Override
-    public void addNuclei(BHCNucleusSet bhcToAdd,boolean curated){
+    public void addNuclei(int probThresh,BHCNucleusSet bhcToAdd,boolean curated){
         if (curated) curatedSet.add(bhcToAdd.getTime());
         
         TreeMap<String,Nucleus> nucsAtTime = new TreeMap<>();
@@ -276,6 +276,7 @@ public class LinkedNucleusFile implements NucleusFile {
             nucsAtTime.put(linkedNuc.getName(),linkedNuc);
         }
         byTime.put(bhcToAdd.getTime(),nucsAtTime);
+        this.thresholdProbs.put(bhcToAdd.getTime(), probThresh);
         notifyListeners();
     }
     public void notifyListeners(){
@@ -525,12 +526,14 @@ public class LinkedNucleusFile implements NucleusFile {
         for (int i=1 ; i<times.length ; ++i){
             int t = times[i];
             BHCTree tree = bhcTreeDir.getTree(t,threshs[i]);
+            
             tree.clearUsed();
             if (isCurated(t)){
                 toNucs = this.getNuclei(t).toArray(new Nucleus[0]);
                 Linkage linkage = new Linkage(fromNucs,toNucs);
                 linkage.formLinkage();                
             } else {
+                this.thresholdProbs.put(t,threshs[i]);
                 ArrayList<Nucleus> toList = new ArrayList<>();
                 // separate polar and non-polar
                 ArrayList<Nucleus> polar = new ArrayList<>();
