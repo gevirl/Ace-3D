@@ -535,6 +535,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 Linkage linkage = new Linkage(fromNucs,toNucs);
                 linkage.formLinkage();                
             } else {
+                this.removeNuclei(t, false);
                 this.thresholdProbs.put(t,threshs[i]);
                 ArrayList<Nucleus> toList = new ArrayList<>();
                 // separate polar and non-polar

@@ -499,6 +499,9 @@ public class Nucleus implements Comparable {
         return BHCNucleusData.similarityScore((BHCNucleusData)nuc1.nucData, (BHCNucleusData)nuc2.nucData);
     }
     static public boolean matchForExpansion(Nucleus nuc1,Nucleus nuc2){
+        if (nuc1.getCellName().equals("polar2")){
+            int asiufh=0;
+        }
         double d = nuc1.distance(nuc2);
         if (d > expansionDistanceThresh){
             return false;
