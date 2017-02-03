@@ -240,7 +240,7 @@ public class LinkedNucleusFile implements NucleusFile {
 
     @Override
     public Set<Integer> getAllTimes() {
-        return this.byTime.keySet();
+        return this.byTime.descendingKeySet();
     }
 
     @Override

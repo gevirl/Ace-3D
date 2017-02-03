@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.rhwlab.dispim.nucleus;
 
 import java.io.BufferedReader;
@@ -24,7 +20,6 @@ public class NamedNucleusFile extends LinkedNucleusFile{
         if (divisionMap == null){
             divisionMap = new TreeMap<>();
     
-//            InputStream s= ClassLoader.getSystemResourceAsStream("NewRules.txt");
             InputStream s = this.getClass().getResourceAsStream("/org/rhwlab/dispim/nucleus/NewRules.txt");
             BufferedReader reader = new BufferedReader(new InputStreamReader(s));
             try {
