@@ -57,6 +57,11 @@ public class CellImage {
             double childY0  = yStart + (timeScale*(1+lastNuc.getTime()-firstNuc.getTime()));
             if (lastNuc.isDividing()){
                 Nucleus[] nextNucs = lastNuc.nextNuclei();
+                if (lastNuc.getCellName().equals("EMS")){
+                    Nucleus save = nextNucs[0];
+                    nextNucs[0] = nextNucs[1];
+                    nextNucs[1] = save;
+                }
                 //draw the children
                 Set<Nucleus> child0Leaves = new HashSet<>();
                 nextNucs[0].findLeaves(child0Leaves);
