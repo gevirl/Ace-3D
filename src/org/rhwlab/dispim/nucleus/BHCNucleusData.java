@@ -202,7 +202,7 @@ public class BHCNucleusData extends NucleusData {
             ir = 1.0/ir;
         }
         double d = super.distance(other);
-        double ret = 4.0*v+ir+d;
+        double ret = 4.0*v+2.0*ir+d;
  /*       
         System.out.printf("Volumes: %f,%f\n", this.volume,other.volume);
         System.out.printf("AvgInt: %f,%f\n",this.getAverageIntensity(),other.getAverageIntensity());

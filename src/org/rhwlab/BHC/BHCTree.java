@@ -301,6 +301,7 @@ if (debug) System.out.printf("Volume returning from %d(%f) as best \n",node.labe
             }
             leftMatch = bestMatch(nuc,(NucleusLogNode)node.getLeft(),leftScore);  
             if (leftMatch.score < ret.score){
+if (debug) System.out.printf("returning from %d best score left %d(%f) \n",node.label,leftMatch.node.label,leftMatch.score);                
                 ret = leftMatch;
             }
         }
@@ -315,6 +316,7 @@ if (debug) System.out.printf("Volume returning from %d(%f) as best \n",node.labe
             }
             rightMatch = bestMatch(nuc,(NucleusLogNode)node.getRight(),rightScore);
             if (rightMatch.score < ret.score){
+if (debug) System.out.printf("returning from %d best score right %d(%f) \n",node.label ,rightMatch.node.label,rightMatch.score);                 
                 ret = rightMatch;
             }
         }
