@@ -471,6 +471,8 @@ public class LinkedNucleusFile implements NucleusFile {
         if (map.isEmpty()){
             byTime.remove(nuc.getTime());
             curatedSet.remove(nuc.getTime());
+        } else {
+            curatedSet.add(nuc.getTime());
         }
         if (notify){
             this.notifyListeners();
@@ -932,6 +934,7 @@ System.out.println("Division by available");
             }
             this.addNucleus(closest);
             this.notifyListeners();
+            curatedSet.add(time);
             return closest;
         }
         return null;
