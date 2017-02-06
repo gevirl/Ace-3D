@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 /**
@@ -76,14 +77,27 @@ public class Division {
             if (debug) System.out.printf("Leg Ratio: %f\n", ratio);
             return false;
         }
- 
         
         double childDist = child1.distance(child2);
-        if (childDist> divDistanceThresh){
+        if (childDist> divDistanceThresh){  // are children too far apart?
             if (debug) System.out.printf("Child distnce: %f\n",childDist);
             return false;
         }
         
+        if (!parent.between(child1, child2)){
+            if (debug) System.out.println("parent not between");
+            return false;            
+        }
+        
+        // check the divison axis compared to the parents shortest axis
+        RealVector[] parentAxes = parent.getAxes();
+        RealVector v1 = new ArrayRealVector(child1.getCenter());
+        RealVector v2 = new ArrayRealVector(child2.getCenter());
+        RealVector divAxis = v2.subtract(v1);
+        if (!related(parentAxes[0],divAxis,debug)){
+            if (debug) System.out.println("Not related ");
+            return false;            
+        }
         ratio = ((BHCNucleusData)child1.getNucleusData()).getVolume()/((BHCNucleusData)child2.getNucleusData()).getVolume();
         if (ratio < 1.0) {
             ratio = 1.0/ratio;
@@ -163,11 +177,11 @@ public class Division {
         if (debug) System.out.printf("Accepted: distance=%f\n",dist);
         return true;
     }
-    private boolean related(RealVector axis1,RealVector axis2){
-        double cos = axis1.dotProduct(axis2);
+    private boolean related(RealVector axis1,RealVector axis2,boolean debug){
+        double cos = Math.abs(axis1.dotProduct(axis2));
         boolean ret =  cos >= cosThresh ;
         if (!ret){
-            System.out.printf("Cosine: %f\n",cos);
+            if (debug) System.out.printf("Cosine: %f\n",cos);
             
         }
         return ret;

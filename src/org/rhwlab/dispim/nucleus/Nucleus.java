@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.json.JsonObjectBuilder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jdom2.Element;
@@ -545,6 +546,97 @@ public class Nucleus implements Comparable {
         double intRatio = nuc1.getAvgIntensity()/nuc2.getAvgIntensity();
         if (intRatio < 1.0)  intRatio = 1.0/intRatio;
         return intRatio <= 2.0;
+    }
+    // is this nucleus between two other nuclei
+    public boolean between(Nucleus nuc1,Nucleus nuc2){
+        return between(this.getCenter(),nuc1,nuc2);
+    }
+    
+    // determine if a given point is between two nuclei
+    static public boolean between(double[] p,Nucleus nuc1,Nucleus nuc2){
+        int D = p.length+1;
+        RealVector P = new ArrayRealVector(D);
+        double[] c1 = nuc1.getCenter();
+        double[] c2 = nuc2.getCenter();
+        double[] del = new double[p.length];
+        double rMax = 0.0;
+        long[] r1 = nuc1.getRadii();
+        long[] r2 = nuc2.getRadii();
+        
+        double sum3 = 0;
+        double sum2 = 0.0;
+        RealMatrix toOrigin = new Array2DRowRealMatrix(D,D);
+        RealMatrix Txz = new Array2DRowRealMatrix(D,D);
+        RealMatrix Tz = new Array2DRowRealMatrix(D,D);
+        for (int i=0 ; i<p.length ; ++i){
+            P.setEntry(i, p[i]);
+            Txz.setEntry(i, i, 1.0);
+            Tz.setEntry(i, i, 1.0);
+            del[i] = c2[i] - c1[i];
+            toOrigin.setEntry(i, i, 1.0);
+            toOrigin.setEntry(i,p.length,-c1[i]);
+            double del2 = del[i]*del[i];
+            sum3 = sum3 + del2;
+            if (i<2){
+                sum2 = sum2 + del2;
+            }
+            if (r1[i] > rMax){
+                rMax = r1[i];
+            }
+            if (r2[i] > rMax){
+                rMax = r2[i];
+            }
+        }
+        P.setEntry(p.length, 1.0);
+        toOrigin.setEntry(p.length,p.length, 1.0);
+        P = toOrigin.operate(P);  // translation of nuc1 to the origin
+        
+        double l = Math.sqrt(sum3);
+        if (l == 0.0){
+            // nuclei are right on top of each other
+            return false;
+        }
+        double lxy = Math.sqrt(sum2);        
+        if (lxy != 0.0){
+            // rotation needed - nuc2 rotated to the z axis
+            Txz.setEntry(0, 0, del[0]/lxy);
+            Txz.setEntry(0, 1, del[1]/lxy);
+            Txz.setEntry(1, 1, del[0]/lxy);
+            Txz.setEntry(1, 0, -del[1]/lxy);   
+
+            Tz.setEntry(0, 0, del[2]/l);
+            Tz.setEntry(0, 2, -lxy/l);
+            Tz.setEntry(2, 2, del[2]/l);
+            Tz.setEntry(2, 0, lxy/l); 
+
+            
+            Txz.setEntry(p.length,p.length, 1.0);
+            Tz.setEntry(p.length,p.length, 1.0);
+
+            P = Txz.operate(P);  // rotate into the xz plane
+            P = Tz.operate(P);  // rotate to the z axis
+            RealVector N = new ArrayRealVector(D);
+            for (int i=0 ; i<del.length ; ++i){
+                N.setEntry(i, del[i]);;
+            }
+            N.setEntry(del.length, 1.0);
+            N = Txz.operate(N);
+            N = Tz.operate(N);
+            int wjkerh=0;
+        }
+
+        double r = Math.sqrt(P.getEntry(0)*P.getEntry(0) + P.getEntry(1)*P.getEntry(1));
+        if (r > rMax){
+            return false;
+        }
+        double z = P.getEntry(2);
+        if (z < -rMax){
+            return false;
+        }
+        if (z > l + rMax){
+            return false;
+        }
+        return true;
     }
 
     private Nucleus child1;

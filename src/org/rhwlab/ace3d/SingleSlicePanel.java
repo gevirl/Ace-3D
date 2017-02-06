@@ -179,7 +179,8 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                     // activate a remant at the mouse position
                     embryo.activateRemnant(parent.getTime(),mousePosition);
 //                    Nucleus.intersect(embryo.getNucleusFile().getSelected(),embryo.getMarked());
-                }
+                } 
+                
                 else {
 //                int mask = KeyEvent.SHIFT_DOWN_MASK;
 //                int modifier = e.getModifiersEx();

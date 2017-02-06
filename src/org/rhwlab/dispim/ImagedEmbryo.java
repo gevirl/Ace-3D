@@ -469,6 +469,18 @@ public class ImagedEmbryo implements Observable {
             this.setSelectedNucleus(activated);
         }
     }
+    // test if the given point is between the marked and selected nuclei
+    public boolean between(double[] p){
+        Nucleus mark = nucFile.getMarked();
+        Nucleus sel = nucFile.getSelected();
+        if (sel != null && mark != null){
+            boolean ret = Nucleus.between(p, sel, mark);
+            return ret;
+        }
+        return false;
+    }
+    
+
    
     NucleusFile nucFile;
     List<ImageSource>  sources;
