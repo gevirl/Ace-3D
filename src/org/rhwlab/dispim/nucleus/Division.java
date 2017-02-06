@@ -50,6 +50,9 @@ public class Division {
     }
     // determine if this is a possible division
     public boolean isPossible(){
+        if (parent.getName().equals("109_1056")){
+            int asuhfusd=0;
+        }
         boolean debug = true;
         if (debug) System.out.printf("%s - %s,%s\n",this.parent.getName(),this.child1.getName(),this.child2.getName());
         if (dist1 >parentToChildDistance || dist2 > parentToChildDistance){

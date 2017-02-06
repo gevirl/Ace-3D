@@ -592,6 +592,9 @@ public class LinkedNucleusFile implements NucleusFile {
                 
                 // try to make some divisions
                 for (Nucleus nuc : nonPolar){
+                    if (nuc.getName().equals("107_4472")){
+                        int isfuis=0;
+                    }
                     NucleusLogNode matchNode = matches.get(nuc);   
                     Nucleus[] divided = tree.divideBySplit(nuc, matchNode);
                     if (divided != null){
@@ -640,7 +643,8 @@ System.out.println("Division by available");
                                         this.addNucleus(availNuc);
                                         nuc.linkTo(availNuc);
 
-                                    } else if (availNuc.getVolume() > 2500) {
+ //                                   } else if (availNuc.getVolume() > 2500) {
+                                    }else {
                                         TreeMap<String,Nucleus> remnantMap  =this.remnants.get(t);
                                         if (remnantMap == null){
                                             remnantMap = new TreeMap<>();
