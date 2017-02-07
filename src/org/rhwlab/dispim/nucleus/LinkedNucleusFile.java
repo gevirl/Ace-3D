@@ -579,6 +579,9 @@ public class LinkedNucleusFile implements NucleusFile {
                 TreeMap<Nucleus,NucleusLogNode> matches = new TreeMap<>();
                 TreeMap<Nucleus,NucleusLogNode> expands = new TreeMap<>();
                 for (Nucleus nuc : nonPolar){
+                    if (nuc.getName().equals("109_3734")){
+                        int fsdiusadgf=0;
+                    }
                     Match best = tree.bestMatchInAvailableNodes(nuc);
                     if (best != null){
                         matches.put(nuc,best.getNode());
@@ -599,10 +602,16 @@ public class LinkedNucleusFile implements NucleusFile {
                     Nucleus[] divided = tree.divideBySplit(nuc, matchNode);
                     if (divided != null){
                         // best match divids
-System.out.println("Division by split")                        ;
+System.out.println("Division by split")   ;
+    if (divided[0].getName().equals("109_3734")){
+        int uisfh=0;
+    }
                         toList.add(divided[0]);
                         this.addNucleus(divided[0]);
-                        nuc.linkTo(divided[0]);   
+                        nuc.linkTo(divided[0]); 
+    if (divided[1].getName().equals("109_3734")){
+        int uisfh=0;
+    }                        
                         toList.add(divided[1]);
                         this.addNucleus(divided[1]);
                         nuc.linkTo(divided[1]);                         
@@ -612,13 +621,19 @@ System.out.println("Division by split")                        ;
                         Nucleus sisterNuc = tree.divideBySister(nuc,expanded);
                         if (sisterNuc != null){
                             // best match divids
-System.out.println("Division by sister")                            ;
+System.out.println("Division by sister") ;      
+    if (sisterNuc.getName().equals("109_3734")){
+        int uisfh=0;
+    }        
                             toList.add(sisterNuc);
                             this.addNucleus(sisterNuc);
                             nuc.linkTo(sisterNuc);   
                         }
                         if (expanded != null){
                             Nucleus expandedNuc = expanded.getNucleus(t);
+    if (expandedNuc.getName().equals("109_3734")){
+        int uisfh=0;
+    }                            
                             toList.add(expandedNuc);
                             this.addNucleus(expandedNuc);
                             nuc.linkTo(expandedNuc);   
@@ -631,6 +646,7 @@ System.out.println("Division by sister")                            ;
                 for (NucleusLogNode avail : avails){
                     Nucleus availNuc = avail.getNucleus(t);
                     if (availNuc != null){
+                        boolean used = false;
                         for (Nucleus nuc : nonPolar){
                             if (!nuc.isDividing()){
                                 Nucleus[] next = nuc.nextNuclei();
@@ -642,18 +658,19 @@ System.out.println("Division by available");
                                         toList.add(availNuc);
                                         this.addNucleus(availNuc);
                                         nuc.linkTo(availNuc);
-
- //                                   } else if (availNuc.getVolume() > 2500) {
-                                    }else {
-                                        TreeMap<String,Nucleus> remnantMap  =this.remnants.get(t);
-                                        if (remnantMap == null){
-                                            remnantMap = new TreeMap<>();
-                                            remnants.put(t,remnantMap);
-                                        }
-                                        remnantMap.put(availNuc.getName(),availNuc);                                        
+                                        used = true;
+                                        break;
                                     }
                                 }
                             }
+                        }
+                        if (!used && availNuc.getVolume()> 500){
+                            TreeMap<String,Nucleus> remnantMap  =this.remnants.get(t);
+                            if (remnantMap == null){
+                                remnantMap = new TreeMap<>();
+                                remnants.put(t,remnantMap);
+                            }
+                            remnantMap.put(availNuc.getName(),availNuc);                             
                         }
                     }
                 }

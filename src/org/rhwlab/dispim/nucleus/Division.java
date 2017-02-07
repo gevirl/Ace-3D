@@ -50,7 +50,7 @@ public class Division {
     }
     // determine if this is a possible division
     public boolean isPossible(){
-        if (parent.getName().equals("109_1056")){
+        if (parent.getName().equals("108_5864")&&child1.getName().equals("109_3672")&&child2.getName().equals("109_3734")){
             int asuhfusd=0;
         }
         boolean debug = true;
@@ -181,7 +181,8 @@ public class Division {
         return true;
     }
     private boolean related(RealVector axis1,RealVector axis2,boolean debug){
-        double cos = Math.abs(axis1.dotProduct(axis2));
+        
+        double cos = Math.abs(axis1.unitVector().dotProduct(axis2.unitVector()));
         boolean ret =  cos >= cosThresh ;
         if (!ret){
             if (debug) System.out.printf("Cosine: %f\n",cos);
@@ -330,9 +331,9 @@ public class Division {
     static int timeThresh = 10;
     static double eccThresh = 0.5;
     static double parentEccThresh = .85;
-    static double divDistanceThresh = 70.0;
+    static double divDistanceThresh = 60.0;
 //    static double parentToChildDistance = 27;
-        static double parentToChildDistance = 35;
+        static double parentToChildDistance = 30;
     static double cosThresh = .8;
     static double volumeThresh = 4.0;
     static double legRatio = 10.0;
