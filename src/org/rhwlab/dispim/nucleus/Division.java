@@ -98,8 +98,18 @@ public class Division {
         RealVector v2 = new ArrayRealVector(child2.getCenter());
         RealVector divAxis = v2.subtract(v1);
         if (!related(parentAxes[0],divAxis,debug)){
-            if (debug) System.out.println("Not related ");
-            return false;            
+            // parent failed - try parents parent minor axis
+            Nucleus parentParent = parent.getParent();
+            if (parentParent != null){
+                RealVector[] parParAxes = parentParent.getAxes();
+                if (!related(parParAxes[0],divAxis,debug)){
+                    if (debug) System.out.println("Not related ");
+                    return false;                     
+                }
+            } else{
+                if (debug) System.out.println("Not related - parent parent null");
+                return false;   
+            }
         }
         ratio = ((BHCNucleusData)child1.getNucleusData()).getVolume()/((BHCNucleusData)child2.getNucleusData()).getVolume();
         if (ratio < 1.0) {
