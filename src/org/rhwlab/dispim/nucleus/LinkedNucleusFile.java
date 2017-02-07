@@ -654,12 +654,24 @@ System.out.println("Division by sister") ;
                                     Division div = new Division(nuc,next[0],availNuc);
                                     if (div.isPossible()){
 System.out.println("Division by available");
-                                        avail.markedAsUsed();
-                                        toList.add(availNuc);
-                                        this.addNucleus(availNuc);
-                                        nuc.linkTo(availNuc);
-                                        used = true;
-                                        break;
+                                        // make sure this possible new node does not overlap an existing node
+                                        boolean overlap = false;
+                                        for (Nucleus existingNuc : this.getNuclei(t)){
+                                            if (existingNuc.distance(availNuc)<200.0){
+                                                if (Nucleus.intersect(availNuc,existingNuc)){
+                                                    overlap = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (!overlap){
+                                            avail.markedAsUsed();
+                                            toList.add(availNuc);
+                                            this.addNucleus(availNuc);
+                                            nuc.linkTo(availNuc);
+                                            used = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
