@@ -445,8 +445,19 @@ public class LinkedNucleusFile implements NucleusFile {
     public void removeNuclei(int time,boolean notify){
         Nucleus[] nucs = this.getNuclei(time).toArray(new Nucleus[0]);
         for (int i=0 ; i<nucs.length ; ++i){
-            this.removeNucleus(nucs[i], notify);
+            this.removeNucleus(nucs[i], false);
         }
+        
+        // remove any remanants too
+        TreeMap<String,Nucleus> map = this.remnants.get(time);
+        if (map != null) {
+            map.clear();
+        }
+        
+        if (notify){
+            this.notifyListeners();
+        }
+        
     }
     @Override
     public void removeNucleus(Nucleus nuc,boolean notify) {
@@ -521,7 +532,7 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         return ret;
     }
-    public void bestMatchAutoLink(Integer[] times,Integer[] threshs)throws Exception {
+    public void bestMatchAutoLink(Integer[] times,Integer[] threshs,double minVolume)throws Exception {
        
         Nucleus[] fromNucs = this.getNuclei(times[0]).toArray(new Nucleus[0]);
         Nucleus[] toNucs;
@@ -535,6 +546,12 @@ public class LinkedNucleusFile implements NucleusFile {
                 Linkage linkage = new Linkage(fromNucs,toNucs);
                 linkage.formLinkage();                
             } else {
+                TreeMap<String,Nucleus> remnantMap = this.remnants.get(t);
+                if (remnantMap == null){
+                    remnantMap = new TreeMap<>();
+                    remnants.put(t,remnantMap);
+                }    
+                remnantMap.clear();
                 this.removeNuclei(t, false);
                 this.thresholdProbs.put(t,threshs[i]);
                 ArrayList<Nucleus> toList = new ArrayList<>();
@@ -550,7 +567,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 }
                 // do the polar bodies - no division considered
                 for (Nucleus nuc : polar){
-                    NucleusLogNode best = tree.bestMatchInAvailableNodes(nuc).getNode();
+                    NucleusLogNode best = tree.bestMatchInAvailableNodes(nuc,minVolume).getNode();
                     NucleusLogNode expand = tree.expandUp(nuc, best);
                     Nucleus bestNuc = best.getNucleus(t);
                     if (bestNuc != null){
@@ -560,29 +577,13 @@ public class LinkedNucleusFile implements NucleusFile {
                         nuc.linkTo(bestNuc);  
                     }
                 }
- /*               
-                for (Nucleus nuc : nonPolar){
-                    Nucleus[] best = tree.bestMatch(nuc,true);
-                    // can the best match be divided into a new cell division
-                    if (best.length == 2){
-                        toList.add(best[1]);
-                        this.addNucleus(best[1]);
-                        nuc.linkTo(best[1]);
-                    }
-                    toList.add(best[0]);
-                    this.addNucleus(best[0]);
-                    nuc.linkTo(best[0]);       
-                   
-                }
-*/                
+                
                 // find the best matches to all the nonpolar
                 TreeMap<Nucleus,NucleusLogNode> matches = new TreeMap<>();
                 TreeMap<Nucleus,NucleusLogNode> expands = new TreeMap<>();
                 for (Nucleus nuc : nonPolar){
-                    if (nuc.getName().equals("109_3734")){
-                        int fsdiusadgf=0;
-                    }
-                    Match best = tree.bestMatchInAvailableNodes(nuc);
+
+                    Match best = tree.bestMatchInAvailableNodes(nuc,minVolume);
                     if (best != null){
                         matches.put(nuc,best.getNode());
                         NucleusLogNode expand = tree.expandUp(nuc, best.getNode());
@@ -595,23 +596,19 @@ public class LinkedNucleusFile implements NucleusFile {
                 
                 // try to make some divisions
                 for (Nucleus nuc : nonPolar){
-                    if (nuc.getName().equals("107_4472")){
-                        int isfuis=0;
+                    if (nuc.getName().equals("149_256")){
+                        int fsdiusadgf=0;
                     }
                     NucleusLogNode matchNode = matches.get(nuc);   
                     Nucleus[] divided = tree.divideBySplit(nuc, matchNode);
                     if (divided != null){
                         // best match divids
 System.out.println("Division by split")   ;
-    if (divided[0].getName().equals("109_3734")){
-        int uisfh=0;
-    }
+
                         toList.add(divided[0]);
                         this.addNucleus(divided[0]);
                         nuc.linkTo(divided[0]); 
-    if (divided[1].getName().equals("109_3734")){
-        int uisfh=0;
-    }                        
+                        
                         toList.add(divided[1]);
                         this.addNucleus(divided[1]);
                         nuc.linkTo(divided[1]);                         
@@ -622,18 +619,14 @@ System.out.println("Division by split")   ;
                         if (sisterNuc != null){
                             // best match divids
 System.out.println("Division by sister") ;      
-    if (sisterNuc.getName().equals("109_3734")){
-        int uisfh=0;
-    }        
+        
                             toList.add(sisterNuc);
                             this.addNucleus(sisterNuc);
                             nuc.linkTo(sisterNuc);   
                         }
                         if (expanded != null){
                             Nucleus expandedNuc = expanded.getNucleus(t);
-    if (expandedNuc.getName().equals("109_3734")){
-        int uisfh=0;
-    }                            
+                           
                             toList.add(expandedNuc);
                             this.addNucleus(expandedNuc);
                             nuc.linkTo(expandedNuc);   
@@ -642,61 +635,88 @@ System.out.println("Division by sister") ;
                 }
                 
                 // try to make divisions with any remaining unused nodes
-                Set<NucleusLogNode> avails =tree.availableNodes();
+                Set<NucleusLogNode> avails =tree.availableNodes(minVolume);
                 for (NucleusLogNode avail : avails){
                     Nucleus availNuc = avail.getNucleus(t);
                     if (availNuc != null){
-                        boolean used = false;
+                        if (availNuc.getVolume()<1000.0)continue;
+                        
+                        if (avail.getLabel()==12756){
+                            int asuihdfuis=0;
+                        }
+                        int saojdfisd=0;
                         for (Nucleus nuc : nonPolar){
+                            if (availNuc.getName().equals("145_13174") && nuc.getName().equals("144_3370")){
+                                int sauifhuisdf=0;
+                            }
                             if (!nuc.isDividing()){
                                 Nucleus[] next = nuc.nextNuclei();
                                 if (next.length >0 && next[0] != null){
                                     Division div = new Division(nuc,next[0],availNuc);
                                     if (div.isPossible()){
 System.out.println("Division by available");
-                                        // make sure this possible new node does not overlap an existing node
-                                        boolean overlap = false;
-                                        for (Nucleus existingNuc : this.getNuclei(t)){
-                                            if (existingNuc.distance(availNuc)<200.0){
-                                                if (Nucleus.intersect(availNuc,existingNuc)){
-                                                    overlap = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        if (!overlap){
-                                            avail.markedAsUsed();
-                                            toList.add(availNuc);
-                                            this.addNucleus(availNuc);
-                                            nuc.linkTo(availNuc);
-                                            used = true;
+                                        if (completeTheDivision(t,nuc,avail,availNuc,toList)){
                                             break;
                                         }
+                                    }
+                                    else {
+                                        // try spliting the available  nuc
+/*                                        
+                                        NucleusLogNode leftNode = ((NucleusLogNode)avail.getLeft());
+                                        NucleusLogNode rightNode = ((NucleusLogNode)avail.getRight());
+                                        Nucleus rightNuc = rightNode.getNucleus(t);
+                                        Nucleus leftNuc = leftNode.getNucleus(t);
+                                        Division leftDiv = new Division(nuc,next[0],leftNuc);
+                                        Division rightDiv = new Division(nuc,next[0],rightNuc);
+                                        if (leftDiv.isPossible()){
+                                            if (completeTheDivision(t,nuc,leftNode,leftNuc,toList)){
+                                                break;
+                                            }
+                                        }
+                                        else if (rightDiv.isPossible()){
+                                            if (completeTheDivision(t,nuc,rightNode,rightNuc,toList)){
+                                                break;
+                                            }
+                                        }  
+*/                                        
                                     }
                                 }
                             }
                         }
-                        if (!used && availNuc.getVolume()> 500){
-                            TreeMap<String,Nucleus> remnantMap  =this.remnants.get(t);
-                            if (remnantMap == null){
-                                remnantMap = new TreeMap<>();
-                                remnants.put(t,remnantMap);
-                            }
-                            remnantMap.put(availNuc.getName(),availNuc);                             
-                        }
                     }
                 }
-                
-                // create more nuclei fromthe remaining supervoxels if volume > 3000
-  
+                // put any remaining segmentations into remant nucs
+            
+                avails =tree.availableNodes(minVolume);
+                for (NucleusLogNode avail : avails){   
+                    Nucleus availNuc = avail.getNucleus(t);
+                    if (availNuc !=null && availNuc.getVolume() > 500 )
+                    remnantMap.put(availNuc.getName(),availNuc);                
+                }             
                 toNucs = toList.toArray(new Nucleus[0]);
                 fromNucs = toNucs; 
-                
-                int iusahdfuis=0;                 
             }          
-           
         }
         this.notifyListeners();
+    }
+    private boolean completeTheDivision(int t,Nucleus nuc,NucleusLogNode avail,Nucleus availNuc,ArrayList<Nucleus> toList){
+        boolean overlap = false;
+        for (Nucleus existingNuc : this.getNuclei(t)){
+            if (existingNuc.distance(availNuc)<200.0){
+                if (Nucleus.intersect(availNuc,existingNuc)){
+                    overlap = true;
+                    break;
+                }
+            }
+        }
+        if (!overlap){
+            avail.markedAsUsed();
+            toList.add(availNuc);
+            this.addNucleus(availNuc);
+            nuc.linkTo(availNuc);
+            return true;
+        } 
+        return false;
     }
 /*
     // auto link between given times
@@ -949,12 +969,15 @@ System.out.println("Division by available");
         return thresholdProbs.get(time);
     }
     
+    // activate the remant at the given position and time
     public Nucleus activateRemnant(int time,long[] pos){
         TreeMap<String,Nucleus> rems = remnants.get(time);
         Nucleus closest = null;
         double d = Double.MAX_VALUE;
         if (rems != null){
-            for (Nucleus rem : rems.values()){
+            String key = null;
+            for (String remnantName : rems.keySet()){
+                Nucleus rem = rems.get(remnantName);
                 double[] center = rem.getCenter();
                 double sum = 0.0;
                 for (int i=0 ; i<pos.length ; ++i){
@@ -964,14 +987,28 @@ System.out.println("Division by available");
                 if (sum < d){
                     d = sum;
                     closest = rem;
+                    key = remnantName;
                 }
             }
             this.addNucleus(closest);
+            rems.remove(key);
             this.notifyListeners();
             curatedSet.add(time);
             return closest;
         }
         return null;
+    }
+    public Set<Nucleus> getRemnants(int time,double minVolume){
+        TreeSet<Nucleus> ret = new TreeSet();
+        TreeMap<String,Nucleus> remnantMap = remnants.get(time);
+        if (remnantMap != null){
+            for (Nucleus nuc : remnantMap.values()){
+                if (nuc.getVolume() >= minVolume){
+                    ret.add(nuc);
+                }
+            }
+        }
+        return ret;
     }
     
     File file;

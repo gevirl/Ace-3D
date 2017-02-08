@@ -457,11 +457,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         remove.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-               Set<Nucleus> nucs = imagedEmbryo.getNuclei(getCurrentTime());
-               for (Nucleus nuc : nucs){
-                   imagedEmbryo.getNucleusFile().removeNucleus(nuc,false);
-               }
-               imagedEmbryo.notifyListeners();
+                LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
+                nf.removeNuclei(getCurrentTime(), false);
+                imagedEmbryo.notifyListeners();
             }
         });
         
@@ -480,10 +478,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     }
                 }
                 for (int t=getCurrentTime();t<=timeTo;++t){
-                    Set<Nucleus> nucs = imagedEmbryo.getNuclei(t);
-                    for (Nucleus nuc : nucs){
-                        imagedEmbryo.getNucleusFile().removeNucleus(nuc,false);
-                    }
+                    LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
+                    nf.removeNuclei(t, false);
                 }
                imagedEmbryo.notifyListeners();
             }
@@ -496,10 +492,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             public void actionPerformed(ActionEvent e) {
                 Integer[] times = imagedEmbryo.getNucleusFile().getAllTimes().toArray(new Integer[0]);
                 for (int i=0 ; i<times.length ; ++i){
-                   Set<Nucleus> nucs = imagedEmbryo.getNuclei(times[i]);
-                   for (Nucleus nuc : nucs){
-                       imagedEmbryo.getNucleusFile().removeNucleus(nuc,false);
-                   }                    
+                    LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
+                    nf.removeNuclei(i, false);
                 }
                 imagedEmbryo.notifyListeners();
             }
@@ -589,7 +583,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     for (int i=0 ; i<timesArray.length;++i){
                         probsArray[i] = probMap.get(timesArray[i]);
                     }
-                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray);
+                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,1000.0); // minvolume of 1000
                     
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
@@ -624,6 +618,16 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         view.add(segmentedNuclei);
+        
+        inactiveNuclei = new JCheckBoxMenuItem("Inactive Nuclei indicator");
+        inactiveNuclei.setSelected(true);
+        inactiveNuclei.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.repaint();
+            }
+        });
+        view.add(inactiveNuclei);        
         
         divisionIndicator = new JCheckBoxMenuItem("Division indicator");
         divisionIndicator.setSelected(true);
@@ -965,6 +969,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     static public boolean nucleiIndicated(){
         return segmentedNuclei.getState();
     }
+    static public boolean inactiveIndicated(){
+        return inactiveNuclei.getState();
+    }    
     static public boolean locationIndicated(){
         return locationIndicator.getState();
     }
@@ -1026,6 +1033,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     PanelDisplay viDialog;
     
     static JCheckBoxMenuItem segmentedNuclei;
+    static JCheckBoxMenuItem inactiveNuclei;
     static JCheckBoxMenuItem sisters;
     static JCheckBoxMenuItem locationIndicator;
     static JCheckBoxMenuItem divisionIndicator;

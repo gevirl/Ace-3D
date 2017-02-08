@@ -122,6 +122,10 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                        drawNuclei(g2);
 //                       g2.setColor(save);
                    }
+                   
+                   if (Ace3D_Frame.inactiveIndicated()){
+                       drawInactiveNuclei(g2);
+                   }
 
                    if (Ace3D_Frame.sistersIndicated()){
                         g2.setColor(Color.GREEN);
@@ -498,6 +502,19 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
         }
         return "z";
     }
+    private void drawInactiveNuclei(Graphics2D g2){
+       Set<Nucleus> nucs = embryo.getNucleusFile().getRemnants(timePointImage.getTime(),1000.0);
+       for (Nucleus nuc : nucs){
+
+           Shape nucShape = nuc.getShape(slice, dim, bufW, bufH);   
+           if (nucShape != null){
+
+               g2.setColor(Color.MAGENTA);
+               g2.draw(nucShape);               
+           }
+       }
+    }
+    
     private void drawNuclei(Graphics2D g2){
        Set<Nucleus> nucs = embryo.getNuclei(timePointImage.getTime());
        for (Nucleus nuc : nucs){

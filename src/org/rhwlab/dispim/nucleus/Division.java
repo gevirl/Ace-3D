@@ -346,6 +346,6 @@ public class Division {
         static double parentToChildDistance = 30;
     static double cosThresh = .8;
     static double volumeThresh = 3.0;
-    static double legRatio = 10.0;
+    static double legRatio = 12.0;
     static double intensityThresh = 5.0;  // ratio of average intensity 
 }

@@ -173,8 +173,8 @@ public class BHCTree {
             }
             return null;
     }
-    public Nucleus[] bestMatch(Nucleus nuc,boolean dividable){
-        Match best = this.bestMatchInAvailableNodes(nuc);
+    public Nucleus[] bestMatch(Nucleus nuc,boolean dividable,double minVolume){
+        Match best = this.bestMatchInAvailableNodes(nuc,minVolume);
 /*        
         double minD = Double.MAX_VALUE;
         for (Node root : roots){
@@ -249,9 +249,9 @@ public class BHCTree {
 //System.out.printf("Best: %s - %s   %f\n",nuc.getName(),ret[0].getName(),minD);
         return ret;
     }
-    public Match bestMatchInAvailableNodes(Nucleus nuc){
+    public Match bestMatchInAvailableNodes(Nucleus nuc,double minVolume){
         Match veryBest = null;
-        Set<NucleusLogNode> availableNodes = this.availableNodes();
+        Set<NucleusLogNode> availableNodes = this.availableNodes(minVolume);
         if (this.isAvailable(availableNodes, 7036)){
             int hasfuih=0;
         }
@@ -370,18 +370,24 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         }
         return false;
     }
-    public Set<NucleusLogNode> availableNodes(){
+    public Set<NucleusLogNode> availableNodes(double minVolume){
         HashSet<NucleusLogNode> ret = new HashSet<>();
         for (Node root : roots){
-            availableNodes((NucleusLogNode)root,ret);
+            availableNodes((NucleusLogNode)root,ret,minVolume);
         }
         return ret;
     }
     
-    static public void availableNodes(NucleusLogNode root,HashSet<NucleusLogNode> availNodes){
+    static public void availableNodes(NucleusLogNode root,HashSet<NucleusLogNode> availNodes,double minVolume){
         if (!root.isUsedRecursive()){
-            availNodes.add(root);
-            return;
+            Nucleus nuc = root.getNucleus(0);  // do not know the time , but does not matter
+            if (nuc == null) return;
+            if (nuc.getVolume() < minVolume) return;
+            double[] ecc = nuc.eccentricity();
+            if (ecc[1]<.95 || ecc[2]<.95){
+                availNodes.add(root);
+                return;
+            }
         }
         if (root.isLeaf()){
             return;  // nothing to add - the root is a leaf that has already been used
@@ -389,8 +395,8 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         if (root.isUsed()){
             return;
         }
-        availableNodes((NucleusLogNode)root.getLeft(),availNodes);
-        availableNodes((NucleusLogNode)root.getRight(),availNodes);
+        availableNodes((NucleusLogNode)root.getLeft(),availNodes,minVolume);
+        availableNodes((NucleusLogNode)root.getRight(),availNodes,minVolume);
     }
     
     public static void saveXML(String file,Element root)throws Exception {

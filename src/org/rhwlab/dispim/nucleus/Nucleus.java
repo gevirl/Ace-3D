@@ -587,6 +587,7 @@ public class Nucleus implements Comparable {
                 rMax = r2[i];
             }
         }
+//        rMax = 1.2* rMax;
         P.setEntry(p.length, 1.0);
         toOrigin.setEntry(p.length,p.length, 1.0);
         P = toOrigin.operate(P);  // translation of nuc1 to the origin
