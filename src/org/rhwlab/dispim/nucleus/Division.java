@@ -50,7 +50,7 @@ public class Division {
     }
     // determine if this is a possible division
     public boolean isPossible(){
-        if (parent.getName().equals("108_5864")&&child1.getName().equals("109_3672")&&child2.getName().equals("109_3734")){
+        if (parent.getName().equals("149_10896")&&child1.getName().equals("150_8504")&&child2.getName().equals("150_7624")){
             int asuhfusd=0;
         }
         boolean debug = true;
@@ -340,7 +340,7 @@ public class Division {
     
     static int timeThresh = 10;
     static double eccThresh = 0.5;
-    static double parentEccThresh = .85;
+    static double parentEccThresh = .86;
     static double divDistanceThresh = 60.0;
 //    static double parentToChildDistance = 27;
         static double parentToChildDistance = 30;
