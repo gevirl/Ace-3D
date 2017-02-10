@@ -10,6 +10,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
@@ -19,6 +22,7 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -64,6 +68,23 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 treePanel.stateChanged(event);
             }
         });
+        
+        MouseListener ml = new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if(SwingUtilities.isRightMouseButton(e)){
+                    int selRow = rootsTree.getRowForLocation(e.getX(), e.getY());
+                    TreePath selPath = rootsTree.getPathForLocation(e.getX(), e.getY());
+                    rootsTree.setSelectionPath(selPath); 
+                    if (selRow>-1){
+                        rootsTree.setSelectionRow(selRow);
+                    }
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode)rootsTree.getLastSelectedPathComponent();
+                    selectCell(node);
+                }
+            };
+        };
+        rootsTree.addMouseListener(ml);
+        
         JScrollPane rootsScroll = new JScrollPane(rootsTree);
 
        
@@ -75,19 +96,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
             @Override
             public void valueChanged(TreeSelectionEvent e) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode)nucsTree.getLastSelectedPathComponent();
-                if (node == null)return;
-                if (node.isLeaf()){
-                    Nucleus nuc = (Nucleus)node.getUserObject();
-                    embryo.setSelectedNucleus(nuc);
-                    panel.changeTime(nuc.getTime());
-                    panel.changePosition(nuc.getCenter());
-                } else{
-                    String timeLabel = (String)node.getUserObject();
-                    try {
-                        int t = Integer.valueOf(timeLabel.substring(5,timeLabel.indexOf(' ')));
-                        panel.changeTime(t);
-                    } catch (Exception exc){}
-                }
+                selectCell(node);
             }
         });
         JScrollPane nucsScroll = new JScrollPane(nucsTree);
@@ -264,6 +273,25 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         }
         return null;
     }
+    
+    private void selectCell(DefaultMutableTreeNode node) {
+    
+        if (node == null)return;
+            if (node.isLeaf()){
+                Nucleus nuc = (Nucleus)node.getUserObject();
+                embryo.setSelectedNucleus(nuc);
+                panel.changeTime(nuc.getTime());
+                panel.changePosition(nuc.getCenter());
+            } else{
+                String timeLabel = (String)node.getUserObject();
+                try {
+                    int t = Integer.valueOf(timeLabel.substring(5,timeLabel.indexOf(' ')));
+                    panel.changeTime(t);
+                } catch (Exception exc){}
+            }
+    }
+            
+            
     ImagedEmbryo embryo;
     SynchronizedMultipleSlicePanel panel;
     NavigationHeaderPanel headPanel;
