@@ -67,8 +67,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 ChangeEvent event = new ChangeEvent(rootsTree);
                 treePanel.stateChanged(event);
             }
-        });
-        
+        });      
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if(SwingUtilities.isRightMouseButton(e)){
@@ -83,10 +82,8 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 }
             };
         };
-        rootsTree.addMouseListener(ml);
-        
+        rootsTree.addMouseListener(ml);      
         JScrollPane rootsScroll = new JScrollPane(rootsTree);
-
        
         nucsRoot = new DefaultMutableTreeNode("All Nuclei",true);
         nucsTree = new JTree(nucsRoot);
@@ -120,20 +117,42 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 }                
             }
         });
-        JScrollPane deathsScroll = new JScrollPane(deathsTree);       
-        JSplitPane leftPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathsScroll,rootsScroll);
-        prefdim = leftPane.getPreferredSize();
-        prefdim.setSize(2*prefdim.width, prefdim.height);
-        leftPane.setPreferredSize(prefdim);
-        leftPane.setDividerLocation(100);
+        JScrollPane deathsScroll = new JScrollPane(deathsTree);   
         
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,nucsScroll,leftPane);
+        inactiveRoot = new DefaultMutableTreeNode("Unused Segmented Voxels",true);
+        inactiveTree = new JTree(inactiveRoot);
+        inactiveTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION); 
+        inactiveTree.addTreeSelectionListener(new TreeSelectionListener(){
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode)inactiveTree.getLastSelectedPathComponent();
+                if (node == null)return;
+                if (node.isLeaf()){
+                    Nucleus nuc = (Nucleus)node.getUserObject();
+                    panel.changeTime(nuc.getTime());
+                    panel.changePosition(nuc.getCenter());
+                }                
+            }
+        });        
+        JScrollPane inactiveScroll = new JScrollPane(inactiveTree);
+        
+        JSplitPane deathInactiveSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathsScroll,inactiveScroll);
+        prefdim = deathInactiveSplit.getPreferredSize();
+        prefdim.setSize(2*prefdim.width, prefdim.height);
+        deathInactiveSplit.setPreferredSize(prefdim);
+        deathInactiveSplit.setDividerLocation(100);
+        
+        JSplitPane triSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathInactiveSplit,rootsScroll);
+        prefdim = triSplit.getPreferredSize();
+        prefdim.setSize(prefdim.width, prefdim.height);
+        triSplit.setPreferredSize(prefdim);        
+        triSplit.setDividerLocation(300);
+        
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,nucsScroll,triSplit);
         JSplitPane split2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,split,treeScroll);
         this.add(split2,BorderLayout.CENTER);
 
         pack();
-        
-
     }
 
     @Override
@@ -157,6 +176,8 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         if (nucFile == null) { 
             return;
         }
+        
+        // making the all nuclei tree
         int currentTime = Navigation_Frame.this.panel.getTime();
         Nucleus selectedNucleus = embryo.getNucleusFile().getSelected();
         DefaultMutableTreeNode currentTimeNode = null;
@@ -181,8 +202,11 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
             if (time == currentTime){
                 currentTimeNode = timeNode;
             }
-        }
+        }    
+        DefaultTreeModel nucsModel = new DefaultTreeModel(nucsRoot);
+        nucsTree.setModel(nucsModel);        
         
+        // making the roots tree
         TreeMap<Integer,Set<Nucleus>> rootMap = embryo.getRootNuclei();
         for (Integer t : rootMap.keySet()){
             for (Nucleus root : rootMap.get(t)){
@@ -206,6 +230,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
             rootsTree.setSelectionPaths(selectedPaths);
         }
         
+        // making the terminal nuclei tree
         for (Integer time : times){
             Set<Nucleus> nucs = nucFile.getLeaves(time);
             if (!nucs.isEmpty()){
@@ -217,10 +242,21 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 }
             }
         }        
-        
-        DefaultTreeModel nucsModel = new DefaultTreeModel(nucsRoot);
-        nucsTree.setModel(nucsModel);
         deathsTree.setModel(new DefaultTreeModel(deathsRoot));
+        
+        // making the inactive nuclei tree
+        for (Integer time : times){
+            Set<Nucleus> nucs=nucFile.getRemnants(time,500);
+            if (!nucs.isEmpty()){
+                DefaultMutableTreeNode timeNode = new DefaultMutableTreeNode(String.format("Time:%d",time));
+                inactiveRoot.add(timeNode);
+                for (Nucleus nuc : nucs){
+                    DefaultMutableTreeNode nucNode = new DefaultMutableTreeNode(nuc);
+                    timeNode.add(nucNode);                
+                }
+            }
+        }        
+        inactiveTree.setModel(new DefaultTreeModel(inactiveRoot));        
         
         // make the current time visible
         TreeNode[] nodes = null;
@@ -300,10 +336,12 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
     DefaultMutableTreeNode rootsRoot;
     DefaultMutableTreeNode nucsRoot;
     DefaultMutableTreeNode deathsRoot;
+    DefaultMutableTreeNode inactiveRoot;
     
     JTree rootsTree;
     JTree nucsTree;
     JTree deathsTree;
+    JTree inactiveTree;
     
     public class NucleusRenderer extends DefaultTreeCellRenderer {
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus){

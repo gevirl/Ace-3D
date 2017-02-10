@@ -503,7 +503,7 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
         return "z";
     }
     private void drawInactiveNuclei(Graphics2D g2){
-       Set<Nucleus> nucs = embryo.getNucleusFile().getRemnants(timePointImage.getTime(),1000.0);
+       Set<Nucleus> nucs = embryo.getNucleusFile().getRemnants(timePointImage.getTime(),0.0);
        for (Nucleus nuc : nucs){
 
            Shape nucShape = nuc.getShape(slice, dim, bufW, bufH);   
