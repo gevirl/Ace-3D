@@ -146,7 +146,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         prefdim = triSplit.getPreferredSize();
         prefdim.setSize(prefdim.width, prefdim.height);
         triSplit.setPreferredSize(prefdim);        
-        triSplit.setDividerLocation(300);
+        triSplit.setDividerLocation(200);
         
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,nucsScroll,triSplit);
         JSplitPane split2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,split,treeScroll);
@@ -171,6 +171,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         nucsRoot.removeAllChildren();
         rootsRoot.removeAllChildren();
         deathsRoot.removeAllChildren();
+        inactiveRoot.removeAllChildren();
         
         NucleusFile nucFile = embryo.getNucleusFile();
         if (nucFile == null) { 
