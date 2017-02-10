@@ -49,8 +49,8 @@ public class Division {
         return true        ;
     }
     // determine if this is a possible division
-    public boolean isPossible(){
-        if (parent.getName().equals("149_10896")&&child1.getName().equals("150_8504")&&child2.getName().equals("150_7624")){
+    public boolean isPossible(){ 
+        if (parent.getName().equals("154_10490")&&child1.getName().equals("155_19154")&&child2.getName().equals("155_17630")){
             int asuhfusd=0;
         }
         boolean debug = true;
@@ -87,7 +87,7 @@ public class Division {
             return false;
         }
         
-        if (!parent.between(child1, child2)){
+        if (parent.getTime()>=65 && !parent.between(child1, child2)){
             if (debug) System.out.println("parent not between");
             return false;            
         }
@@ -343,7 +343,7 @@ public class Division {
     static double parentEccThresh = .86;
     static double divDistanceThresh = 60.0;
 //    static double parentToChildDistance = 27;
-        static double parentToChildDistance = 30;
+        static double parentToChildDistance = 39; // 30
     static double cosThresh = .8;
     static double volumeThresh = 3.0;
     static double legRatio = 12.0;

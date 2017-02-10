@@ -193,6 +193,9 @@ public class BHCNucleusData extends NucleusData {
     }
     // distance weighted by intensity and volume
     public double weightedDistance(BHCNucleusData other){
+        if (this.getName().equals("059_510") && (other.getName().equals("060_716")|| other.getName().equals("060_2106"))){
+            int iusadhfs=0;
+        }
         double v = this.volume/other.volume;
         if (v <1.0){
             v = 1.0/v;
@@ -202,7 +205,7 @@ public class BHCNucleusData extends NucleusData {
             ir = 1.0/ir;
         }
         double d = super.distance(other);
-        double ret = 4.0*v+2.0*ir+d;
+        double ret = 4.0*v+3.0*ir+d;
  /*       
         System.out.printf("Volumes: %f,%f\n", this.volume,other.volume);
         System.out.printf("AvgInt: %f,%f\n",this.getAverageIntensity(),other.getAverageIntensity());

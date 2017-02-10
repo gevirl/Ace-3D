@@ -534,10 +534,14 @@ public class LinkedNucleusFile implements NucleusFile {
     }
     public void bestMatchAutoLink(Integer[] times,Integer[] threshs,double minVolume)throws Exception {
        
-        Nucleus[] fromNucs = this.getNuclei(times[0]).toArray(new Nucleus[0]);
+//        Nucleus[] fromNucs = this.getNuclei(times[0]).toArray(new Nucleus[0]);
         Nucleus[] toNucs;
         for (int i=1 ; i<times.length ; ++i){
+            Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);
             int t = times[i];
+            if (t == 24){
+                int uisahdfs=0;
+            }
             BHCTree tree = bhcTreeDir.getTree(t,threshs[i]);
             
             tree.clearUsed();
@@ -570,11 +574,12 @@ public class LinkedNucleusFile implements NucleusFile {
                     NucleusLogNode best = tree.bestMatchInAvailableNodes(nuc,minVolume).getNode();
                     NucleusLogNode expand = tree.expandUp(nuc, best);
                     Nucleus bestNuc = best.getNucleus(t);
+                    Nucleus expandNuc = expand.getNucleus(t);
                     if (bestNuc != null){
                         expand.markedAsUsed();
-                        toList.add(bestNuc);
-                        this.addNucleus(bestNuc);
-                        nuc.linkTo(bestNuc);  
+                        toList.add(expandNuc);
+                        this.addNucleus(expandNuc);
+                        nuc.linkTo(expandNuc);  
                     }
                 }
                 
@@ -582,7 +587,9 @@ public class LinkedNucleusFile implements NucleusFile {
                 TreeMap<Nucleus,NucleusLogNode> matches = new TreeMap<>();
                 TreeMap<Nucleus,NucleusLogNode> expands = new TreeMap<>();
                 for (Nucleus nuc : nonPolar){
-
+                    if (nuc.getName().equals("089_8264")){
+                        int fsdiusadgf=0;
+                    }
                     Match best = tree.bestMatchInAvailableNodes(nuc,minVolume);
                     if (best != null){
                         matches.put(nuc,best.getNode());
@@ -596,7 +603,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 
                 // try to make some divisions
                 for (Nucleus nuc : nonPolar){
-                    if (nuc.getName().equals("149_256")){
+                    if (nuc.getName().equals("059_5456")){
                         int fsdiusadgf=0;
                     }
                     NucleusLogNode matchNode = matches.get(nuc);   
@@ -974,7 +981,7 @@ System.out.println("Division by available");
         TreeMap<String,Nucleus> rems = remnants.get(time);
         Nucleus closest = null;
         double d = Double.MAX_VALUE;
-        if (rems != null){
+        if (rems != null && !rems.isEmpty()){
             String key = null;
             for (String remnantName : rems.keySet()){
                 Nucleus rem = rems.get(remnantName);
@@ -984,17 +991,21 @@ System.out.println("Division by available");
                     double del = center[i] - pos[i];
                     sum = sum + del*del;
                 }
+                sum = Math.sqrt(sum);
                 if (sum < d){
                     d = sum;
                     closest = rem;
                     key = remnantName;
                 }
             }
-            this.addNucleus(closest);
-            rems.remove(key);
-            this.notifyListeners();
-            curatedSet.add(time);
-            return closest;
+            long[] radii = closest.getRadii();
+            if (d <= radii[2]){
+                this.addNucleus(closest);
+                rems.remove(key);
+                this.notifyListeners();
+                curatedSet.add(time);
+                return closest;
+            }
         }
         return null;
     }

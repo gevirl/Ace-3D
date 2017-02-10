@@ -304,25 +304,6 @@ public class ImagedEmbryo implements Observable {
         }
         return null;
     }
-    public void renameSelectedCell(String newName){
-//        ((Ace3DNucleusFile)nucFile).renameCell(newName);
-    }
-
-    /*
-    public BHCTree getBHCTree(int time)throws Exception {
-        BHCTree tree = this.bhcTreeMap.get(time);
-        if (tree == null) {
-            BHCNucleusDirectory bhc = ((Ace3DNucleusFile) nucFile).getBHC();
-            BHCNucleusFile bhcNucFile = bhc.getFileforTime(time);
-            File bhcFile = bhcNucFile.getBHCTreeFile();
-            tree = new BHCTree(bhcFile.getPath());
-            bhcTreeMap.put(time, tree);
-        }
-        return tree
-    } 
-*/
-
-
 
     public List<ImageSource> getSources(){
         return sources;
@@ -337,7 +318,6 @@ public class ImagedEmbryo implements Observable {
             }
         }
     }
-
 
     public TreeMap<Integer,Set<Nucleus>> getRootNuclei(){
         TreeMap<Integer,Set<Nucleus>> ret = new TreeMap<>();
@@ -479,7 +459,57 @@ public class ImagedEmbryo implements Observable {
         }
         return false;
     }
-    
+    public void reportDivisionEccengtricty(){
+        double[] minEcc = {1.0,1.0,1.0};
+        double[] maxEcc = {0.0,0.0,0.0}; 
+        Nucleus minNuc=null;
+        Nucleus maxNuc=null;
+        double divMin = Double.MAX_VALUE;
+        double nonDivMin = 0.0;
+        double divMax = 0.0;
+        double nonDivMax = 0.0;
+        Set<Integer> times = nucFile.getAllTimes();
+        for (Integer time : times){
+            for (Nucleus nuc : nucFile.getNuclei(time)){
+                double[] ecc = nuc.eccentricity();
+                
+                if (nuc.isDividing()){
+                    if (ecc[1] < .86){
+                        ecc = nuc.getParent().eccentricity();
+                    }
+                    double v = ecc[0] + ecc[1] - ecc[2];
+                    if (v < divMin){
+                        divMin = v;
+                        minNuc = nuc;
+                    }
+                    if (v > divMax){
+                        divMax = v;
+                        maxNuc = nuc;
+                    }
+                    for (int i=0 ; i<3 ; ++i){
+                        if (ecc[i] < minEcc[i]){
+                            minEcc[i] = ecc[i];
+                        }
+                        if (ecc[i] > maxEcc[i]){
+                            maxEcc[i] = ecc[i];
+                        }
+                    }
+                } else {
+                    double v = ecc[0] + ecc[1] - ecc[2];
+                    if (v < nonDivMin){
+                        nonDivMin = v;
+                    }
+                    if (v > nonDivMax){
+                        nonDivMax = v;
+                    }                    
+                }
+            }
+        }
+        System.out.printf("Minumum division ecc (%.2f,%.2f,%.2f)\n",minEcc[0],minEcc[1],minEcc[2]);
+        System.out.printf("Maxumum division ecc (%.2f,%.2f,%.2f)\n",maxEcc[0],maxEcc[1],maxEcc[2]);
+        System.out.printf("%s   Div Min = %f   Div Max = %f\n",minNuc.getName(),divMin,divMax);
+        System.out.printf("%s   Non Min = %f   Non Max = %f\n",maxNuc.getName(),nonDivMin,nonDivMax);
+    }
 
    
     NucleusFile nucFile;

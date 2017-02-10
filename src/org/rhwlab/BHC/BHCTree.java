@@ -345,19 +345,32 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
 */        
     }
 
-    // expand the given match to the largest possible match
+    // expand the given match to the largest possible match  - source already matches the match nucleus , can it be expanded?
     public NucleusLogNode expandUp(Nucleus source,NucleusLogNode match){
+        if (source.getName().equals("146_3092")&& match.getLabel()==7974){
+            int iahsdfs=0;
+        }
         NucleusLogNode par = (NucleusLogNode)match.getParent();
         if (par == null){
             return match;
         }
-        NodeBase sister = (NodeBase)match.getSister();
-        if (sister.isUsedRecursive()){   // cannot go up if any part of the sister has already been used
+        NodeBase matchSister = (NodeBase)match.getSister();
+        if (matchSister.isUsedRecursive()){   // cannot go up if any part of the sister has already been used
             return match;
         }
         
-        if (Nucleus.matchForExpansion(source, par.getNucleus(time))){
-            return expandUp(source,par);
+        if (Nucleus.matchForExpansion(source, par.getNucleus(time))){  // does the parent of the match still match?
+            return expandUp(source,par);  // yes - continue to expand
+        } else {
+            // check if sister and match intersect
+            Nucleus matchSisterNuc = ((NucleusLogNode)matchSister).getNucleus(time);
+            Nucleus matchNuc = match.getNucleus(time);
+            if (matchSisterNuc != null && matchSisterNuc.getVolume() > 0.25*matchNuc.getVolume()){
+                return match;
+            }
+            if (matchSisterNuc == null || Nucleus.intersect(matchNuc, matchSisterNuc)){
+                return expandUp(source,par);  // yes - continue to expand
+            }
         }
         return match;
     }
