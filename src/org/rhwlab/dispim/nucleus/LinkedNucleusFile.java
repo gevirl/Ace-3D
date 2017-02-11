@@ -20,6 +20,7 @@ import javax.json.JsonObjectBuilder;
 import org.jdom2.Element;
 import org.rhwlab.BHC.BHCTree;
 import org.rhwlab.BHC.BHCTree.Match;
+import org.rhwlab.BHC.Node;
 import org.rhwlab.BHC.NucleusLogNode;
 
 /**
@@ -974,8 +975,8 @@ System.out.println("Division by available");
         return thresholdProbs.get(time);
     }
     
-    // activate the remant at the given position and time
-    public Nucleus activateRemnant(int time,long[] pos){
+    // activate the remnant at the given position and time
+    public Nucleus activateRemnant(int time,long[] pos)throws Exception{
         TreeMap<String,Nucleus> rems = remnants.get(time);
         Nucleus closest = null;
         double d = Double.MAX_VALUE;
@@ -999,7 +1000,7 @@ System.out.println("Division by available");
             long[] radii = closest.getRadii();
             if (d <= radii[2]){
                 this.addNucleus(closest);
-                rems.remove(key);
+                this.buildRemnants(time);
                 this.notifyListeners();
                 curatedSet.add(time);
                 return closest;
@@ -1018,6 +1019,32 @@ System.out.println("Division by available");
             }
         }
         return ret;
+    }
+    // rebuild the list of remnants at the given time based on the active nuclei at the time
+    public void buildRemnants(int time)throws Exception {
+        int probThresh =this.thresholdProbs.get(time);
+        Set<Nucleus> activeNucs = this.getNuclei(time);
+        BHCTree tree = bhcTreeDir.getTree(time, probThresh);
+        tree.clearUsed();
+        TreeMap<String,Nucleus> rems = remnants.get(time);
+        rems.clear();
+        
+        // mark the tree nodes corresponding to active nuclei as used 
+        for (Nucleus activeNuc : activeNucs){
+            BHCNucleusData nucData = (BHCNucleusData)activeNuc.getNucleusData();
+            String srcNode = nucData.getSourceNode();
+            NucleusLogNode node = (NucleusLogNode)tree.findNode(Integer.valueOf(srcNode));
+            node.markedAsUsed();
+        }
+        
+        Set<NucleusLogNode> avails = tree.availableNodes(time);
+        for (NucleusLogNode avail : avails){
+            Nucleus nuc = avail.getNucleus(time);
+            if (nuc != null){
+                rems.put(nuc.getName(), nuc);
+            }
+        }
+        this.notifyListeners();
     }
     
     File file;

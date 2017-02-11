@@ -16,6 +16,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.rhwlab.dispim.ImagedEmbryo;
+import org.rhwlab.dispim.nucleus.LinkedNucleusFile;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 
@@ -147,7 +148,14 @@ public class SelectedNucleusFrame extends JFrame implements PlugIn,javafx.beans.
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (embryo.selectedNucleus() != null){
+                    int time = embryo.selectedNucleus().getTime();
                     embryo.getNucleusFile().removeNucleus(embryo.selectedNucleus(),true);
+                    try {
+                        ((LinkedNucleusFile)embryo.getNucleusFile()).buildRemnants(time);
+                    } catch (Exception exc){
+                        exc.printStackTrace();
+                    }
+                    
                 }
             }
         });    
