@@ -39,6 +39,7 @@ public class LinkedNucleusFile implements NucleusFile {
             timeEleMap.put(t, timeEle);
         }
         for (int t : timeEleMap.descendingKeySet()){
+System.out.printf("time %d\n",t);
             TreeMap<String,Nucleus> nucMap = new TreeMap<>();
             TreeMap<String,Nucleus> remMap = new TreeMap<>();
             Element timeEle = timeEleMap.get(t);
@@ -63,13 +64,15 @@ public class LinkedNucleusFile implements NucleusFile {
                     String c1 = nucEle.getAttributeValue("child1");
                     if (c1 != null){
                         TreeMap<String,Nucleus> nextNucs = byTime.get(t+1);
-                        Nucleus child1Nuc = nextNucs.get(c1);
-                        Nucleus child2Nuc = null;
-                        String c2 = nucEle.getAttributeValue("child2");
-                        if (c2 != null){
-                            child2Nuc = nextNucs.get(c2);
+                        if (nextNucs != null){
+                            Nucleus child1Nuc = nextNucs.get(c1);
+                            Nucleus child2Nuc = null;
+                            String c2 = nucEle.getAttributeValue("child2");
+                            if (c2 != null){
+                                child2Nuc = nextNucs.get(c2);
+                            }
+                            nuc.setDaughters(child1Nuc, child2Nuc);
                         }
-                        nuc.setDaughters(child1Nuc, child2Nuc);
                     }
                 }else {
                     remMap.put(nuc.getName(), nuc);
