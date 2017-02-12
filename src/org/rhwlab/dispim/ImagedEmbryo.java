@@ -443,7 +443,7 @@ public class ImagedEmbryo implements Observable {
         notifyListeners();
         this.setSelectedNucleus(sel);
     }
-    public void activateRemnant(int time,long[] pos){
+    public void activateRemnant(int time,long[] pos)throws Exception {
         Nucleus activated = nucFile.activateRemnant(time,pos);
         if (activated != null){
             this.setSelectedNucleus(activated);
