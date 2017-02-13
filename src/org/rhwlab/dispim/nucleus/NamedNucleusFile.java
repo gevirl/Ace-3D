@@ -4,6 +4,8 @@ package org.rhwlab.dispim.nucleus;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.util.Set;
 import java.util.TreeMap;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -111,75 +113,9 @@ public class NamedNucleusFile extends LinkedNucleusFile{
         }
         RealMatrix rotMat =  rotationMatrix(cellDirection,div.getV());
         return rotMat;
-/*        
-        // get all the cells at the given time
-        Set<Nucleus> nucs = this.getNuclei(time);
-        TreeMap<String,Nucleus> nucMap = new TreeMap<>();
-        TreeSet<String> nucNames = new TreeSet<>();
-        for (Nucleus nuc : nucs){
-            nucNames.add(nuc.getCellName());
-            nucMap.put(nuc.getCellName(),nuc);
-        }
         
-        // find all divisions that could have generated the cells at this time
-        TreeMap<String,Vector3D> cellDirs = new TreeMap<>();
-        Vector3D cellDirection = new Vector3D(0,0,0);
-        ArrayList<Division> divList = new ArrayList<>();
-        for (Division div : divisionMap.values()){
-            if (nucNames.contains(div.child1) && nucNames.contains(div.child2)){
-                divList.add(div);
-                
-                Vector3D cellDir = divisionDirection(nucMap.get(div.child1), nucMap.get(div.child2));
-                cellDir = cellDir.normalize();
-                cellDirs.put(div.child1,cellDir);
-                cellDirection = cellDirection.add(cellDir);
-            }
-        }
-        // add up all the vectors
-        Vector3D divDirection = new Vector3D(0,0,0);
-        for (Division div : divList){
-            divDirection = divDirection.add(div.getV());
-        }
-        RealMatrix rotMat =  rotationMatrix(cellDirection,divDirection);
-        
-        Vector3D div = divList.get(0).getV();
-        Vector3D cell = cellDirs.get(divList.get(0).child1);
-        rotMat =  rotationMatrix(cell,div);
-        
-        for (String key : cellDirs.keySet()){
-            Vector3D direct = cellDirs.get(key);
-           double[] result = rotMat.operate(direct.toArray());
-           double sum = 0.0;
-           for (int i=0 ; i<result.length ; ++i){
-                sum = sum + result[i]*result[i];
-           }
-           sum = Math.sqrt(sum);
-           for (int i=0 ; i<result.length ; ++i){
-                result[i] = result[i]/sum;
-           }           
-           int jasdfuisd=0;
-        }
-        return rotMat;
-*/        
     }
-/*
-    // use a nucleus to determine the rotation matrix for the embryo
-    public RealMatrix rotationMatrix(Nucleus nuc){
-        RealMatrix ret = null;
-        
-        Nucleus last = this.lastNucleusInCell(nuc);
-        if (last.isLeaf()) return ret;  // no children
-        
-        Division div = divisionMap.get(last.getCellName());
-        if (div == null) return ret; // cannot use an unknown cell
-        
-        Nucleus[] children = last.nextNuclei();
-        Vector3D A= divisionDirection(children[0],children[1]);        
-        Vector3D B = div.getV();
-        ret = rotationMatrix(A,B);        
-        return ret;
-    }
-*/
+
     // determine the direction of a division, given the two just divided nuclei
     static public Vector3D divisionDirection(Nucleus nuc1,Nucleus nuc2){
         double[] p0 = nuc1.getCenter();
@@ -244,6 +180,24 @@ public class NamedNucleusFile extends LinkedNucleusFile{
             ret.setAttribute("orientation", builder.toString());
         }
         return ret;
+    }
+    
+    public void divisionReport(PrintStream stream){
+        stream.println("Time\t  ParentCell\td\td1\td2\tvol");
+        for (Integer time : this.byTime.keySet()){
+            Set<Nucleus> nucs = this.getNuclei(time);
+            for (Nucleus nuc : nucs){
+                if (nuc.isDividing()){
+                    Nucleus[] children = nuc.nextNuclei();
+                    double d1 = nuc.distance(children[0]);
+                    double d2 = nuc.distance(children[1]);
+                    double d = children[0].distance(children[1]);
+                    double volRatio = children[0].getVolume()/children[1].getVolume();
+                    if (volRatio < 1.0) volRatio = 1.0/volRatio;
+                    stream.printf("%d\t%12s\t%.2f\t%.2f\t%.2f\t%.2f\n",time,nuc.getCellName(),d,d1,d2,volRatio);
+                }
+            }
+        }
     }
     static RealMatrix R;  // embryo tranformation matrix -  aligns the embryo with the divisions file
     static TreeMap<String,Division> divisionMap;   

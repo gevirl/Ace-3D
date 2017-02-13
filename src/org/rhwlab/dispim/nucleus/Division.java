@@ -29,17 +29,10 @@ public class Division {
         this.dist1 = d1;
         this.dist2 = d2;
         dist =  dist1 + dist2;
+        score = null;
+        init();
     } 
-    /*
-    public Division(Nucleus parent,Nucleus child1,Nucleus child2){
-        this.parent = parent;
-        this.child1 = child1;
-        this.child2 = child2;
-        this.dist1 = this.parent.distance(this.child1);
-        this.dist2 = this.parent.distance(this.child2);
-        dist =  dist1 + dist2;
-    }
-    */
+
     public boolean isDistancePossible(){
         
         if (dist > divDistanceThresh){
@@ -48,13 +41,18 @@ public class Division {
         }  
         return true        ;
     }
+    public boolean isPossible(){
+        return score != null;
+    }
     // determine if this is a possible division
-    public boolean isPossible(){ 
+    public boolean init(){ 
         if (parent.getName().equals("154_10490")&&child1.getName().equals("155_19154")&&child2.getName().equals("155_17630")){
             int asuhfusd=0;
         }
+        
         boolean debug = true;
         if (debug) System.out.printf("%s - %s,%s\n",this.parent.getName(),this.child1.getName(),this.child2.getName());
+        
         if (dist1 >parentToChildDistance || dist2 > parentToChildDistance){
             if (debug) System.out.printf("parent to children: %f  %f\n",dist1,dist2);
             return false;  // children too far from parent            
@@ -72,12 +70,12 @@ public class Division {
             if (debug) System.out.println("Polar child2");
             return false;  // polar bodies do not divide
         }           
-        double ratio = dist1/dist2;
-        if (ratio < 1.0){
-            ratio = 1.0/ratio;
+        double legDistRatio = dist1/dist2;
+        if (legDistRatio < 1.0){
+            legDistRatio = 1.0/legDistRatio;
         }
-        if (ratio >legRatio){
-            if (debug) System.out.printf("Leg Ratio: %f\n", ratio);
+        if (legDistRatio >legRatio){
+            if (debug) System.out.printf("Leg Ratio: %f\n", legDistRatio);
             return false;
         }
         
@@ -96,7 +94,7 @@ public class Division {
         RealVector[] parentAxes = parent.getAxes();
         RealVector v1 = new ArrayRealVector(child1.getCenter());
         RealVector v2 = new ArrayRealVector(child2.getCenter());
-        RealVector divAxis = v2.subtract(v1);
+        divAxis = v2.subtract(v1);
         if (!related(parentAxes[0],divAxis,debug)){
             // parent failed - try parents parent minor axis
             Nucleus parentParent = parent.getParent();
@@ -111,15 +109,18 @@ public class Division {
                 return false;   
             }
         }
-        ratio = ((BHCNucleusData)child1.getNucleusData()).getVolume()/((BHCNucleusData)child2.getNucleusData()).getVolume();
-        if (ratio < 1.0) {
-            ratio = 1.0/ratio;
+        
+        // children should have about the same volume
+        double volRatio = ((BHCNucleusData)child1.getNucleusData()).getVolume()/((BHCNucleusData)child2.getNucleusData()).getVolume();
+        if (volRatio < 1.0) {
+            volRatio = 1.0/volRatio;
         }
-        if (ratio > volumeThresh){
-            if (debug) System.out.printf("Volume ratio %s\n",ratio);
+        if (volRatio > volumeThresh){
+            if (debug) System.out.printf("Volume ratio %s\n",volRatio);
             return false;
         }
         
+        // children and parents should be about the same intensity
         double intensityRatio = ((BHCNucleusData)parent.getNucleusData()).getAverageIntensity()/((BHCNucleusData)child1.getNucleusData()).getAverageIntensity();
         if (intensityRatio < 1.0){
             intensityRatio = 1.0/intensityRatio;
@@ -136,12 +137,13 @@ public class Division {
             if (debug) System.out.println("Intensity child2");
             return false;
         }        
-
         int lastDiv = parent.timeSinceDivsion();
         if ( lastDiv != -1 && lastDiv < timeThresh){
             if (debug) System.out.println("Time");
             return false;  // lifetime of cell is too short for another division
         }
+        
+        // parent and children should be eccentric
         double[] ecc = parent.eccentricity();
         if (ecc[1] < parentEccThresh){
             if (parent.getParent() == null){
@@ -154,8 +156,6 @@ public class Division {
                 return false;
             }
         }
-
-
         ecc = child1.eccentricity();
         if (ecc[1] < eccThresh){
             if (debug) System.out.println("Child1 Eccentricity");
@@ -167,6 +167,7 @@ public class Division {
             return false;  // nuclei are not eccentric enough            
         }
         
+        // children should not intersect in a possible divison
         if (Nucleus.intersect(child1, child2)){
             if (debug) System.out.println("Daughters intersect");
             return false;  // nuclei are not eccentric enough                
@@ -188,11 +189,17 @@ public class Division {
         }
  */     
         if (debug) System.out.printf("Accepted: distance=%f\n",dist);
+        RealVector[] child1Axes = child1.getAxes();
+        RealVector[] child2Axes = child2.getAxes();
+        double cos1 = cosineAngleBetween(child1Axes[0],divAxis);
+        double cos2 = cosineAngleBetween(child2Axes[0],divAxis);
+        score = divAxis.getNorm() + 4.0*(2.0-cos1-cos2) + 3.0*volRatio;
+        
         return true;
     }
+    // are two axis close enough to be a division
     private boolean related(RealVector axis1,RealVector axis2,boolean debug){
-        
-        double cos = Math.abs(axis1.unitVector().dotProduct(axis2.unitVector()));
+        double cos = cosineAngleBetween(axis1,axis2);
         boolean ret =  cos >= cosThresh ;
         if (!ret){
             if (debug) System.out.printf("Cosine: %f\n",cos);
@@ -200,7 +207,9 @@ public class Division {
         }
         return ret;
     }
-    
+    private static double cosineAngleBetween(RealVector v1,RealVector v2){
+        return Math.abs(v1.unitVector().dotProduct(v2.unitVector()));
+    }
     public double getDistance(){
         return dist;
     }
@@ -334,16 +343,18 @@ public class Division {
     Nucleus parent;
     Nucleus child1;
     Nucleus child2;
-    double dist;
-    double dist1;
-    double dist2;
+    double dist;  // sum of dist1 + dist2  
+    double dist1;  //distance from parent to child1
+    double dist2;  //distance from parent to child2
+    RealVector divAxis;  // division axis
+    Double score;  // will be null if not a possible division
     
     static int timeThresh = 10;
     static double eccThresh = 0.5;
     static double parentEccThresh = .86;
     static double divDistanceThresh = 60.0;
 //    static double parentToChildDistance = 27;
-        static double parentToChildDistance = 39; // 30
+    static double parentToChildDistance = 39; // 30
     static double cosThresh = .8;
     static double volumeThresh = 3.0;
     static double legRatio = 12.0;

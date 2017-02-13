@@ -499,11 +499,11 @@ public class Nucleus implements Comparable {
     static public double similarityScore(Nucleus nuc1,Nucleus nuc2){
         return BHCNucleusData.similarityScore((BHCNucleusData)nuc1.nucData, (BHCNucleusData)nuc2.nucData);
     }
-    // can nuc2 be expanded an still match nuc1
+    // does nuc2 match nuc1 well enough to be used for expansion
     static public boolean matchForExpansion(Nucleus nuc1,Nucleus nuc2){
         long[] radii = nuc2.getRadii();
         if (radii[2]>38){
-            return false;
+            return false;  //do not expand up beyond a maximum radius of 38
         }
         if (nuc1.getCellName().equals("polar2")){
             int asiufh=0;
@@ -533,8 +533,8 @@ public class Nucleus implements Comparable {
         
         return true;
     }
-    // do two nuclei match up well enough
-    static public boolean match(Nucleus nuc1,Nucleus nuc2){
+    // do two nuclei match up well enough to be sisters
+    static public boolean sisterMatch(Nucleus nuc1,Nucleus nuc2){
         double d = nuc1.distance(nuc2);
         if (d > distThreshold){
             return false;

@@ -157,7 +157,7 @@ public class BHCTree {
      //                   if (ratio <1.2){
                         Nucleus expandedNuc = expanded.getNucleus(time);
                         if (!Nucleus.intersect(expandedNuc,sisterNuc)){
-                            if (Nucleus.match(sisterNuc, expanded.getNucleus(time))){       
+                            if (Nucleus.sisterMatch(sisterNuc, expanded.getNucleus(time))){       
                                 Division div = new Division(nuc,expanded.getNucleus(time),sisterNuc);
                                 if (div.isPossible()){
                                     Nucleus[] ret = new Nucleus[2];
@@ -173,20 +173,10 @@ public class BHCTree {
             }
             return null;
     }
+ /*       
     public Nucleus[] bestMatch(Nucleus nuc,boolean dividable,double minVolume){
         Match best = this.bestMatchInAvailableNodes(nuc,minVolume);
-/*        
-        double minD = Double.MAX_VALUE;
-        for (Node root : roots){
-            NucleusLogNode node = (NucleusLogNode)root;
-            double score = Nucleus.similarityScore(nuc, node.getNucleus(time));
-            Match match = bestMatch(nuc,node,score);
-            if (match.score < minD){
-                minD = match.score;
-                best = match;
-            }
-        }
-*/        
+       
         NucleusLogNode expanded = expandUp(nuc,best.node);
         expanded.markedAsUsed(); 
         best.node = expanded;
@@ -249,6 +239,7 @@ public class BHCTree {
 //System.out.printf("Best: %s - %s   %f\n",nuc.getName(),ret[0].getName(),minD);
         return ret;
     }
+*/
     public Match bestMatchInAvailableNodes(Nucleus nuc,double minVolume){
         Match veryBest = null;
         Set<NucleusLogNode> availableNodes = this.availableNodes(minVolume);
@@ -274,7 +265,7 @@ public class BHCTree {
     // find the best nucleus to match in the subtree root at the given node
     public Match bestMatch(Nucleus nuc,NucleusLogNode node,double nodeScore){
         Match ret = new Match(node,nodeScore);
-        boolean debug = false;
+        boolean debug = true;
  //       if (nuc.getCellName().equals("polar2")) debug = true;
  /*
 if (debug) System.out.printf("Matching nuc= %s(%.2f,%.2f,%.2f) V%.2f I%.2f to node =%d(%.2f) (%.2f,%.2f,%.2f) V%.2f I%.2f dist=%f\n", 
@@ -398,8 +389,11 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
             if (nuc.getVolume() < minVolume) return;
             double[] ecc = nuc.eccentricity();
             if (ecc[1]<.95 || ecc[2]<.95){
-                availNodes.add(root);
-                return;
+//                long[] radii = nuc.getRadii();
+//                if (radii[2]<50){
+                    availNodes.add(root);
+                    return;
+//                }
             }
         }
         if (root.isLeaf()){

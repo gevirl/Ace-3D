@@ -49,6 +49,7 @@ import org.rhwlab.dispim.TifDirectoryImageSource;
 import org.rhwlab.dispim.TimePointImage;
 import org.rhwlab.dispim.nucleus.BHCDirectory;
 import org.rhwlab.dispim.nucleus.LinkedNucleusFile;
+import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 import org.rhwlab.dispim.nucleus.NucleusFile;
 
@@ -249,6 +250,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     File sel = fileChooser.getSelectedFile();
                     try {
                         openSession(sel);
+                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).divisionReport(System.out);
                     } catch (Exception exc){
                         exc.printStackTrace();
                     }
