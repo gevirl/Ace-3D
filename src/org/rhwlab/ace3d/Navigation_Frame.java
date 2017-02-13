@@ -327,6 +327,14 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 } catch (Exception exc){}
             }
     }
+    static Nucleus getSelectedInactive(){
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode)inactiveTree.getLastSelectedPathComponent();
+        if (node == null)return null;
+        if (node.isLeaf()){
+            return (Nucleus)node.getUserObject();
+        }  
+        return null;        
+    }
             
             
     ImagedEmbryo embryo;
@@ -342,7 +350,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
     JTree rootsTree;
     JTree nucsTree;
     JTree deathsTree;
-    JTree inactiveTree;
+    static JTree inactiveTree;
     
     public class NucleusRenderer extends DefaultTreeCellRenderer {
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus){

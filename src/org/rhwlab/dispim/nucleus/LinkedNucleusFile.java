@@ -501,7 +501,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 TreeMap<Nucleus,NucleusLogNode> matches = new TreeMap<>();
                 TreeMap<Nucleus,NucleusLogNode> expands = new TreeMap<>();
                 for (Nucleus nuc : nonPolar){
-                    if (nuc.getName().equals("163_18498")){
+                    if (nuc.getName().equals("111_6070")){
                         int fsdiusadgf=0;
                     }
                     Match best = tree.bestMatchInAvailableNodes(nuc,minVolume);
@@ -517,7 +517,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 
                 // try to make some divisions
                 for (Nucleus nuc : nonPolar){
-                    if (nuc.getName().equals("109_1056")){
+                    if (nuc.getName().equals("111_6070")){
                         int fsdiusadgf=0;
                     }
                     NucleusLogNode matchNode = matches.get(nuc);   
@@ -536,15 +536,15 @@ System.out.println("Division by split")   ;
                         
                     } else {
                         NucleusLogNode expanded = expands.get(nuc);
-                        Nucleus sisterNuc = tree.divideBySister(nuc,expanded);
-                        if (sisterNuc != null){
+//                        Nucleus sisterNuc = tree.divideBySister(nuc,expanded);
+//                        if (sisterNuc != null){
                             // best match divids
 System.out.println("Division by sister") ;      
         
-                            toList.add(sisterNuc);
-                            this.addNucleus(sisterNuc);
-                            nuc.linkTo(sisterNuc);   
-                        }
+ //                           toList.add(sisterNuc);
+//                            this.addNucleus(sisterNuc);
+ //                           nuc.linkTo(sisterNuc);   
+//                        }
                         if (expanded != null){
                             Nucleus expandedNuc = expanded.getNucleus(t);
                            
@@ -560,7 +560,7 @@ System.out.println("Division by sister") ;
                 for (NucleusLogNode avail : avails){
                     Nucleus availNuc = avail.getNucleus(t);
                     if (availNuc != null){
-
+                        TreeSet<Division> possibleDivs = new TreeSet<>();
                         for (Nucleus nuc : nonPolar){
                             if (availNuc.getName().equals("145_13174") && nuc.getName().equals("144_3370")){
                                 int sauifhuisdf=0;
@@ -570,35 +570,18 @@ System.out.println("Division by sister") ;
                                 if (next.length >0 && next[0] != null){
                                     Division div = new Division(nuc,next[0],availNuc);
                                     if (div.isPossible()){
-System.out.println("Division by available");
-                                        if (completeTheDivision(t,nuc,avail,availNuc,toList)){
-                                            break;
-                                        }
-                                    }
-                                    else {
-                                        // try spliting the available  nuc
-/*                                        
-                                        NucleusLogNode leftNode = ((NucleusLogNode)avail.getLeft());
-                                        NucleusLogNode rightNode = ((NucleusLogNode)avail.getRight());
-                                        Nucleus rightNuc = rightNode.getNucleus(t);
-                                        Nucleus leftNuc = leftNode.getNucleus(t);
-                                        Division leftDiv = new Division(nuc,next[0],leftNuc);
-                                        Division rightDiv = new Division(nuc,next[0],rightNuc);
-                                        if (leftDiv.isPossible()){
-                                            if (completeTheDivision(t,nuc,leftNode,leftNuc,toList)){
-                                                break;
-                                            }
-                                        }
-                                        else if (rightDiv.isPossible()){
-                                            if (completeTheDivision(t,nuc,rightNode,rightNuc,toList)){
-                                                break;
-                                            }
-                                        }  
-*/                                        
+                                        System.out.println("Division by available");
+                                        possibleDivs.add(div);
+//                                        if (completeTheDivision(t,nuc,avail,availNuc,toList)){
+ //                                           break;
                                     }
                                 }
                             }
                         }
+                        if (!possibleDivs.isEmpty()){
+                            Division div = possibleDivs.first();
+                            completeTheDivision(t,div.parent,avail,div.child2,toList);
+                        }                        
                     }
                 }
                 // put any remaining segmentations into remant nucs

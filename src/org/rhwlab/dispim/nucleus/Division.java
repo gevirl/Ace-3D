@@ -18,7 +18,7 @@ import org.apache.commons.math3.linear.RealVector;
  *
  * @author gevirl
  */
-public class Division {
+public class Division implements Comparable {
     public Division(Nucleus parent,Nucleus child1,Nucleus child2){
         this(parent,child1,parent.distance(child1),child2,parent.distance(child2));
     }
@@ -340,6 +340,12 @@ public class Division {
         }
         return ret;
     }
+    @Override
+    public int compareTo(Object o) {
+        Division otherDiv = (Division)o;
+        return this.score.compareTo(otherDiv.score);
+    }
+    
     Nucleus parent;
     Nucleus child1;
     Nucleus child2;
@@ -359,4 +365,6 @@ public class Division {
     static double volumeThresh = 3.0;
     static double legRatio = 12.0;
     static double intensityThresh = 5.0;  // ratio of average intensity 
+
+
 }

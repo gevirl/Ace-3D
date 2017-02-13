@@ -204,8 +204,17 @@ public class BHCNucleusData extends NucleusData {
         if (ir<1.0){
             ir = 1.0/ir;
         }
+        long[] otherRadii = other.getRadii();
+        long[] radii = this.getRadii();
+        double sum = 0.0;
+        for (int i=0 ; i<radii.length ; ++i){
+            double rad = (double)otherRadii[i]/(double)radii[i];
+            if (rad < 1.0) rad = 1.0/rad;
+            sum = sum + rad;
+        }
         double d = super.distance(other);
         double ret = 4.0*v+3.0*ir+d;
+        ret = 2.0*sum + 3.0*ir + d;
  /*       
         System.out.printf("Volumes: %f,%f\n", this.volume,other.volume);
         System.out.printf("AvgInt: %f,%f\n",this.getAverageIntensity(),other.getAverageIntensity());

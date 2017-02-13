@@ -265,7 +265,7 @@ public class BHCTree {
     // find the best nucleus to match in the subtree root at the given node
     public Match bestMatch(Nucleus nuc,NucleusLogNode node,double nodeScore){
         Match ret = new Match(node,nodeScore);
-        boolean debug = true;
+        boolean debug = false;
  //       if (nuc.getCellName().equals("polar2")) debug = true;
  /*
 if (debug) System.out.printf("Matching nuc= %s(%.2f,%.2f,%.2f) V%.2f I%.2f to node =%d(%.2f) (%.2f,%.2f,%.2f) V%.2f I%.2f dist=%f\n", 
