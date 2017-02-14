@@ -446,7 +446,7 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         return ret;
     }
-    public void bestMatchAutoLink(Integer[] times,Integer[] threshs,double minVolume)throws Exception {
+    public void bestMatchAutoLink(Integer[] times,Integer[] threshs,int minVolume)throws Exception {
        
 //        Nucleus[] fromNucs = this.getNuclei(times[0]).toArray(new Nucleus[0]);
         Nucleus[] toNucs;
@@ -667,7 +667,7 @@ System.out.println("Division by split")   ;
     }
     
     // activate the remnant at the given position and time
-    public Nucleus activateRemnant(int time,long[] pos)throws Exception{
+    public Nucleus activateRemnant(int time,long[] pos,int minVolume)throws Exception{
         TreeMap<String,Nucleus> rems = remnants.get(time);
         Nucleus closest = null;
         double d = Double.MAX_VALUE;
@@ -691,7 +691,7 @@ System.out.println("Division by split")   ;
             long[] radii = closest.getRadii();
             if (d <= radii[2]){
                 this.addNucleus(closest);
-                this.buildRemnants(time);
+                this.buildRemnants(time,minVolume);
                 this.notifyListeners();
                 curatedSet.add(time);
                 return closest;
@@ -712,7 +712,7 @@ System.out.println("Division by split")   ;
         return ret;
     }
     // rebuild the list of remnants at the given time based on the active nuclei at the time
-    public void buildRemnants(int time)throws Exception {
+    public void buildRemnants(int time,int minVolume)throws Exception {
         int probThresh =this.thresholdProbs.get(time);
         Set<Nucleus> activeNucs = this.getNuclei(time);
         BHCTree tree = bhcTreeDir.getTree(time, probThresh);
@@ -728,7 +728,7 @@ System.out.println("Division by split")   ;
             node.markedAsUsed();
         }
         
-        Set<NucleusLogNode> avails = tree.availableNodes(time);
+        Set<NucleusLogNode> avails = tree.availableNodes(minVolume);
         for (NucleusLogNode avail : avails){
             Nucleus nuc = avail.getNucleus(time);
             if (nuc != null){

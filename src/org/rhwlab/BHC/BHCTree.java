@@ -240,7 +240,7 @@ public class BHCTree {
         return ret;
     }
 */
-    public Match bestMatchInAvailableNodes(Nucleus nuc,double minVolume){
+    public Match bestMatchInAvailableNodes(Nucleus nuc,int minVolume){
         Match veryBest = null;
         Set<NucleusLogNode> availableNodes = this.availableNodes(minVolume);
         if (this.isAvailable(availableNodes, 7036)){
@@ -377,17 +377,17 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         }
         return false;
     }
-    public Set<NucleusLogNode> availableNodes(double minVolume){
+    public Set<NucleusLogNode> availableNodes(int minVolume){
         HashSet<NucleusLogNode> ret = new HashSet<>();
         for (Node root : roots){
-            availableNodes((NucleusLogNode)root,ret,minVolume);
+            availableNodes(time,(NucleusLogNode)root,ret,minVolume);
         }
         return ret;
     }
     
-    static public void availableNodes(NucleusLogNode root,HashSet<NucleusLogNode> availNodes,double minVolume){
+    static public void availableNodes(int t,NucleusLogNode root,HashSet<NucleusLogNode> availNodes,int minVolume){
         if (!root.isUsedRecursive()){
-            Nucleus nuc = root.getNucleus(0);  // do not know the time , but does not matter
+            Nucleus nuc = root.getNucleus(t);  
             if (nuc == null) return;
             if (nuc.getVolume() < minVolume) return;
             double[] ecc = nuc.eccentricity();
@@ -405,8 +405,8 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         if (root.isUsed()){
             return;
         }
-        availableNodes((NucleusLogNode)root.getLeft(),availNodes,minVolume);
-        availableNodes((NucleusLogNode)root.getRight(),availNodes,minVolume);
+        availableNodes(t,(NucleusLogNode)root.getLeft(),availNodes,minVolume);
+        availableNodes(t,(NucleusLogNode)root.getRight(),availNodes,minVolume);
     }
     
     public static void saveXML(String file,Element root)throws Exception {

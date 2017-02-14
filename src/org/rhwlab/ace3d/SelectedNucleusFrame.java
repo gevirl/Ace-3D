@@ -151,7 +151,7 @@ public class SelectedNucleusFrame extends JFrame implements PlugIn,javafx.beans.
                     int time = embryo.selectedNucleus().getTime();
                     embryo.getNucleusFile().removeNucleus(embryo.selectedNucleus(),true);
                     try {
-                        ((LinkedNucleusFile)embryo.getNucleusFile()).buildRemnants(time);
+                        ((LinkedNucleusFile)embryo.getNucleusFile()).buildRemnants(time,Ace3D_Frame.minimumVolume);
                     } catch (Exception exc){
                         exc.printStackTrace();
                     }

@@ -182,7 +182,7 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                 } else if (kCode == KeyEvent.VK_F5){
                     // activate a remant at the mouse position
                     try {
-                        embryo.activateRemnant(parent.getTime(),mousePosition);
+                        embryo.activateRemnant(parent.getTime(),parent.getPosition());
                     }catch(Exception exc){
                         exc.printStackTrace();
                     }

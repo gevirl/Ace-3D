@@ -444,7 +444,7 @@ public class ImagedEmbryo implements Observable {
         this.setSelectedNucleus(sel);
     }
     public void activateRemnant(int time,long[] pos)throws Exception {
-        Nucleus activated = nucFile.activateRemnant(time,pos);
+        Nucleus activated = nucFile.activateRemnant(time,pos,Ace3D_Frame.minimumVolume);
         if (activated != null){
             this.setSelectedNucleus(activated);
         }
