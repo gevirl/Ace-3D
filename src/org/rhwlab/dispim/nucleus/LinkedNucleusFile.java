@@ -501,7 +501,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 TreeMap<Nucleus,NucleusLogNode> matches = new TreeMap<>();
                 TreeMap<Nucleus,NucleusLogNode> expands = new TreeMap<>();
                 for (Nucleus nuc : nonPolar){
-                    if (nuc.getName().equals("111_6070")){
+                    if (nuc.getName().equals("106_4710")||nuc.getName().equals("107_6272")){
                         int fsdiusadgf=0;
                     }
                     Match best = tree.bestMatchInAvailableNodes(nuc,minVolume);
@@ -539,7 +539,7 @@ System.out.println("Division by split")   ;
 //                        Nucleus sisterNuc = tree.divideBySister(nuc,expanded);
 //                        if (sisterNuc != null){
                             // best match divids
-System.out.println("Division by sister") ;      
+//System.out.println("Division by sister") ;      
         
  //                           toList.add(sisterNuc);
 //                            this.addNucleus(sisterNuc);

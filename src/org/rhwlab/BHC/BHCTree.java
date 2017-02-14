@@ -266,7 +266,10 @@ public class BHCTree {
     public Match bestMatch(Nucleus nuc,NucleusLogNode node,double nodeScore){
         Match ret = new Match(node,nodeScore);
         boolean debug = false;
- //       if (nuc.getCellName().equals("polar2")) debug = true;
+        if (nuc.getName().equals("106_4710")&&node.label==2254) {
+            int sdifuhs=0;
+            debug = true;
+        }
  /*
 if (debug) System.out.printf("Matching nuc= %s(%.2f,%.2f,%.2f) V%.2f I%.2f to node =%d(%.2f) (%.2f,%.2f,%.2f) V%.2f I%.2f dist=%f\n", 
         nuc.getName(),c[0],c[1],c[2],nuc.getVolume(),nuc.getAvgIntensity(),
