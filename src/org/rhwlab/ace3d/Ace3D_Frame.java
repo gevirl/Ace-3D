@@ -438,8 +438,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     TreeMap<Integer,BHCTree> trees = bhc.getTrees(time);
                     BHCTree tree = null;
                     if (trees.size() > 1){
-                        Object resp = JOptionPane.showInputDialog(null,"Choose segmentation threshold","thresholds ",JOptionPane.INFORMATION_MESSAGE,
-                            null, trees.keySet().toArray(),trees.firstKey());
+                        Object resp = JOptionPane.showInputDialog(null,"Choose segmentation threshold","thresholds ",
+                                JOptionPane.INFORMATION_MESSAGE, null, trees.keySet().toArray(),trees.firstKey());
                         tree = trees.get(resp);
                     } else {
                         tree = trees.firstEntry().getValue();
@@ -587,7 +587,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     for (int i=0 ; i<timesArray.length;++i){
                         probsArray[i] = probMap.get(timesArray[i]);
                     }
-                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 500
+                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
                     
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
@@ -1050,16 +1050,15 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     
     static TreeMap<String,DataSetProperties> dataSetProperties = new TreeMap<>();
     
-    static public int minimumVolume = 500;
+    static public int minimumVolume = 50;
     static public void main(String[] args) {
         EventQueue.invokeLater(new Runnable(){
             @Override
             public void run() {
                 Interpreter.batchMode=true;
-                ImageJ ij = new ImageJ(ImageJ.NO_SHOW);
+                //ImageJ ij = new ImageJ(ImageJ.NO_SHOW);
                 try {
-                    Ace3D_Frame   frame = new Ace3D_Frame();
-                    
+                    Ace3D_Frame frame = new Ace3D_Frame();
                     frame.run(null);
                 } catch (Exception exc){
                     exc.printStackTrace();
