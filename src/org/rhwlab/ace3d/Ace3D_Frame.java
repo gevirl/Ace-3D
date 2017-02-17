@@ -1047,7 +1047,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     
     static TreeMap<String,DataSetProperties> dataSetProperties = new TreeMap<>();
     
-    static public int minimumVolume = 500;
+    static public int minimumVolume = 50;
     static public void main(String[] args) {
         EventQueue.invokeLater(new Runnable(){
             @Override

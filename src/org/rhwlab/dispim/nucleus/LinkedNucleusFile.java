@@ -510,8 +510,6 @@ public class LinkedNucleusFile implements NucleusFile {
                         NucleusLogNode expand = tree.expandUp(nuc, best.getNode());
                         expands.put(nuc,expand);
                         expand.markedAsUsed();
- //                       expands.put(nuc,best.getNode());
- //                       best.getNode().markedAsUsed();
                     }
                 }
                 
@@ -523,9 +521,8 @@ public class LinkedNucleusFile implements NucleusFile {
                     NucleusLogNode matchNode = matches.get(nuc);   
                     Nucleus[] divided = tree.divideBySplit(nuc, matchNode);
                     if (divided != null){
-                        // best match divids
+                        // best match divides - add both children
 System.out.println("Division by split")   ;
-
                         toList.add(divided[0]);
                         this.addNucleus(divided[0]);
                         nuc.linkTo(divided[0]); 
@@ -535,16 +532,8 @@ System.out.println("Division by split")   ;
                         nuc.linkTo(divided[1]);                         
                         
                     } else {
+                        // just add the best expanded match
                         NucleusLogNode expanded = expands.get(nuc);
-//                        Nucleus sisterNuc = tree.divideBySister(nuc,expanded);
-//                        if (sisterNuc != null){
-                            // best match divids
-//System.out.println("Division by sister") ;      
-        
- //                           toList.add(sisterNuc);
-//                            this.addNucleus(sisterNuc);
- //                           nuc.linkTo(sisterNuc);   
-//                        }
                         if (expanded != null){
                             Nucleus expandedNuc = expanded.getNucleus(t);
                            
@@ -562,7 +551,7 @@ System.out.println("Division by split")   ;
                     if (availNuc != null){
                         TreeSet<Division> possibleDivs = new TreeSet<>();
                         for (Nucleus nuc : nonPolar){
-                            if (availNuc.getName().equals("145_13174") && nuc.getName().equals("144_3370")){
+                            if (availNuc.getName().equals("203_7018") && nuc.getName().equals("202_17952")){
                                 int sauifhuisdf=0;
                             }
                             if (!nuc.isDividing()){
@@ -579,6 +568,9 @@ System.out.println("Division by split")   ;
                             }
                         }
                         if (!possibleDivs.isEmpty()){
+                            if (possibleDivs.size()>1){
+                                int sauifhuishdf=0;
+                            }
                             Division div = possibleDivs.first();
                             completeTheDivision(t,div.parent,avail,div.child2,toList);
                         }                        
@@ -599,6 +591,13 @@ System.out.println("Division by split")   ;
         this.notifyListeners();
     }
     private boolean completeTheDivision(int t,Nucleus nuc,NucleusLogNode avail,Nucleus availNuc,ArrayList<Nucleus> toList){
+            avail.markedAsUsed();
+            toList.add(availNuc);
+            this.addNucleus(availNuc);
+            nuc.linkTo(availNuc);
+            return true;
+    }
+/*            
         boolean overlap = false;
         for (Nucleus existingNuc : this.getNuclei(t)){
             if (existingNuc.distance(availNuc)<200.0){
@@ -617,7 +616,7 @@ System.out.println("Division by split")   ;
         } 
         return false;
     }
-
+*/
     // remove all the nuclei in the cell containing the given nucleus
     public void removeCell(Nucleus nuc,boolean notify){
         Nucleus last = lastNucleusInCell(nuc);

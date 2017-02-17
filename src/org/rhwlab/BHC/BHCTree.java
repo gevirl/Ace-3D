@@ -341,7 +341,7 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
 
     // expand the given match to the largest possible match  - source already matches the match nucleus , can it be expanded?
     public NucleusLogNode expandUp(Nucleus source,NucleusLogNode match){
-        if (source.getName().equals("146_3092")&& match.getLabel()==7974){
+        if (match.getLabel()==104){
             int iahsdfs=0;
         }
         NucleusLogNode par = (NucleusLogNode)match.getParent();
