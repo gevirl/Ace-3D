@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
@@ -688,6 +690,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         for (int t=fromTime ; t<=toTime ; ++t){
             Set<Integer> probs = bhc.getThresholdProbs(t);
             Integer[] probArray = probs.toArray(new Integer[0]);
+            Arrays.sort(probArray, Collections.reverseOrder());
             if (probs.size()==1){
                 map.put(t,probArray[0]);
             } else {

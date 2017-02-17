@@ -177,7 +177,10 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                     rightClick(mousePosition,false);
                 } else if (kCode == KeyEvent.VK_F1){
                     rightClick(mousePosition,true);
-                }else if (kCode == KeyEvent.VK_F4){
+                } else if (kCode == KeyEvent.VK_F3) {
+                    embryo.formLink();
+                    rightClick(mousePosition, true);
+                } else if (kCode == KeyEvent.VK_F4){
                     embryo.formLink();
                 } else if (kCode == KeyEvent.VK_F5){
                     // activate a remant at the mouse position
@@ -187,9 +190,14 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                         exc.printStackTrace();
                     }
 //                    Nucleus.intersect(embryo.getNucleusFile().getSelected(),embryo.getMarked());
-                } 
-                
-                else {
+                } else if (kCode == KeyEvent.VK_F6) {
+                    try {embryo.activateRemnant(parent.getTime(),parent.getPosition());
+                    } catch(Exception exc) {
+                        exc.printStackTrace();
+                    }
+                    embryo.formLink();
+                    rightClick(mousePosition, true);                   
+                } else {
 //                int mask = KeyEvent.SHIFT_DOWN_MASK;
 //                int modifier = e.getModifiersEx();
  //               if ((modifier&mask) == mask){
