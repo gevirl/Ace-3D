@@ -85,6 +85,14 @@ public class MicroCluster {
         return ret;
     }
     public static RealMatrix precision(List<MicroCluster> data,RealVector mu){
+        LUDecomposition lud = new LUDecomposition(variance(data,mu));
+        RealMatrix prec = null;
+        if (lud.getSolver().isNonSingular()){
+            prec = lud.getSolver().getInverse();
+        }
+        return prec;        
+    }
+    public static RealMatrix variance(List<MicroCluster> data,RealVector mu){
         RealMatrix ret = new Array2DRowRealMatrix(mu.getDimension(),mu.getDimension());
         RealVector v = new ArrayRealVector(mu.getDimension());
         long n = 0;
@@ -97,15 +105,8 @@ public class MicroCluster {
                 ret = ret.add(del.outerProduct(del));
                 ++n;
             }
-            
         }
-        ret = ret.scalarMultiply(1.0/n);
-        LUDecomposition lud = new LUDecomposition(ret);
-        RealMatrix prec = null;
-        if (lud.getSolver().isNonSingular()){
-            prec = lud.getSolver().getInverse();
-        }
-        return prec;
+        return ret.scalarMultiply(1.0/n);
     }
     // add content to an xml node
     public int addContent(Element node){
