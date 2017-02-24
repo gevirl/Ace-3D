@@ -49,7 +49,7 @@ public class SampledAlgorithm extends ThreadedAlgorithm {
             for (long i=0 ; i<save.getN() ; ++i){
                 MicroCluster cl = save.get(i);
                 RealVector v = cl.asRealVector();
-                double pLeft = leftGaussian.logProbability(v);
+                double pLeft = leftGaussian.logProbability(v) ;
                 double pRight = rightGaussian.logProbability(v);
                 if (pLeft > pRight){
                     leftSet.add(cl);
@@ -61,13 +61,13 @@ public class SampledAlgorithm extends ThreadedAlgorithm {
             MicroClusterDataSource rightSource = new MicroClusterDataSource(rightSet);
 
             // run algorithm on each split in a spearate thread
-            if (leftSource.getN() > 5.0*nSamples){
+            if (leftSource.getN() > 10.0*nSamples){
                 SampledAlgorithm leftAlg = new SampledAlgorithm();
                 leftAlg.setSource(leftSource);
                 leftAlg.run();
                 top.left = leftAlg.nodeList.get(0);
             }
-            if (rightSource.getN() > 5.0*nSamples){
+            if (rightSource.getN() > 10.0*nSamples){
                 SampledAlgorithm rightAlg = new SampledAlgorithm();
                 rightAlg.setSource(rightSource);
                 rightAlg.run();
@@ -140,5 +140,5 @@ int iuhdfidush=0;
         }
         MultivariateNormalDistribution dist;
     }
-    static int nSamples=2000;  // the number of samples to use     
+    static int nSamples=1000;  // the number of samples to use     
 }

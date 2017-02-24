@@ -21,8 +21,8 @@ import java.util.Set;
  * @author gevirl
  */
 public class CellImage {
-    public BufferedImage getImage(Nucleus firstNuc,int maxTime,LUT lut,boolean nodes,boolean leaves,double timeScale,double cellWidth){
-        
+    public BufferedImage getImage(Nucleus firstNuc,int maxTime,LUT lut,boolean nodes,boolean leaves,double timeScale,double cellWidth,double expScaleMax){
+        this.expMax = expScaleMax;
         this.lut = lut;
         this.maxTime = maxTime;
         this.labelNodes = nodes;
@@ -90,7 +90,8 @@ public class CellImage {
             double y1 = y0 + timeScale;
             Line2D.Double line = new Line2D.Double(x0,y0,x0,y1);
 
-            int exp = (int)currentNuc.getExpression();
+            
+            int exp = (int)Math.min(255,255*currentNuc.getExpression()/expMax);
             int rgb = lut.getRGB(exp);
             Color c = new Color(rgb);
             g2.setColor(c);
@@ -157,6 +158,7 @@ public class CellImage {
         public double y0;
         public double y1;
     }
+    double expMax;
     int maxTime;
     boolean labelNodes;
     boolean labelLeaves;

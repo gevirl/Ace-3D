@@ -63,7 +63,11 @@ public class NucleusData implements Comparable {
         this.xC = Double.valueOf(ele.getAttributeValue("x"));
         this.yC = Double.valueOf(ele.getAttributeValue("y"));
         this.zC = Double.valueOf(ele.getAttributeValue("z"));
-        
+        try {
+            this.exp = Double.valueOf(ele.getAttributeValue("expression"));
+        } catch (Exception exc){
+            
+        }
         this.eigenA = new EigenDecomposition(A);
         this.adjustedA = this.A.copy();
         this.adjustedEigenA = new EigenDecomposition(adjustedA);

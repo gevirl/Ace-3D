@@ -161,7 +161,7 @@ public class NavigationTreePanel extends JPanel implements ChangeListener{
             roots[i] = (Nucleus)node.getUserObject();
             cellImage[i] = new CellImage();
             buffered[i] = cellImage[i].getImage(roots[i],headPanel.getMaxTime(),lut,headPanel.labelNodes(),headPanel.labelLeaves(),
-                    headPanel.getTimeScale(),headPanel.getCellWidth());
+                    headPanel.getTimeScale(),headPanel.getCellWidth(),headPanel.getExpressionMax());
             W = W + buffered[i].getWidth();
             int h = buffered[i].getHeight();
             if (h > H){

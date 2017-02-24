@@ -184,13 +184,14 @@ public class ImagedEmbryo implements Observable {
         nucFile.addNucleus(nuc);
     }
     public void calculateExpression(){
-        List<String> datasets = Ace3D_Frame.datasetsSelected();
+        List<String> datasets = Ace3D_Frame.getAllDatsets();
         if (!datasets.isEmpty()){
             Set<Integer> times = nucFile.getAllTimes();
             for (Integer time : times){
-                this.calculateExpression(datasets.get(0), time);
+                this.calculateExpression("Expressing", time);
             }
         }
+        notifyListeners();
     }
     // calculate the expression for all the nuclei at a given time using the given dataset images
     public void calculateExpression(String dataset,int time){
@@ -205,7 +206,7 @@ public class ImagedEmbryo implements Observable {
                 System.err.printf("%s nucleus:%s time:%d\n",exc.getMessage(),nuc.getName(),nuc.getTime());
             }
         }
-        notifyListeners();
+        
     }
 
     public double calculateExpression(Nucleus nuc ,TimePointImage tpi,double[][] e)throws Exception {

@@ -74,6 +74,17 @@ public class NavigationHeaderPanel extends JPanel {
             }
         });
         this.add(cellWidth);
+        
+        this.add(new JLabel("Expression Scale Max: "));
+        expMax = new JTextField("5000");
+        expMax.setColumns(12);
+        expMax.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                treePanel.stateChanged(new ChangeEvent(NavigationHeaderPanel.this));
+            }
+        });
+        this.add(expMax);
     }
 
     public void setTreePanel(NavigationTreePanel treePanel){
@@ -97,6 +108,9 @@ public class NavigationHeaderPanel extends JPanel {
     public void setNucleus(String name){
         nucleus.setText("Nucleus: "+name);
     }
+    public double getExpressionMax(){
+        return Double.valueOf(expMax.getText().trim());
+    }
 
     NavigationTreePanel treePanel;
     JTextField maxTime;
@@ -104,5 +118,6 @@ public class NavigationHeaderPanel extends JPanel {
     JCheckBox labelLeaves;
     JTextField timeScale;
     JTextField cellWidth;
+    JTextField expMax;
     JLabel nucleus;
 }
