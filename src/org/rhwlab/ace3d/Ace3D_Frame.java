@@ -573,7 +573,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     int fromTime = -1;
                     while (fromTime == -1){
                         try {
-                            String ans = JOptionPane.showInputDialog("Enter time to link back to");
+                            Set<Integer> times = imagedEmbryo.getNucleusFile().getAllTimes();
+                            int tp = times.size();
+                            String ans = JOptionPane.showInputDialog(null, "Enter time to link back to", String.valueOf(tp));
                             if (ans == null){
                                 return;
                             }

@@ -32,6 +32,7 @@ import org.rhwlab.dispim.nucleus.BHCDirectory;
 import org.rhwlab.dispim.nucleus.BHCNucleusData;
 import org.rhwlab.dispim.nucleus.BHCNucleusSet;
 import org.rhwlab.dispim.nucleus.LinkedNucleusFile;
+import org.rhwlab.dispim.nucleus.Nucleus;
 import org.rhwlab.dispim.nucleus.NucleusFile;
 
 /**
@@ -42,6 +43,7 @@ public class BHCTreeCutDialog extends JDialog {
     public BHCTreeCutDialog(Ace3D_Frame owner,ImagedEmbryo embryo){
         super(owner,false);
         this.owner = owner;
+        this.embryo = embryo;
         this.nucleusFile = embryo.getNucleusFile();
         this.setTitle("Cut the BHC Tree");
         this.setSize(300, 500);
@@ -51,6 +53,15 @@ public class BHCTreeCutDialog extends JDialog {
         JPanel volumePanel = new JPanel();
         volumePanel.setLayout(new GridLayout(3,3));
         volumePanel.add(new JLabel("Minimum Volume: "));
+        
+        if (owner.getCurrentTime() > 200) {
+            volumeField.setText("100");
+            maxItemsField.setText("400");
+        } else if (owner.getCurrentTime() > 100) {
+            volumeField.setText("400");
+            maxItemsField.setText("200");
+        }
+        
         volumePanel.add(volumeField);
         volumeField.setColumns(6);
         volumeField.addActionListener(new ActionListener(){
@@ -103,6 +114,8 @@ public class BHCTreeCutDialog extends JDialog {
                 }
             }
         });
+        //jList.setSelectedValue(f, result);
+        
         JScrollPane scroll = new JScrollPane(jList);
         this.getContentPane().add(scroll, BorderLayout.CENTER);
         
@@ -118,6 +131,7 @@ public class BHCTreeCutDialog extends JDialog {
         });
         button.add(cancel);
         this.getContentPane().add(button,BorderLayout.SOUTH);
+        
     }
     private void ok(){
         Object sel = jList.getSelectedValue();
@@ -190,7 +204,7 @@ public class BHCTreeCutDialog extends JDialog {
         
         CutDescriptor selected = null;
         CutDescriptor cutDesc = new CutDescriptor(tree.firstTreeCut());
-        while (cutDesc.getNodeCount() <= maxItems){
+        while (cutDesc.getNodeCount() <= maxItems){ //pete
             model.addElement(cutDesc);
             if (n != null && cutDesc.getNodeCount()==n){
                 selected = cutDesc;
@@ -207,6 +221,11 @@ public class BHCTreeCutDialog extends JDialog {
         }
 
         jList.setModel(model);
+        NucleusFile nucFile = embryo.getNucleusFile();
+        int nucNumber = nucFile.getNuclei(owner.getCurrentTime()).size(); 
+        //in model, find CutDescriptor that matches number of cells of nucNumber
+        selected = (CutDescriptor)model.getElementAt(nucNumber);
+        
         jList.setSelectedValue(selected,true);    
         ok();
     }
@@ -224,11 +243,12 @@ public class BHCTreeCutDialog extends JDialog {
     BHCTree tree;
     JList jList;
     JTextField volumeField = new JTextField("1000");
-    JTextField maxItemsField  = new JTextField("60");
+    JTextField maxItemsField  = new JTextField("30");
     JComboBox segBox = new JComboBox();
 //    JTextField minSegProbField = new JTextField("50");
     int maxItems=60;
     int minVolume=1000;
+    ImagedEmbryo embryo;
     
     class CutDescriptor {
         public CutDescriptor(TreeSet<NucleusLogNode> cut){
