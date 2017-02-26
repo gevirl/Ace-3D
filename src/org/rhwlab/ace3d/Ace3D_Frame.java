@@ -514,7 +514,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 if (bhc.getDirectory() != null){
                     
                     int[] dims = TimePointImage.getIntDims();
-                    if (bhc.getDirectory().getParent().endsWith("diSPIM/")) {
+                    if (bhc.getDirectory().getParent().endsWith("diSPIM")) {
                         submitDialog = new BHCSubmitDialog(Ace3D_Frame.this,bhc.getDirectory().getPath(),dims);                       
                     } else submitDialog = new BHCSubmitDialog(Ace3D_Frame.this,bhc.getDirectory().getParent(),dims);
                     submitDialog.setVisible(true);
