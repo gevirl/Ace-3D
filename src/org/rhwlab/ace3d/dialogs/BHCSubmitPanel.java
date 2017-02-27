@@ -76,7 +76,7 @@ public class BHCSubmitPanel extends JPanel {
         
         this.add(new JLabel("Concentration parameter"));
         this.add(alpha);
-        this.add(new JLabel("1000-1000000"));
+        this.add(new JLabel("1000-100000000"));
         
         this.add(new JLabel("Variance"));
         this.add(variance);

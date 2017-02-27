@@ -329,12 +329,17 @@ public class Nuclei_Identification implements Runnable {
             if (!water){
                 qsubStream.println("#$ -P sage");
             }
+/*           
             qsubStream.println("cd /nfs/waterston/Ace3D");
             qsubStream.println("PATH=/nfs/waterston/jdk1.8.0_102/bin:$PATH");
             qsubStream.println("JAVA_HOME=/nfs/waterston/jdk1.8.0_102");
             qsubStream.println("M2_HOME=/nfs/waterston/apache-maven-3.3.9");
             qsubStream.printf("/nfs/waterston/apache-maven-3.3.9/bin/mvn \"-Dexec.args=-Xms%sG -Xmx%sG  ",cores*memory,cores*memory);
             qsubStream.print(" -classpath %classpath org.rhwlab.BHC.Nuclei_Identification ");
+*/           
+            qsubStream.printf("cd %s\n", directory.getPath());
+            qsubStream.println("module load java/8u25");
+            qsubStream.printf("java -jar -Xms%sG -Xmx%sG /nfs/waterston/tools3/Ace-3D.jar  ",cores*memory,cores*memory);
             qsubStream.printf("-segThresh %d -S %f -nu %d -alpha %f -segTiff \'%s\'  -lineageTiff \'%s\' -bhcDir %s  ",th,S,nu,alpha,names[1],names[0],directory.getPath());
             if (force!=null){
                 qsubStream.printf(" -force %s ",force);
@@ -357,7 +362,7 @@ public class Nuclei_Identification implements Runnable {
             if (box.getMax(2)!=null){
                 qsubStream.printf(" -zMax %f", box.getMax(2));
             }            
-            qsubStream.print("\" -Dexec.executable=/nfs/waterston/jdk1.8.0_102/bin/java -Dexec.classpathScope=runtime org.codehaus.mojo:exec-maven-plugin:1.2.1:exec");
+//            qsubStream.print("\" -Dexec.executable=/nfs/waterston/jdk1.8.0_102/bin/java -Dexec.classpathScope=runtime org.codehaus.mojo:exec-maven-plugin:1.2.1:exec");
             qsubStream.println();
             qsubStream.close();
         }
