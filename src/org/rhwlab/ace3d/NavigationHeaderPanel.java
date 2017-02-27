@@ -25,7 +25,7 @@ public class NavigationHeaderPanel extends JPanel {
         
         this.add(new JLabel("Max Time:"));
         maxTime = new JTextField();
-        maxTime.setText("200");
+        maxTime.setText("300");
         maxTime.setColumns(10);
         maxTime.addActionListener(new ActionListener(){
             @Override

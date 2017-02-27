@@ -5,6 +5,7 @@
  */
 package org.rhwlab.ace3d;
 
+import ij.plugin.LutLoader;
 import ij.process.LUT;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -35,7 +36,7 @@ import org.rhwlab.dispim.nucleus.NucleusFile;
  */
 public class NavigationTreePanel extends JPanel implements ChangeListener{
     public NavigationTreePanel(ImagedEmbryo emb){
-        lut = LUT.createLutFromColor(Color.GREEN);
+        lut = LutLoader.openLut("/nfs/waterston/pete/ace3d.lut");
         embryo = emb;
         lut.min = 0;
         lut.max = 255;

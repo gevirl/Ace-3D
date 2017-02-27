@@ -514,7 +514,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 if (bhc.getDirectory() != null){
                     
                     int[] dims = TimePointImage.getIntDims();
-                    submitDialog = new BHCSubmitDialog(Ace3D_Frame.this,bhc.getDirectory().getParent(),dims);
+                    if (bhc.getDirectory().getParent().endsWith("diSPIM")) {
+                        submitDialog = new BHCSubmitDialog(Ace3D_Frame.this,bhc.getDirectory().getPath(),dims);                       
+                    } else submitDialog = new BHCSubmitDialog(Ace3D_Frame.this,bhc.getDirectory().getParent(),dims);
                     submitDialog.setVisible(true);
                 }
             }
@@ -573,7 +575,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     int fromTime = -1;
                     while (fromTime == -1){
                         try {
-                            String ans = JOptionPane.showInputDialog("Enter time to link back to");
+                            int tp = imagedEmbryo.getNucleusFile().getAllTimes().size();
+                            String ans = JOptionPane.showInputDialog(null, "Enter time to link back to", String.valueOf(tp));
                             if (ans == null){
                                 return;
                             }
