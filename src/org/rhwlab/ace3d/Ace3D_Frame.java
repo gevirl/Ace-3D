@@ -167,6 +167,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                             ,Math.min(expSource.getMaxTime(),panel.getMaxTime()) );    
 
                         bhc  = new BHCDirectory(new File(sel,"BHC"));
+                        Ace3D_Frame.this.setTitle(bhc.getDirectory().getParent());
                         imagedEmbryo.getNucleusFile().setBHCTreeDirectory(bhc);                    
 
                         imagedEmbryo.notifyListeners();                    
@@ -193,7 +194,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     File sel = fileChooser.getSelectedFile();
                     try {
                         openSession(sel);
-                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).divisionReport(System.out);
+//                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).divisionReport(System.out);
+                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).timeLinkageReport(System.out);
                     } catch (Exception exc){
                         exc.printStackTrace();
                     }
@@ -735,6 +737,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         if (bhcEle != null){
             openBHCDir(new File(bhcEle.getAttributeValue("path")));
         }
+        this.setTitle(bhc.getDirectory().getParent());
         imagedEmbryo.fromXML(root.getChild("ImagedEmbryo"));
         for (ImageSource source : imagedEmbryo.getSources()){
             panel.setTimeRange(Math.max(source.getMinTime(),panel.getMinTime())

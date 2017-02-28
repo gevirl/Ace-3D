@@ -199,6 +199,35 @@ public class NamedNucleusFile extends LinkedNucleusFile{
             }
         }
     }
+    public void timeLinkageReport(PrintStream stream){
+        stream.println("Time\t  ParentCell\td\tvol");
+        double dMax = 0.0;
+        String dMaxCell = null;
+        String volMaxCell = null;
+        double volMax = 0.0;
+        for (Integer time : this.byTime.keySet()){
+            Set<Nucleus> nucs = this.getNuclei(time);
+            for (Nucleus nuc : nucs){
+                if (!nuc.isDividing()&&!nuc.isLeaf()){
+                    Nucleus[] children = nuc.nextNuclei();
+                    double d = nuc.distance(children[0]);
+                    double volRatio = nuc.getVolume()/children[0].getVolume();
+                    if (volRatio < 1.0) volRatio = 1.0/volRatio;
+                    if (d > dMax ){
+                        dMax = d;
+                        dMaxCell = nuc.getName();
+                    }
+                    if (volRatio > volMax){
+                        volMax = volRatio;
+                        volMaxCell = nuc.getName();
+                    }
+                    stream.printf("%d\t%12s\t%.2f\t%.2f\n",time,nuc.getCellName(),d,volRatio);
+                }
+            }
+        }
+        stream.printf("\n\n%s\tDistance max = %.2f\n",dMaxCell,dMax);
+        stream.printf("%s\tVolume Ratio max = %.2f\n",volMaxCell,volMax);
+    }
     static RealMatrix R;  // embryo tranformation matrix -  aligns the embryo with the divisions file
     static TreeMap<String,Division> divisionMap;   
 
