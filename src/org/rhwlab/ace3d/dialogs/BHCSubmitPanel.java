@@ -74,9 +74,9 @@ public class BHCSubmitPanel extends JPanel {
         this.add(segProb);
         this.add(new JLabel("0-100"));
         
-        this.add(new JLabel("Concentration parameter"));
-        this.add(alpha);
-        this.add(new JLabel("1000-100000000"));
+        this.add(new JLabel("Log(Concentration)"));
+        this.add(lnAlpha);
+        this.add(new JLabel("3-10"));
         
         this.add(new JLabel("Variance"));
         this.add(variance);
@@ -148,7 +148,7 @@ public class BHCSubmitPanel extends JPanel {
     } 
     public double getAlpha(){
         try {
-            return Double.valueOf(alpha.getText().trim());
+            return Math.pow(10.0,Double.valueOf(lnAlpha.getText().trim()));
         } catch (Exception exc){
             return 10000;
         }
@@ -232,7 +232,7 @@ public class BHCSubmitPanel extends JPanel {
     JTextField seriesDir;
     JTextField startTime = new JTextField("1");
     JTextField endTime = new JTextField("400");
-    JTextField alpha = new JTextField("10000");
+    JTextField lnAlpha = new JTextField("5");
     JTextField variance = new JTextField("20");
     JTextField degrees = new JTextField("10");
     JTextField segProb = new JTextField("50");

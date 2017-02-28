@@ -179,66 +179,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         fileMenu.addSeparator();
-/*        
-        JMenuItem virtStack = new JMenuItem("Open Lineaging TIFF Virtual Stack");
-        virtStack.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String vsProp = props.getProperty("VirtualStack");
-                if (vsProp != null){
-                    fileChooser.setSelectedFile(new File(vsProp));
-                } 
-                if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION){    
-                    File sel = fileChooser.getSelectedFile();
-                    String timeStr = setMinTime();
-                    if (timeStr != null){
-                        ImageJHyperstackSource source = new ImageJHyperstackSource(sel,Integer.valueOf(timeStr),"Lineaging",imagedEmbryo); 
-                        panel.setTimeRange(Math.max(source.getMinTime(),panel.getMinTime())
-                            ,Math.min(source.getMaxTime(),panel.getMaxTime()) );  
-                        imagedEmbryo.notifyListeners();
-                        props.setProperty("VirtualStack",sel.getPath());
-                    }
-                }                
-            }
-        });
-        fileMenu.add(virtStack);
-        
-        JMenuItem segTifDir = new JMenuItem("Open Segmented TIF Directory");
-        segTifDir.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String stProp = props.getProperty("SegTiffs");
-                if (stProp != null){
-                    fileChooser.setSelectedFile(new File(stProp));
-                } 
-                if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION){    
-                    File sel = fileChooser.getSelectedFile();
-                    TifDirectoryImageSource source = new TifDirectoryImageSource(sel.getPath(),"Segmented",imagedEmbryo,true);
-                        panel.setTimeRange(Math.max(source.getMinTime(),panel.getMinTime())
-                            ,Math.min(source.getMaxTime(),panel.getMaxTime()) );
-                    imagedEmbryo.notifyListeners();
-                    props.setProperty("SegTiffs",sel.getPath());
-                }                 
-            }
-        });
-        fileMenu.add(segTifDir);
-        
-        JMenuItem bhcOpen = new JMenuItem("Open BHC Trees ");
-        bhcOpen.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    openBHCDir(null);
-                    imagedEmbryo.notifyListeners();
-                    
-                }catch (Exception exc){
-                    exc.printStackTrace();
-                }
-            }
-        });
-        fileMenu.add(bhcOpen); 
-        fileMenu.addSeparator();
- */       
+      
         JMenuItem session = new JMenuItem("Open Existing Session");
         fileMenu.add(session);
         session.addActionListener(new ActionListener(){
