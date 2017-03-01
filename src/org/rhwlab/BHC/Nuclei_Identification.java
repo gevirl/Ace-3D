@@ -338,8 +338,8 @@ public class Nuclei_Identification implements Runnable {
             qsubStream.print(" -classpath %classpath org.rhwlab.BHC.Nuclei_Identification ");
 */           
             qsubStream.printf("cd %s\n", directory.getPath());
-            qsubStream.println("module load java/8u25");
-            qsubStream.printf("java -jar -Xms%sG -Xmx%sG /nfs/waterston/tools3/Ace-3D.jar  ",cores*memory,cores*memory);
+//            qsubStream.println("module load java/8u25");
+            qsubStream.printf("/nfs/waterston/jdk1.8.0_102/bin/java -jar -Xms%sG -Xmx%sG /nfs/waterston/tools3/Ace-3D.jar  ",cores*memory,cores*memory);
             qsubStream.printf("-segThresh %d -S %f -nu %d -alpha %f -segTiff \'%s\'  -lineageTiff \'%s\' -bhcDir %s  ",th,S,nu,alpha,names[1],names[0],directory.getPath());
             if (force!=null){
                 qsubStream.printf(" -force %s ",force);
