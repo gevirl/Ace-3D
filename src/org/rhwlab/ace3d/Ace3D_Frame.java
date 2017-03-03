@@ -5,11 +5,13 @@
  */
 package org.rhwlab.ace3d;
 
-import ij.ImageJ;
 import ij.macro.Interpreter;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -28,6 +30,7 @@ import java.util.TreeMap;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -44,7 +47,6 @@ import org.rhwlab.ace3d.dialogs.BHCSubmitDialog;
 import org.rhwlab.ace3d.dialogs.BHCTreeCutDialog;
 import org.rhwlab.ace3d.dialogs.PanelDisplay;
 import org.rhwlab.dispim.HDF5DirectoryImageSource;
-import org.rhwlab.dispim.ImageJHyperstackSource;
 import org.rhwlab.dispim.ImageSource;
 import org.rhwlab.dispim.ImagedEmbryo;
 import org.rhwlab.dispim.TifDirectoryImageSource;
@@ -533,8 +535,15 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     for (int i=0 ; i<timesArray.length;++i){
                         probsArray[i] = probMap.get(timesArray[i]);
                     }
-                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
                     
+                    new Thread(() -> {
+                        try {
+                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                    }).start();
+
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
                     exc.printStackTrace();
