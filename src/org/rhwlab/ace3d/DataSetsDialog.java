@@ -52,6 +52,10 @@ public class DataSetsDialog extends JFrame {
             p.setProperties(props);
         }
     }
+    public void clear(){
+        map.clear();
+        contrastPanel.removeAll();
+    }
     Ace3D_Frame owner;
     JPanel contrastPanel;
     int min;

@@ -360,7 +360,7 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
             Nucleus matchSisterNuc = ((NucleusLogNode)matchSister).getNucleus(time);
             Nucleus matchNuc = match.getNucleus(time);
             if (matchSisterNuc != null && matchSisterNuc.getVolume() > 0.25*matchNuc.getVolume()){
-                return match;
+                return match;  // sister too large - do not expand up
             }
             if (matchSisterNuc == null || Nucleus.intersect(matchNuc, matchSisterNuc)){
                 return expandUp(source,par);  // yes - continue to expand
@@ -391,14 +391,16 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
             if (nuc == null) return;
             if (nuc.getVolume() < minVolume) return;
             double[] ecc = nuc.eccentricity();
-            if (ecc[1]<.95 || ecc[2]<.95){
+            if (ecc[1]<.95 || ecc[2]<.95){  // don't include very elongated regions
 //                long[] radii = nuc.getRadii();
 //                if (radii[2]<50){
-                    availNodes.add(root);
+                    availNodes.add(root); //no part of the root node has been used and it is big enough and not elongated
                     return;
 //                }
             }
+            return;
         }
+        // some part of the root has been used to get here
         if (root.isLeaf()){
             return;  // nothing to add - the root is a leaf that has already been used
         }

@@ -726,6 +726,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         
     } 
     private void openSession(File xml)throws Exception {
+        Ace3D_Frame.contrastDialog.clear();
+        Ace3D_Frame.dataSetProperties.clear();
         SAXBuilder saxBuilder = new SAXBuilder();
         Document doc = saxBuilder.build(xml);
         Element root = doc.getRootElement();   
