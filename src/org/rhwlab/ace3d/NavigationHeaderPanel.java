@@ -54,7 +54,7 @@ public class NavigationHeaderPanel extends JPanel {
         this.add(labelLeaves);
         
         this.add(new JLabel("Time Scale:"));
-        timeScale = new JTextField("3.0");
+        timeScale = new JTextField("1.5");
         timeScale.setColumns(10);
         timeScale.addActionListener(new ActionListener(){
             @Override
@@ -65,7 +65,7 @@ public class NavigationHeaderPanel extends JPanel {
         this.add(timeScale);  
         
         this.add(new JLabel("Cell Width:"));
-        cellWidth = new JTextField("20.0");
+        cellWidth = new JTextField("18.0");
         cellWidth.setColumns(10);
         cellWidth.addActionListener(new ActionListener(){
             @Override
