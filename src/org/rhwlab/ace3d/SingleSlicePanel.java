@@ -647,7 +647,7 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
         }        
     }
     private void labelNucleus(Graphics g2,Nucleus nuc){
-        g2.drawString(nuc.getName(),screenX(nuc.getCenter()),screenY(nuc.getCenter()));
+        g2.drawString(nuc.getCellName(),screenX(nuc.getCenter()),screenY(nuc.getCenter()));
     }
     public void setEmbryo(ImagedEmbryo em){
         this.embryo = em;
