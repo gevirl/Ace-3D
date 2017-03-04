@@ -37,7 +37,7 @@ public class LinkedNucleusFile implements NucleusFile {
         this.curatedSet.clear();
         this.remnants.clear();
         this.thresholdProbs.clear();
-        selectedNucleus = new SelectedNucleus();
+//        selectedNucleus = new SelectedNucleus();
         
         TreeMap<Integer,Element> timeEleMap = new TreeMap<>();
         for (Element timeEle : nucleiEle.getChildren("Time")){
