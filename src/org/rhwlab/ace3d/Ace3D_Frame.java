@@ -8,10 +8,7 @@ package org.rhwlab.ace3d;
 import ij.macro.Interpreter;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
-import java.awt.Color;
 import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -30,7 +27,6 @@ import java.util.TreeMap;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -298,7 +294,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         calcExp.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                Ace3D_Frame.this.imagedEmbryo.calculateExpression();
+                new Thread(() -> {
+                    Ace3D_Frame.this.imagedEmbryo.calculateExpression();
+                }).start();
             }
         });
         fileMenu.add(calcExp);
