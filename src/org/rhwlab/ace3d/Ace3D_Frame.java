@@ -5,7 +5,6 @@
  */
 package org.rhwlab.ace3d;
 
-import ij.ImageJ;
 import ij.macro.Interpreter;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
@@ -44,7 +43,6 @@ import org.rhwlab.ace3d.dialogs.BHCSubmitDialog;
 import org.rhwlab.ace3d.dialogs.BHCTreeCutDialog;
 import org.rhwlab.ace3d.dialogs.PanelDisplay;
 import org.rhwlab.dispim.HDF5DirectoryImageSource;
-import org.rhwlab.dispim.ImageJHyperstackSource;
 import org.rhwlab.dispim.ImageSource;
 import org.rhwlab.dispim.ImagedEmbryo;
 import org.rhwlab.dispim.TifDirectoryImageSource;
@@ -296,7 +294,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         calcExp.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                Ace3D_Frame.this.imagedEmbryo.calculateExpression();
+                new Thread(() -> {
+                    Ace3D_Frame.this.imagedEmbryo.calculateExpression();
+                }).start();
             }
         });
         fileMenu.add(calcExp);
@@ -533,8 +533,15 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     for (int i=0 ; i<timesArray.length;++i){
                         probsArray[i] = probMap.get(timesArray[i]);
                     }
-                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
                     
+                    new Thread(() -> {
+                        try {
+                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                    }).start();
+
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
                     exc.printStackTrace();
