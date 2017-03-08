@@ -398,7 +398,7 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
                     return;
 //                }
             }
-            return;
+            //return; This was the change that broke autolinking
         }
         // some part of the root has been used to get here
         if (root.isLeaf()){

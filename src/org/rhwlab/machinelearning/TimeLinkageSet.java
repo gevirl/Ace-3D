@@ -126,12 +126,3 @@ public class TimeLinkageSet extends TrainingSet {
 
 
 }
-    static public void main(String[] args)throws Exception{
-        TimeLinkageSet ts = new TimeLinkageSet();
-        ts.addNucleiFrom(new File("/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml"));
-        int iusagdfugsd=0;
-    }
-    String[] labels ={"Time","Cell","Distance","VolumeRatio"};
-    Set<Object[]> positive;
-    Set<Object[]> negative;
-}
