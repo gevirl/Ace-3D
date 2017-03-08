@@ -50,7 +50,6 @@ public class ImagedEmbryo implements Observable {
         nucFile = new NamedNucleusFile();
     }
     public void fromXML(Element root){
-        sources.clear();
         Element sourcesEle = root.getChild("Sources");
         for (Element src : sourcesEle.getChildren()){
             String name = src.getName();

@@ -188,7 +188,7 @@ public class SelectedNucleusFrame extends JFrame implements PlugIn,javafx.beans.
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (embryo.selectedNucleus() != null){
-                    RealMatrix r =((NamedNucleusFile)embryo.getNucleusFile()).orientEmbryo(embryo.selectedNucleus().getTime());
+                    RealMatrix r =((NamedNucleusFile)embryo.getNucleusFile()).orientEmbryoByFourCells(embryo.selectedNucleus().getTime());
                     NamedNucleusFile.setOrientation(r);
                     embryo.nameAllRoots();
                     embryo.notifyListeners();

@@ -33,10 +33,7 @@ public class LinkedNucleusFile implements NucleusFile {
 
     @Override
     public void fromXML(Element nucleiEle) {
-        this.byTime.clear();
-        this.curatedSet.clear();
-        this.remnants.clear();
-        this.thresholdProbs.clear();
+
 //        selectedNucleus = new SelectedNucleus();
         
         TreeMap<Integer,Element> timeEleMap = new TreeMap<>();
