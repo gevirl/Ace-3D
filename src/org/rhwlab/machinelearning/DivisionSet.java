@@ -5,6 +5,7 @@
  */
 package org.rhwlab.machinelearning;
 
+
 import java.io.File;
 import org.rhwlab.dispim.nucleus.Nucleus;
 
@@ -12,6 +13,7 @@ import org.rhwlab.dispim.nucleus.Nucleus;
  *
  * @author gevirl
  */
+
 public class DivisionSet extends TrainingSet {
 
     @Override
@@ -27,6 +29,5 @@ public class DivisionSet extends TrainingSet {
     @Override
     public String[] getLabels() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
+    }   
 }

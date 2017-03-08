@@ -6,21 +6,25 @@
 package org.rhwlab.machinelearning;
 
 import java.io.File;
+
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 
 /**
  *
  * @author gevirl
- */
+ **/
+
 public class TimeLinkageSet extends TrainingSet {
    
-
     @Override
     public void addNucleiFrom(File sessionXML,double localRegion)throws Exception {
         NamedNucleusFile nucFile = super.readNucleusFile(sessionXML);
@@ -60,6 +64,7 @@ public class TimeLinkageSet extends TrainingSet {
             }
         }
     }
+
 
     @Override
     public Comparable[] formDataVector(String classification,Nucleus source, Nucleus[] next) {
@@ -120,4 +125,13 @@ public class TimeLinkageSet extends TrainingSet {
     static String[] labels ={"Class","Time","Cell","Distance","VolumeRatio","IntensityRatio"};
 
 
+}
+    static public void main(String[] args)throws Exception{
+        TimeLinkageSet ts = new TimeLinkageSet();
+        ts.addNucleiFrom(new File("/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml"));
+        int iusagdfugsd=0;
+    }
+    String[] labels ={"Time","Cell","Distance","VolumeRatio"};
+    Set<Object[]> positive;
+    Set<Object[]> negative;
 }
