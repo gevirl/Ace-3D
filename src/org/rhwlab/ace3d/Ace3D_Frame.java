@@ -544,9 +544,10 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
-                    exc.printStackTrace();
+                    if (!(exc instanceof NullPointerException)) {
+                        exc.printStackTrace();
+                    }
                 }
-                
             }
         });        
         JMenuItem unlink = new JMenuItem("Unlink Current Time");

@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import org.jdom2.Element;
 import org.rhwlab.BHC.BHCTree;
 
@@ -63,6 +65,9 @@ public class BHCDirectory {
         }        
     }
     public Set<Integer> getThresholdProbs(int time){
+        if (treeFiles.get(time) == null) {
+            JOptionPane.showMessageDialog(new JFrame(), "Missing BHC file for timepoint " + time);
+        }
         return  treeFiles.get(time).keySet();
     }
 
