@@ -31,7 +31,7 @@ public class BHCDirectory {
         this.dir = new File(xml.getAttributeValue("path"));
         open();
     }
-    final private void open(){
+    public void open(){
         if (!dir.isDirectory()){
             dir = dir.getParentFile();
         }
