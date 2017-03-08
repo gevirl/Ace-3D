@@ -195,7 +195,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     try {
                         openSession(sel);
 //                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).divisionReport(System.out);
-                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).timeLinkageReport(System.out);
+ //                       ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).timeLinkageReport(System.out);
                     } catch (Exception exc){
                         exc.printStackTrace();
                     }
