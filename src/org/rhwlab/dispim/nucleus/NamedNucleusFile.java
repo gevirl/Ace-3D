@@ -5,11 +5,18 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.stat.descriptive.moment.VectorialCovariance;
+import org.apache.commons.math3.stat.descriptive.moment.VectorialMean;
 import org.jdom2.Element;
 
 /**
@@ -97,7 +104,134 @@ public class NamedNucleusFile extends LinkedNucleusFile{
         nameChildren(last.getChild1());
         nameChildren(last.getChild2());
   
-    }   
+    } 
+    static public RealVector homogeneous(double[] v){
+        ArrayRealVector ret = new ArrayRealVector(v.length+1);
+        for (int i=0 ; i<v.length ; ++i){
+            ret.setEntry(i, v[i]);
+        }
+        ret.setEntry(v.length,1.0);
+        return ret;
+    }
+    public RealMatrix orientEmbryoByFourCells(int time){
+        RealVector P2 = null;
+        RealVector ABa = null;
+        // get the four cells at the given time
+        Set<Nucleus> nucs = this.getNuclei(time);
+        ArrayList<RealVector> four = new ArrayList<>();
+        for (Nucleus nuc : nucs){
+            for (String cell : fourCells){
+                if (nuc.getCellName().equals(cell)){
+                    four.add(new ArrayRealVector(nuc.getCenter()));
+                    if (nuc.getCellName().equals("P2")){
+                        P2 = homogeneous(nuc.getCenter());
+                    }else if (nuc.getCellName().equals("ABa")){
+                        ABa = homogeneous(nuc.getCenter());
+                    }
+                }
+            }
+        }
+        if (four.size() != 4) return null;
+        
+        VectorialMean vm = new VectorialMean(3);
+        RealVector mu = new ArrayRealVector(3);
+        for (RealVector f : four){
+            mu = mu.add(f);
+            vm.increment(f.toArray());
+        }
+        mu = mu.mapDivideToSelf(4.0);
+        
+        RealMatrix C = new Array2DRowRealMatrix(3,3);
+        VectorialCovariance vcvTrue = new VectorialCovariance(3,true);
+        VectorialCovariance vcvFalse = new VectorialCovariance(3,false);
+        for (RealVector v : four){
+            RealVector del = v.subtract(mu);
+            C = C.add(del.outerProduct(del));
+            vcvTrue.increment(v.toArray());
+            vcvFalse.increment(v.toArray());
+        }
+        RealMatrix vcvTrueMatrix = vcvTrue.getResult();
+        RealMatrix vcvFalseMatrix = vcvFalse.getResult();
+        EigenDecomposition eigen = new EigenDecomposition(C);
+        double[] real = eigen.getRealEigenvalues();
+        double[] imag = eigen.getImagEigenvalues();
+        RealVector N = eigen.getEigenvector(2);
+        double u = -N.getEntry(0);
+        double v = -N.getEntry(1);
+        double w = -N.getEntry(2);
+        System.out.printf("N: (%f,%f,%f)\n",u,v,w);
+        ArrayRealVector N4 = new ArrayRealVector(4);
+        N4.setEntry(0, u);
+        N4.setEntry(1, v);
+        N4.setEntry(2, w);
+        N4.setEntry(3, 1.0);
+
+        Array2DRowRealMatrix Txz = new Array2DRowRealMatrix(4,4);  //rotate around z-axis to the xz plane
+        double denom2 = Math.sqrt(u*u + v*v);
+        Txz.setEntry(0,0,u/denom2);
+        Txz.setEntry(1,1,u/denom2);
+        Txz.setEntry(1,0,-v/denom2);
+        Txz.setEntry(0,1,v/denom2);
+        Txz.setEntry(2,2,1.0);
+        Txz.setEntry(3,3,1.0);
+        
+        Array2DRowRealMatrix Tz = new Array2DRowRealMatrix(4,4);  // rotate around y-axis to line up with the z-axis
+        double denom = Math.sqrt(u*u + v*v + w*w);
+        Tz.setEntry(0,0,w/denom);
+        Tz.setEntry(2,0,denom2/denom);
+        Tz.setEntry(1,1,1.0);
+        Tz.setEntry(0,2,-denom2/denom);
+        Tz.setEntry(2,2,w/denom);
+        Tz.setEntry(3,3,1.0);
+        
+        Array2DRowRealMatrix Tp = new Array2DRowRealMatrix(4,4);  // translate mean to the origin
+        Tp.setEntry(0,0,1.0);
+        Tp.setEntry(1,1,1.0);
+        Tp.setEntry(2,2,1.0);
+        Tp.setEntry(3,3,1.0);
+        Tp.setEntry(0,3,-mu.getEntry(0));
+        Tp.setEntry(1,3,-mu.getEntry(1));
+        Tp.setEntry(2,3,-mu.getEntry(2));
+        
+        Array2DRowRealMatrix Tx = new Array2DRowRealMatrix(4,4);  // rotate aroud x-axis 180
+        Tx.setEntry(0,0,1.0);
+        Tx.setEntry(1,1,-1.0);
+        Tx.setEntry(2,3,-1.0);
+        Tx.setEntry(0,0,1.0);
+        
+        Array2DRowRealMatrix Tb = new Array2DRowRealMatrix(4,4);  // translate back to mean 
+        Tb.setEntry(0,0,1.0);
+        Tb.setEntry(1,1,1.0);
+        Tb.setEntry(2,2,1.0);
+        Tb.setEntry(3,3,1.0);
+        Tb.setEntry(0,3,mu.getEntry(0));
+        Tb.setEntry(1,3,mu.getEntry(1));
+        Tb.setEntry(2,3,mu.getEntry(2));   
+        
+        RealVector P2p = Tz.operate(Txz.operate(Tp.operate(P2)));
+        RealVector ABap = Tz.operate(Txz.operate(Tp.operate(ABa)));
+        
+        Array2DRowRealMatrix Txy = new Array2DRowRealMatrix(4,4);  // rotate in xy plane around z axis
+        RealVector delta = P2p.subtract(ABap);
+        u = delta.getEntry(0);
+        v = delta.getEntry(1);
+        denom2 = Math.sqrt(u*u + v*v);
+        Txy.setEntry(0,0,v/denom2);
+        Txy.setEntry(1,1,v/denom2);
+        Txy.setEntry(1,0,u/denom2);
+        Txy.setEntry(0,1,-u/denom2);
+        Txy.setEntry(2,2,1.0);
+        Txy.setEntry(3,3,1.0);  
+        
+        for (Nucleus nuc : nucs){
+            RealVector vec = homogeneous(nuc.getCenter());
+            RealVector vecp = Tb.operate(Txy.operate(Tz.operate(Txz.operate(Tp.operate(vec)))));
+            System.out.printf("%s: (%.0f,%.0f,%.0f)  (%.0f,%.0f,%.0f)\n",
+                    nuc.getCellName(),vec.getEntry(0),vec.getEntry(1),vec.getEntry(2),
+                    vecp.getEntry(0),vecp.getEntry(1),vecp.getEntry(2));
+        }
+        return null;
+    }
     public RealMatrix orientEmbryo(int time){
         Nucleus selected = this.getSelected();
         Nucleus sister = selected.getSister();
@@ -228,6 +362,7 @@ public class NamedNucleusFile extends LinkedNucleusFile{
         stream.printf("\n\n%s\tDistance max = %.2f\n",dMaxCell,dMax);
         stream.printf("%s\tVolume Ratio max = %.2f\n",volMaxCell,volMax);
     }
+    static String[] fourCells = {"ABa","ABp","EMS","P2"};
     static RealMatrix R;  // embryo tranformation matrix -  aligns the embryo with the divisions file
     static TreeMap<String,Division> divisionMap;   
 
