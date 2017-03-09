@@ -210,6 +210,7 @@ public class LogNode extends NodeBase implements Node  {
         }
         stream.println();
  */       
+        int freeMem = (int)Runtime.getRuntime().freeMemory()/(1024 * 1024);
         stream.printf("lnd=%s\n", Double.toString(lnd));
         stream.printf("lnGammaN=%s\n", Double.toString(this.lngn));
         stream.printf("ln1MinusPi=%s\n", Double.toString(lnonePi));
@@ -218,6 +219,7 @@ public class LogNode extends NodeBase implements Node  {
         stream.printf("lnDPM=%s\n", Double.toString(lnDPM));
         stream.printf("lnR=%s\n", Double.toString(lnR));
         stream.printf("R=%s\n", Double.toString(Math.exp(lnR)));
+        stream.printf("Free memory=%s\n", Integer.toString(freeMem));
     }  
     
     public String vectorAsString(RealVector v){
