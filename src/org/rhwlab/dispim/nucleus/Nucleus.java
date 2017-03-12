@@ -398,6 +398,7 @@ public class Nucleus implements Comparable {
             this.child2.parent = this;
         }
     }
+
     public void setParent(Nucleus p){
         this.parent = p;
     }

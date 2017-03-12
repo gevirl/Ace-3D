@@ -47,7 +47,26 @@ public class NamedNucleusFile extends LinkedNucleusFile{
             } catch (Exception exc){
                 exc.printStackTrace();
             } 
-        }        
+        } 
+        if (specialMap == null){
+            specialMap = new TreeMap<>();
+            InputStream s = this.getClass().getResourceAsStream("/org/rhwlab/dispim/nucleus/SpecialRules.csv");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(s));
+            try {
+                String line = reader.readLine();
+                line = reader.readLine();
+                while (line != null){
+                    if (!line.startsWith("#")){
+                        String[] tokens = line.split(",");
+                        SpecialDivision special = new SpecialDivision(tokens);
+                        specialMap.put(special.parent,special);
+                    }
+                    line = reader.readLine();
+                }
+            } catch (Exception exc){
+                exc.printStackTrace();
+            }             
+        }
     }
     // toogle the name of the containing cell of the given nucleus with the sister cell
     public void toggleCellName(Nucleus nuc,boolean notify){
@@ -78,6 +97,9 @@ public class NamedNucleusFile extends LinkedNucleusFile{
     // name the children of the given nucleus using division file and the embryo orientatation rotation matrix(if confiremed)
     // if the roation matrix has not been confirmed the names are random
     static public void nameChildren(Nucleus nuc){
+        if (nuc.getCellName().equals("P2")){
+            int asidfsud=0;
+        }
         Nucleus last = LinkedNucleusFile.lastNucleusInCell(nuc);
         if (last.isLeaf()) return ;  // no children
         
@@ -86,17 +108,42 @@ public class NamedNucleusFile extends LinkedNucleusFile{
             if (R != null){
                 Nucleus c1 = last.getChild1();
                 Nucleus c2 = last.getChild2(); 
-                Vector3D direction = divisionDirection(c1,c2);
-                double d0 = new Vector3D(R.operate(direction.toArray())).dotProduct(div.getV());
-                double d1 = new Vector3D(R.operate(direction.scalarMultiply(-1.0).toArray())).dotProduct(div.getV());
-                if (d0 < d1)            {
-                    Nucleus parent = c1.getParent();
-                    parent.setDaughters(c2, c1);  //swap the daughters
+                
+                RealVector v1 = R.operate(homogeneous(c1.getCenter()));
+                RealVector v2 = R.operate(homogeneous(c2.getCenter()));
+                RealVector delV = v2.subtract(v1);
+                
+                RealVector divDir = div.getVector();
+/*                
+                RealVector direction = v2.subtract(v1);
+                double dot = direction.dotProduct(divDir);
+                double d0 = R.operate(direction).dotProduct(div.getVector());
+                double d1 = R.operate(direction.mapMultiply(-1)).dotProduct(div.getVector());
+*/
+                // special division??
+                
+                SpecialDivision special = specialMap.get(last.getCellName());
+                
+                if (special == null){
+                
+                    if (div.child2.endsWith("p") && v2.getEntry(0)-v1.getEntry(0) < 0.0 ){
+                        last.setDaughters(c2, c1);  //swap the daughters
+                    } else if (div.child2.endsWith("v") && v2.getEntry(2)-v1.getEntry(2) < 0.0 ){
+                        last.setDaughters(c2, c1);  //swap the daughters
+                    } else if (div.child2.endsWith("r") && v2.getEntry(1)-v1.getEntry(1) > 0.0 ){
+                        last.setDaughters(c2, c1);  //swap the daughters
+                    }
+                } else{
+                    int index = Math.abs(special.value)-1;
+                    if (special.value*(v2.getEntry(index)-v1.getEntry(index)) < 0.0){
+                        last.setDaughters(c2, c1);  //swap the daughters
+                    }
                 }
             }
             Nucleus.nameCellRecursive(last.getChild1(),div.child1, false);
             Nucleus.nameCellRecursive(last.getChild2(),div.child2, false);   
         } else {
+            // unknown division - can't rename the children
             Nucleus.nameCellRecursive(last.getChild1(),null, false);
             Nucleus.nameCellRecursive(last.getChild2(),null, false);             
         }
@@ -253,15 +300,39 @@ System.out.printf("N: (%f,%f,%f)\n",u,v,w);
         // rotate 90 degrees around the x axis       
         RealVector ABpfs = Tsecond.operate(Tfirst.operate(ABp));
         RealVector EMSfs = Tsecond.operate(Tfirst.operate(EMS));
+        RealVector ABas = Tsecond.operate(ABaf);
+        
+        Array2DRowRealMatrix TABas = new Array2DRowRealMatrix(4,4); // translate ABas to origin
+        TABas.setEntry(0,0,1.0);
+        TABas.setEntry(1,1,1.0);
+        TABas.setEntry(2,2,1.0);
+        TABas.setEntry(3,3,1.0);
+        TABas.setEntry(0,3,-ABas.getEntry(0));
+        TABas.setEntry(1,3,-ABas.getEntry(1));
+        TABas.setEntry(2,3,-ABas.getEntry(2));        
+
+        Array2DRowRealMatrix TABasb = new Array2DRowRealMatrix(4,4); // translate  back to ABas
+        TABasb.setEntry(0,0,1.0);
+        TABasb.setEntry(1,1,1.0);
+        TABasb.setEntry(2,2,1.0);
+        TABasb.setEntry(3,3,1.0);
+        TABasb.setEntry(0,3,ABas.getEntry(0));
+        TABasb.setEntry(1,3,ABas.getEntry(1));
+        TABasb.setEntry(2,3,ABas.getEntry(2));    
+        
         RealMatrix Tx = new Array2DRowRealMatrix(4,4);
         Tx.setEntry(0,0,1);
-        Tx.setEntry(1,2,-1);
         Tx.setEntry(1,1,0);
-        Tx.setEntry(2,1,-1);
         Tx.setEntry(2,2,0);
         Tx.setEntry(3,3,1);
-        
-        Tsecond = Tx.multiply(Tsecond);
+        if (ABpfs.getEntry(1) < EMSfs.getEntry(1)){
+            Tx.setEntry(1,2,-1);
+            Tx.setEntry(2,1,1);
+        }else {
+            Tx.setEntry(1,2,1);
+            Tx.setEntry(2,1,-1);            
+        }
+        Tsecond = TABasb.multiply(Tx.multiply(TABas.multiply(Tsecond)));
 /*        
         if (ABpfs.getEntry(0) > EMSfs.getEntry(0)){
             RealVector ABas = Tsecond.operate(ABaf);
@@ -290,7 +361,7 @@ System.out.printf("N: (%f,%f,%f)\n",u,v,w);
             Tflip.setEntry(3,3,1.0);
             Tsecond = TABasb.multiply(Tflip.multiply(TABas.multiply(Tsecond)));
         }
- */       
+*/        
         RealMatrix T = Tsecond.multiply(Tfirst);
         for (Nucleus nuc : nucs){
             RealVector vec = homogeneous(nuc.getCenter());
@@ -299,8 +370,9 @@ System.out.printf("N: (%f,%f,%f)\n",u,v,w);
                     nuc.getCellName(),vec.getEntry(0),vec.getEntry(1),vec.getEntry(2),
                     vecp.getEntry(0),vecp.getEntry(1),vecp.getEntry(2));
         }
-        return null;
+        return T;
     }
+/*    
     public RealMatrix orientEmbryo(int time){
         Nucleus selected = this.getSelected();
         Nucleus sister = selected.getSister();
@@ -318,16 +390,12 @@ System.out.printf("N: (%f,%f,%f)\n",u,v,w);
         return rotMat;
         
     }
-
+*/
     // determine the direction of a division, given the two just divided nuclei
-    static public Vector3D divisionDirection(Nucleus nuc1,Nucleus nuc2){
-        double[] p0 = nuc1.getCenter();
-        Vector3D v0 = new Vector3D(p0[0],p0[1],p0[2]);
-        
-        double[] p1 = nuc2.getCenter();
-        Vector3D v1 = new Vector3D(p1[0],p1[1],p1[2]);
-
-        return v1.subtract(v0)        ;
+    static public RealVector divisionDirection(Nucleus nuc1,Nucleus nuc2){
+        RealVector v0 = homogeneous(nuc1.getCenter());
+        RealVector v1 = homogeneous(nuc2.getCenter());
+        return v1.subtract(v0);
     }    
     //find the rotation matrix that rotates the A vector onto the B vector
     static public RealMatrix rotationMatrix(Vector3D A,Vector3D B){
@@ -433,7 +501,8 @@ System.out.printf("N: (%f,%f,%f)\n",u,v,w);
     }
     static String[] fourCells = {"ABa","ABp","EMS","P2"};
     static RealMatrix R;  // embryo tranformation matrix -  aligns the embryo with the divisions file
-    static TreeMap<String,Division> divisionMap;   
+    static TreeMap<String,Division> divisionMap; 
+    static TreeMap<String,SpecialDivision> specialMap;
 
     class Division{
         public Division(String d1,String d2,double[] v){
@@ -444,8 +513,29 @@ System.out.printf("N: (%f,%f,%f)\n",u,v,w);
         public Vector3D getV(){
             return new Vector3D(v);
         }
+        public RealVector getVector(){
+            return homogeneous(v);
+        }
         String child1;
         String child2;
         double[] v;
+    }
+    class SpecialDivision {
+        public SpecialDivision(String p,String c1,String c2,int v){
+            this.parent = p;
+            this.child1 = c1;
+            this.child2 = c2;
+            this.value = v;
+        }
+        public SpecialDivision(String[] tokens){
+            parent = tokens[0];
+            child1 = tokens[1];
+            child2 = tokens[2];
+            value = Integer.valueOf(tokens[3]);
+        }
+        String parent;
+        String child1;
+        String child2;
+        int value;
     }
 }
