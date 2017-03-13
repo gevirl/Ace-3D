@@ -2,4 +2,4 @@
 # axis=1,A->P  axis=-2,L->R  axis=3,D->V
 P2,C,P3,3
 P3,D,P4,3
-P4,Z3,Z2,-1
+P4,Z2,Z3,-1

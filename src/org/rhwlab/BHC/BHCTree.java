@@ -359,7 +359,11 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
             // check if sister and match intersect
             Nucleus matchSisterNuc = ((NucleusLogNode)matchSister).getNucleus(time);
             Nucleus matchNuc = match.getNucleus(time);
-            if (matchSisterNuc != null && matchSisterNuc.getVolume() > 0.25*matchNuc.getVolume()){
+            double factor = 0.25;
+            if (time < 100){
+                factor = .5;  // allow early time point to expand up the tree more than later time points
+            }
+            if (matchSisterNuc != null && matchSisterNuc.getVolume() > factor*matchNuc.getVolume()){
                 return match;  // sister too large - do not expand up
             }
             if (matchSisterNuc == null || Nucleus.intersect(matchNuc, matchSisterNuc)){
