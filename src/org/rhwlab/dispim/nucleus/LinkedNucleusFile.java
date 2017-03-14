@@ -8,6 +8,7 @@ package org.rhwlab.dispim.nucleus;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
@@ -738,6 +739,16 @@ System.out.println("Division by split")   ;
             }
         }
         this.notifyListeners();
+    }
+    // find the set of nuclei in the local region of a source nucleus
+    public Set<Nucleus> localRegion(Nucleus source,double radius){
+        HashSet<Nucleus> ret = new HashSet<>();
+        for (Nucleus nuc : this.getNuclei(source.getTime()+1)){
+            if (source.distance(nuc) <= radius ){
+                ret.add(nuc);
+            }
+        }
+        return ret;
     }
     
     File file;

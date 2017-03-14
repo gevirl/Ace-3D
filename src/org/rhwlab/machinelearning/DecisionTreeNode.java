@@ -6,6 +6,7 @@
 package org.rhwlab.machinelearning;
 
 import java.lang.reflect.Constructor;
+import java.util.TreeMap;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
@@ -15,37 +16,46 @@ import org.jdom2.input.SAXBuilder;
  * @author gevirl
  */
 public class DecisionTreeNode {
-    public DecisionTreeNode(String xml){
-        
-    }
-    public DecisionTreeNode(Element ele)throws Exception {
+
+    public DecisionTreeNode(Element ele) {
         this.positive = Integer.valueOf(ele.getAttributeValue("positive"));
         this.total = Integer.valueOf(ele.getAttributeValue("total"));
         this.variable = ele.getAttributeValue("variable");
         if (this.variable != null){
             String type = ele.getAttributeValue("class");
-            Class c = Class.forName(type);
-            Constructor cons = c.getConstructor(Class.forName("java.lang.String"));
-            value = (Comparable)cons.newInstance(ele.getAttributeValue("value"));
-            
-            less = new DecisionTreeNode(ele.getChild("Less"));
-            greater = new DecisionTreeNode(ele.getChild("Greater"));
+            try {
+                Class c = Class.forName(type);
+                Constructor cons = c.getConstructor(Class.forName("java.lang.String"));
+                value = (Comparable)cons.newInstance(ele.getAttributeValue("value"));
+
+                less = new DecisionTreeNode(ele.getChild("Less"));
+                greater = new DecisionTreeNode(ele.getChild("Greater"));
+            } catch (Exception exc){
+                exc.printStackTrace();
+            }
         }
     }
-    static public Element xmlRoot(String file)throws Exception {
-        SAXBuilder saxBuilder = new SAXBuilder();
-        Document doc = saxBuilder.build(file);
-        Element root = doc.getRootElement();  
-        return root;
+    public double positiveClassificaion(Comparable[] data,TreeMap<String,Integer> labelIndexes){
+        if (variable == null){
+            return probability();
+        }
+        Integer i = labelIndexes.get(variable);
+        if (data[i].compareTo(value) <= 0 ) {
+            return less.positiveClassificaion(data, labelIndexes);
+        } else {
+            return greater.positiveClassificaion(data, labelIndexes);
+        }
+        
     }
+    public double probability(){
+        return (double)positive/(double)total;
+    }
+
     
-    static public void main(String[] args)throws Exception {
-        DecisionTreeNode tree = new DecisionTreeNode("/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/DecisionTree.xml");
-    }
-    String variable;
-    Comparable value;
     int positive;
     int total;
+    String variable;
+    Comparable value;
     DecisionTreeNode less;
     DecisionTreeNode greater;
 }

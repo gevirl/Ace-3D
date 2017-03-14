@@ -130,7 +130,7 @@ public class NamedNucleusFile extends LinkedNucleusFile{
                         last.setDaughters(c2, c1);  //swap the daughters
                     } else if (div.child2.endsWith("v") && v2.getEntry(2)-v1.getEntry(2) < 0.0 ){
                         last.setDaughters(c2, c1);  //swap the daughters
-                    } else if (div.child2.endsWith("r") && v2.getEntry(1)-v1.getEntry(1) > 0.0 ){
+                    } else if (div.child2.endsWith("r") && v2.getEntry(1)-v1.getEntry(1) < 0.0 ){
                         last.setDaughters(c2, c1);  //swap the daughters
                     }
                 } else{

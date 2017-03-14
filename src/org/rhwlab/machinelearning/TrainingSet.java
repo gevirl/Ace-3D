@@ -33,10 +33,10 @@ abstract public class TrainingSet {
         nucFile.fromXML(nucFileEle); 
         return nucFile;
     }
-    public void formDecisionTree(String[] labels,int depth){
-        this.labels = labels;
+    public void formDecisionTree(int depth){
         // find the split that creates the maximum gain in information
         ColumnGain bestGain = null;
+        String[] labels = this.getLabels();
         for (int c =1 ; c<labels.length ; ++c){
             sort(c);
             ColumnGain gain = bestSplitInRange(0,data.size());
@@ -57,8 +57,8 @@ abstract public class TrainingSet {
 //System.out.printf("%s,%s,%d,%d\n",labels[bestGain.column],bestGain.value.toString(),this.positiveCount,this.data.size());            
             // check if split is good enouch         
         if (bestGain.lessPos > 0 && bestGain.greatPos > 0 && bestGain.lessPos!=bestGain.lessSize && bestGain.greatPos!=bestGain.greatSize){
-            lessSet.formDecisionTree(labels,depth+1);
-            greaterSet.formDecisionTree(labels,depth+1);
+            lessSet.formDecisionTree(depth+1);
+            greaterSet.formDecisionTree(depth+1);
 /*            
             if (bestGain.lessPos !=0 && bestGain.lessPos != bestGain.lessSize ){
                 lessSet.formDecisionTree(labels,depth+1);
@@ -170,7 +170,8 @@ abstract public class TrainingSet {
         }
         return entropy;
     }
-    public void saveData(PrintStream stream,String[] labels){
+    public void saveData(PrintStream stream){
+        String[] labels = this.getLabels();
         if (labels != null){
             stream.print("#");
             for (int i=0 ; i<labels.length ; ++i){
@@ -213,6 +214,7 @@ abstract public class TrainingSet {
     }
     // report results of decision tree training into xml
     public Element toXML(String nodeType){
+        String[] labels = this.getLabels();
         Element ele = new Element(nodeType);
         
         ele.setAttribute("positive", Integer.toString(this.getPositiveCount()));
@@ -236,7 +238,6 @@ abstract public class TrainingSet {
     abstract public Comparable[] formDataVector(String cl,Nucleus source,Nucleus[] next);
     abstract public String[] getLabels();
     
-    String[] labels;
     Integer positiveCount=null;
     Double entropy=null;
     Double delta = null;

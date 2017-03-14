@@ -243,9 +243,7 @@ public class BHCTree {
     public Match bestMatchInAvailableNodes(Nucleus nuc,int minVolume){
         Match veryBest = null;
         Set<NucleusLogNode> availableNodes = this.availableNodes(minVolume);
-        if (this.isAvailable(availableNodes, 7036)){
-            int hasfuih=0;
-        }
+
         for (NucleusLogNode availableNode : availableNodes){
             Nucleus availNuc = availableNode.getNucleus(time);
             if (availNuc != null) {

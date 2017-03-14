@@ -7,14 +7,11 @@ package org.rhwlab.machinelearning;
 
 import java.io.File;
 
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Set;
+import java.util.TreeMap;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import org.jdom2.Document;
-import org.jdom2.Element;
-import org.jdom2.input.SAXBuilder;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 
@@ -24,6 +21,7 @@ import org.rhwlab.dispim.nucleus.Nucleus;
  **/
 
 public class TimeLinkageSet extends TrainingSet {
+
    
     @Override
     public void addNucleiFrom(File sessionXML,double localRegion)throws Exception {
@@ -79,10 +77,22 @@ public class TimeLinkageSet extends TrainingSet {
         double intratio = source.getAvgIntensity()/next[0].getAvgIntensity();
         if (intratio < 1.0) intratio = 1.0/intratio;
         data[5] = intratio;
+        int postTime = source.timeSinceDivsion();
+        if (postTime == -1) postTime = 0;
+        data[6] = postTime;
         return data;
     }  
     public String[] getLabels(){
         return labels;
+    }
+    public TreeMap<String,Integer> getLabelsAsMap(){
+        if (labelMap == null){
+            labelMap = new TreeMap<>();
+            for (int i=0 ; i<labels.length ; ++i){
+                labelMap.put(labels[i],i);
+            }
+        }
+        return labelMap;
     }
     static public void main(String[] args)throws Exception{
         TimeLinkageSet ts = new TimeLinkageSet();
@@ -112,7 +122,7 @@ public class TimeLinkageSet extends TrainingSet {
         }
   //      ts.saveData(System.out, labels);
   */
-        ts.formDecisionTree(labels,0);
+        ts.formDecisionTree(0);
         
 //        OutputStream stream = new FileOutputStream(xml);     
         OutputStream stream = System.out;
@@ -122,7 +132,8 @@ public class TimeLinkageSet extends TrainingSet {
         
         int iusagdfugsd=0;
     }
-    static String[] labels ={"Class","Time","Cell","Distance","VolumeRatio","IntensityRatio"};
+    static String[] labels = {"Class","Time","Cell","Distance","VolumeRatio","IntensityRatio","PostDivisionTime"};
+    static TreeMap<String,Integer> labelMap;
 
 
 }
