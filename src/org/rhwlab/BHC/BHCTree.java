@@ -339,9 +339,7 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
 
     // expand the given match to the largest possible match  - source already matches the match nucleus , can it be expanded?
     public NucleusLogNode expandUp(Nucleus source,NucleusLogNode match){
-        if (match.getLabel()==104){
-            int iahsdfs=0;
-        }
+
         NucleusLogNode par = (NucleusLogNode)match.getParent();
         if (par == null){
             return match;
@@ -359,7 +357,7 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
             Nucleus matchNuc = match.getNucleus(time);
             double factor = 0.25;
             if (time < 100){
-                factor = .5;  // allow early time point to expand up the tree more than later time points
+                factor = .6;  // allow early time point to expand up the tree more than later time points
             }
             if (matchSisterNuc != null && matchSisterNuc.getVolume() > factor*matchNuc.getVolume()){
                 return match;  // sister too large - do not expand up
