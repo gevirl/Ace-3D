@@ -221,6 +221,29 @@ public class NavigationTreePanel extends JPanel implements ChangeListener{
     public void setHeadPanel(NavigationHeaderPanel headPanel){
         this.headPanel=headPanel;
     }
+    public BufferedImage getCompositeImage(){
+        int w = 0;
+        int hmax = -1;
+        for (int i=0 ; i<buffered.length ; ++i){
+            w = w + buffered[i].getWidth();
+            int h = buffered[i].getHeight();
+            if (h > hmax){
+                hmax = h;
+            }
+        }
+        BufferedImage image = new BufferedImage(w,hmax,BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = image.createGraphics();   
+        g2.setColor(Color.white);
+ 
+        g2.fillRect(0,0,w,hmax);        
+        AffineTransform xForm = new AffineTransform();
+        int xPos =0;
+        for (int i=0 ; i<buffered.length ; ++i){
+            g2.drawImage(buffered[i],new AffineTransformOp(xForm,AffineTransformOp.TYPE_NEAREST_NEIGHBOR),xPos,(int)(roots[i].getTime()*headPanel.getTimeScale()));    
+            xPos = xPos + buffered[i].getWidth();
+        }
+        return image;
+    }
     TreePath[] treePaths;
     NavigationHeaderPanel headPanel;
     LUT lut;

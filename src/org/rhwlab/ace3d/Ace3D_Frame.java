@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import javax.imageio.ImageIO;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -233,63 +234,25 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         fileMenu.addSeparator();
-/*        
-        
-        JMenuItem hyper = new JMenuItem("Import ImageJ Hyperstack");
-        hyper.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String timeStr = setMinTime();
-                if (timeStr != null){
-                    source = new ImageJHyperstackSource();
-                    source.open();
-                    initToSource();
-                    int firstTime = Integer.valueOf(timeStr);
-                    source.setFirstTime(firstTime);
-                    panel.setTimeRange(firstTime, source.getMaxTime());                    
-                }
-            }
-        });
-        fileMenu.add(hyper);
 
-        JMenuItem superVoxel = new JMenuItem("Open TGMM SuperVoxel Binary Files");
-        superVoxel.addActionListener(new ActionListener(){
+        JMenuItem saveTree = new JMenuItem("Save Tree Image As");
+        saveTree.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                String svFile = props.getProperty("TGMMSuperVoxelBinaryFile");
-                if (svFile != null){
-                    sourceChooser.setSelectedFile(new File(svFile));
-                } 
-                if (sourceChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION){
-                    props.setProperty("TGMMSuperVoxelBinaryFile",sourceChooser.getSelectedFile().getPath()); 
-                    source = new TGMMSuperVoxelSource(sourceChooser.getSelectedFile().getPath());
-                    source.open();
-                    initToSource();
-                }
-                int fhsduis=0;
-            }
-        });
-        fileMenu.add(superVoxel);
-       
-        JMenuItem open = new JMenuItem("Open Images from HDF5");
-        open.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String hdf5File = props.getProperty("HDF5ImageFile");
-                if (hdf5File != null){
-                    ij.io.OpenDialog.setDefaultDirectory(new File(hdf5File).getParent());
-                }
-                source = new Hdf5ImageSource();
-                if (source.open()){
-                    props.setProperty("HDF5ImageFile", source.getFile());
-                    initToSource();
+                try {
+                    JFileChooser ch = new JFileChooser(bhc.getDirectory().getParentFile());
+                    int retVal = ch.showSaveDialog(panel);
+                    if (retVal == JFileChooser.APPROVE_OPTION){
+                        ImageIO.write(navFrame.getTreeImage(),"png", ch.getSelectedFile()); 
+                    }
+                }catch (Exception exc){
+                     exc.printStackTrace();
                 }
             }
         });
-        fileMenu.add(open);
+        fileMenu.add(saveTree);
+        fileMenu.addSeparator();
         
-
-*/        
         JMenuItem calcExp = new JMenuItem("Calculate Expression");
         calcExp.addActionListener(new ActionListener(){
             @Override

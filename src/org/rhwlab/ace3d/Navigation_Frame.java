@@ -13,6 +13,7 @@ import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
@@ -334,6 +335,9 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
             return (Nucleus)node.getUserObject();
         }  
         return null;        
+    }
+    public BufferedImage getTreeImage(){
+        return treePanel.getCompositeImage();
     }
             
             
