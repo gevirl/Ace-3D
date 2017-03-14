@@ -334,6 +334,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         cutItem.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
+                bhc.open();
                 try {
                     cutTree();
                 } catch (Exception exc){
@@ -526,7 +527,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                             fromTime = Integer.valueOf(ans);
                         } catch (Exception exc){}
                     }
-                    bhc.open(); // Does this let you autolink newly segmented timepoints without restarting the program?
+                    bhc.open();
                     TreeMap<Integer,Integer> probMap = mapTimesToThreshProbs(fromTime,getCurrentTime());
                     Set<Integer> timesSet = probMap.navigableKeySet();
                     Integer[] timesArray = timesSet.toArray(new Integer[0]);
