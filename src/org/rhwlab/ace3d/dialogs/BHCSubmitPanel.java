@@ -9,12 +9,15 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import org.rhwlab.dispim.datasource.BoundingBox;
 
 /**
@@ -23,8 +26,15 @@ import org.rhwlab.dispim.datasource.BoundingBox;
  */
 public class BHCSubmitPanel extends JPanel {
     public BHCSubmitPanel(String init, int[] dims){
+        super();
+        ButtonGroup group = new ButtonGroup();       
+        group.add(waterque);
+        group.add(sageque);
+        group.add(runlocal);
+        waterque.setSelected(true);    
+        
         this.dims = dims;
-        this.setLayout(new GridLayout(15,3));
+        this.setLayout(new GridLayout(17,3));
         
         this.add(new JLabel("Cores to request"));
         this.add(cores);
@@ -34,10 +44,20 @@ public class BHCSubmitPanel extends JPanel {
         this.add(memory);
         this.add(new JLabel(""));
         
+        
         this.add(new JLabel("To waterston grid"));
-        waterque.setSelected(true);
         this.add(waterque);  
         this.add(new JLabel(""));        
+        
+        this.add(new JLabel("To sage grid"));
+        this.add(sageque);  
+        this.add(new JLabel("")); 
+
+        this.add(new JLabel("Run locally"));
+        this.add(runlocal);  
+        this.add(new JLabel("")); 
+        
+
         
         this.add(new JLabel("Force KMeans/BHC"));
         this.add(forceKMeans);  
@@ -226,7 +246,9 @@ public class BHCSubmitPanel extends JPanel {
     int[] dims;
     JCheckBox forceKMeans = new JCheckBox();
     JCheckBox forceBHC = new JCheckBox();
-    JCheckBox waterque = new JCheckBox();
+    JRadioButton waterque = new JRadioButton("");
+    JRadioButton sageque = new JRadioButton("");
+    JRadioButton runlocal = new JRadioButton("");
     JTextField cores = new JTextField("2");
     JTextField memory = new JTextField("22");
     JTextField seriesDir;

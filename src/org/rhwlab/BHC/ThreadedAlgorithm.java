@@ -45,6 +45,7 @@ public class ThreadedAlgorithm implements Runnable {
         for (int i=0 ; i<nodeList.size()-1 ; ++i){
             Map map = Collections.synchronizedMap(new HashMap<>());
             MergeAction merge = new MergeAction(nodeList,i,i+1,map);
+/*            
             ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors(),
                     ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                     new Thread.UncaughtExceptionHandler() {
@@ -54,6 +55,8 @@ public class ThreadedAlgorithm implements Runnable {
                     System.exit(0);
                 }
             },false);
+*/
+            ForkJoinPool pool = new ForkJoinPool();
             try {
                 pool.invoke(merge);
             } catch (Exception exc){
@@ -140,8 +143,9 @@ public class ThreadedAlgorithm implements Runnable {
 
             profile.report(System.out,"Starting MergeAction");
             // make new pairs with all the clusters
-            Map map = Collections.synchronizedMap(new HashMap<>());
+            Map map = Collections.synchronizedMap(new HashMap<>());           
             MergeAction merge = new MergeAction(nodeList,T,0,nodeList.size()-1,map);
+/*            
             ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors(),
                     ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                     new Thread.UncaughtExceptionHandler() {
@@ -151,6 +155,8 @@ public class ThreadedAlgorithm implements Runnable {
                     System.exit(0);
                 }
             },false);
+*/
+            ForkJoinPool pool = new ForkJoinPool();
             try {
                 pool.invoke(merge);
             } catch(Exception exc){

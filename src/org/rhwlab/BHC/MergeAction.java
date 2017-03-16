@@ -67,5 +67,5 @@ public class MergeAction extends RecursiveAction {
     int end;
     Map pairs;
 
-    static int mergeSize = 2000;
+    static int mergeSize = 2500;
 }
