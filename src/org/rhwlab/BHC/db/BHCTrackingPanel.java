@@ -81,6 +81,20 @@ public class BHCTrackingPanel extends TrackingPanel implements ActionListener {
                 } else {
                     this.getModel().setValue(row,"Tracking" , "Complete", true);
                 }
+                for (int i=0 ; i<tokens.length; ++i){
+                    if (tokens[i].startsWith("nu=")){
+                        String[] values = tokens[i].split("\"");
+                        this.getModel().setValue(row,"DegreesFreedom" ,values[1], true);
+                    }
+                    else if (tokens[i].startsWith("alpha")){
+                        String[] values = tokens[i].split("\"");
+                        Integer logConc = new Integer((int)Math.log10(Double.valueOf(values[1])));
+                        this.getModel().setValue(row,"Log Conc" ,logConc.toString() , true);                        
+                    }
+                    else if (tokens[i].startsWith("s=")){
+                        this.getModel().setValue(row,"Variance" ,tokens[i+1] , true);  
+                    }
+                }
             }
             
             

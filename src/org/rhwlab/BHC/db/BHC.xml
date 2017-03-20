@@ -19,15 +19,22 @@
     <Column header="Reason"  selectColumn="T" dbcolumn="Reason" class="org.rhwlab.spreadsheet.Reason" editor="org.rhwlab.spreadsheet.ListEditor"></Column>     
     <Column header="Name" class="org.rhwlab.LMS.TextCell" dbcolumn="diSPIMName" width="200" >
         <Listener column="BHCDirectory"></Listener>
+        <Listener column="BHCID"></Listener>
     </Column>
-    <Column header="Time" class="org.rhwlab.LMS.IntegerCell" dbcolumn="Time" editor="org.rhwlab.spreadsheet.TextEditor"></Column>  
+    <Column header="Time" class="org.rhwlab.LMS.IntegerCell" dbcolumn="Time" editor="org.rhwlab.spreadsheet.TextEditor">
+        <Listener column="BHCID"></Listener>
+    </Column>  
 
-    <Column header="SegProb" class="org.rhwlab.LMS.IntegerCell" dbcolumn="SegmentationThreshold" editor="org.rhwlab.spreadsheet.TextEditor" width="75" ></Column>
+    <Column header="SegProb" class="org.rhwlab.LMS.IntegerCell" dbcolumn="SegmentationThreshold" editor="org.rhwlab.spreadsheet.TextEditor" width="75" >
+        <Listener column="BHCID"></Listener>
+    </Column>
     <Column header="Log Conc" class="org.rhwlab.LMS.IntegerCell" dbcolumn="LogConcentration" editor="org.rhwlab.spreadsheet.TextEditor" width="75" ></Column>
-    <Column header="VoxelRange" class="org.rhwlab.LMS.TextCell" dbcolumn="VoxelRange"  editor="org.rhwlab.spreadsheet.TextEditor" width="75" ></Column>
-    <Column header="DegressFreedom" class="org.rhwlab.LMS.IntegerCell" dbcolumn="DegreesFreedom" editor="org.rhwlab.spreadsheet.ListEditor" width="75" ></Column>
+    <Column header="Variance" class="org.rhwlab.LMS.DoubleCell" dbcolumn="Variance"  editor="org.rhwlab.spreadsheet.TextEditor" width="75" ></Column>
+    <Column header="DegreesFreedom" class="org.rhwlab.LMS.IntegerCell" dbcolumn="DegreesFreedom" editor="org.rhwlab.spreadsheet.ListEditor" width="75" ></Column>
     
     <Column header="BHCDirectory" class="org.rhwlab.BHC.db.Directory" ></Column> 
-    
+    <Column header="BHCID" class="org.rhwlab.BHC.db.BHCID" dbcolumn="BHCID" >
+        <Listener column="Tracking"></Listener>
+    </Column>
 >        
 </SpreadSheet>
