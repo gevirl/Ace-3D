@@ -29,9 +29,10 @@ public class ClusteredDataSource extends DataSourceBase  implements VoxelDataSou
     public ClusteredDataSource(String file)throws Exception {
         this.openFromClusters(file);
     }
-    public ClusteredDataSource(VoxelClusterer[] clusterers,double thresh,int D){
+    public ClusteredDataSource(VoxelClusterer[] clusterers,Segmentation segmentation,int D){
         this.D = D;
-        this.segThresh = thresh;
+        this.segmentation = segmentation;
+        this.segThresh = segmentation.getThreshold();
         
         // how many total clusters and total points?
         int K = 0;
@@ -184,6 +185,7 @@ public class ClusteredDataSource extends DataSourceBase  implements VoxelDataSou
     public void saveAsXML(String file)throws Exception {
         OutputStream stream = new FileOutputStream(file);
         Element root = new Element("KMeansClustering");
+        this.segmentation.getBoundingBox().toXMl(root);
         root.setAttribute("NumberOfClusters",Integer.toString(centers.length));
         root.setAttribute("Partitions", Integer.toString(partitions));
         root.setAttribute("Dimensions",Integer.toString(D));
@@ -322,6 +324,7 @@ public class ClusteredDataSource extends DataSourceBase  implements VoxelDataSou
     RealVector[] centers;
     int minIntensity;
     int maxIntensity;
+    Segmentation segmentation;
     double segThresh; // the threshold used in the segmentation
  //   int background;
 

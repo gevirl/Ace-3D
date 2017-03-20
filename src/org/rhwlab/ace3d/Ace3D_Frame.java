@@ -17,6 +17,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +41,8 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.rhwlab.BHC.BHCTree;
+import org.rhwlab.BHC.db.BHCTrackingPanel;
+import org.rhwlab.LMS.views.LabMan;
 import org.rhwlab.ace3d.dialogs.BHCSubmitDialog;
 import org.rhwlab.ace3d.dialogs.BHCTreeCutDialog;
 import org.rhwlab.ace3d.dialogs.PanelDisplay;
@@ -53,6 +56,7 @@ import org.rhwlab.dispim.nucleus.LinkedNucleusFile;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 import org.rhwlab.dispim.nucleus.NucleusFile;
+import org.rhwlab.spreadsheet.TrackingPanel;
 
 /**
  *
@@ -60,6 +64,15 @@ import org.rhwlab.dispim.nucleus.NucleusFile;
  */
 public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     public  Ace3D_Frame()  {
+        InputStream[] xml = new InputStream[1];
+        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/BHC/db/BHC.xml");
+        try {
+            labMan = new LabMan(xml);
+
+            labMan.setVisible(true);
+        } catch (Exception exc){
+            exc.printStackTrace();
+        }
         
         this.addMouseListener(new MouseAdapter(){
             @Override
@@ -428,6 +441,16 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 }
             }
         });
+        
+        JMenuItem bhcTable = new JMenuItem("BHC Table");
+        segmenting.add(bhcTable);
+        bhcTable.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                labMan.setVisible(true);
+
+            }
+        });
 /*        
         JMenuItem outlierItem = new JMenuItem("Resegment Outliers");
         outlierItem.addActionListener(new ActionListener(){
@@ -709,6 +732,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         Element bhcEle = root.getChild("BHCTreeDirectory");
         if (bhcEle != null){
             openBHCDir(new File(bhcEle.getAttributeValue("path")));
+            
+            
         }
         this.setTitle(bhc.getDirectory().getParentFile().getName());
         imagedEmbryo.fromXML(root.getChild("ImagedEmbryo"));
@@ -716,8 +741,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             panel.setTimeRange(Math.max(source.getMinTime(),panel.getMinTime())
                 ,Math.min(source.getMaxTime(),panel.getMaxTime()) );
         }
-        imagedEmbryo.notifyListeners();  
-        
+        imagedEmbryo.notifyListeners(); 
+        BHCTrackingPanel sheet = (BHCTrackingPanel)labMan.getPanel("BHC");
+        sheet.setEmbryo(bhc,imagedEmbryo);
         Element dsEle = root.getChild("DataSets");
         for (Element props : dsEle.getChildren("DataSetProperties")){
             String name = props.getAttributeValue("Name");
@@ -957,6 +983,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     BHCDirectory bhc;
     VolumeIntensityPlot viPlot;
     PanelDisplay viDialog;
+    LabMan labMan;
     
     static JCheckBoxMenuItem segmentedNuclei;
     static JCheckBoxMenuItem inactiveNuclei;

@@ -102,7 +102,7 @@ public class SegmentedTiffDataSource extends TiffDataSource implements Segmented
             clusterer.join();
         } 
 
-        ClusteredDataSource ret =  new ClusteredDataSource(clusterers.toArray(new VoxelClusterer[0]),segmentation.getThreshold(),this.getD());
+        ClusteredDataSource ret =  new ClusteredDataSource(clusterers.toArray(new VoxelClusterer[0]),segmentation,this.getD());
         ret.setPartition(mx);
         return ret;
     }
@@ -137,6 +137,9 @@ public class SegmentedTiffDataSource extends TiffDataSource implements Segmented
         ret.setAdjusted(prob);
         return ret;
     } 
+    public Segmentation getSegmentation(){
+        return segmentation;
+    }
     Segmentation segmentation;
 
     

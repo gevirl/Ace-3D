@@ -5,6 +5,8 @@
  */
 package org.rhwlab.dispim.datasource;
 
+import org.jdom2.Element;
+
 /**
  *
  * @author gevirl
@@ -31,6 +33,14 @@ public class BoundingBox {
     }
     public Double getMax(int d){
         return maxs[d];
+    }
+    public void toXMl(Element ele){
+        ele.setAttribute("xmin", Integer.toString(mins[0].intValue()));
+        ele.setAttribute("ymin", Integer.toString(mins[1].intValue()));
+        ele.setAttribute("zmin", Integer.toString(mins[2].intValue()));
+        ele.setAttribute("xmax", Integer.toString(maxs[0].intValue()));
+        ele.setAttribute("ymax", Integer.toString(maxs[1].intValue()));
+        ele.setAttribute("zmax", Integer.toString(maxs[2].intValue()));        
     }
     Double[] mins;
     Double[] maxs;

@@ -110,7 +110,13 @@ public class BHCDirectory {
         bhcEle.setAttribute("path", dir.getPath()) ;    
         return bhcEle;
     }
+    public Set<Integer> getTimes(){
+        return this.treeFiles.keySet();
+    }
 
+    public File getTreeFile(int time,int prob){
+        return this.treeFiles.get(time).get(prob);
+    }
     // convert file names to include segmentation threshold
     // this is one time use only
     static public void convert(File dir)throws Exception {
