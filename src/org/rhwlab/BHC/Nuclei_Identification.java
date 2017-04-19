@@ -7,6 +7,7 @@ package org.rhwlab.BHC;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,17 +116,7 @@ public class Nuclei_Identification implements Runnable {
                 System.exit(2);
             }
         }
- /*       
-        if (!gmmFile.exists() || force){
-            try {
-                this.runTreeCut(BHCTreeFile, gmmFile);
 
-            } catch (Exception exc){
-                exc.printStackTrace();
-                System.exit(3);
-            }
-        }
-        */
     }
     private void runMicroCluster(SegmentedTiffDataSource segSource,File microClusterFile)throws Exception {
         int nVoxels = segSource.getSegmentN();
@@ -182,56 +173,8 @@ public class Nuclei_Identification implements Runnable {
         this.runBHC(mcSource, BHCTreeFile);
         
     }
-    private void runTreeCut(File BHCTreeFile,File gmmFile) throws Exception {
- //       BHCTree tree = new BHCTree(BHCTreeFile.getPath());
- //       tree.saveCutAtThresholdAsXML(gmmFile.getPath(),.5);
-/*        
-        Double[] post = tree.allPosteriors().toArray(new Double[0]);
-        for (int i=0 ; i<post.length ; ++i){
-            if (post[i] >= 0.5){
-                tree.saveCutAtThresholdAsXML(gmmFile.getPath(),post[i-1]);
-                break;
-            }
-        }
-*/        
-    }
-/*    
-    static public void runBHCStudy(File microClusterFile)throws Exception {
-        double[] alphas = new double[8];
-        alphas[0] = 1000.0;
-        for (int i=1 ; i<alphas.length ; ++i){
-            alphas[i] = 10.0*alphas[i-1];
-        }
-        double[] precisions = new double[10];
-        precisions[0] = 50.0;
-        for (int i=1 ; i<precisions.length ; ++i){
-            precisions[i] = precisions[i-1] + 50.0;
-        }
-        MicroClusterDataSource microDataSource = new MicroClusterDataSource(microClusterFile.getPath());
-        PrintStream stream = new PrintStream(microClusterFile.getPath()+".study");
-        for (double alpha : alphas){
-            for (double prec : precisions){
-                ThreadedAlgorithm alg = new ThreadedAlgorithm();
-                alg.setSource(microDataSource); 
-                alg.setPrecision(prec);
-                alg.setNu(20);
-                alg.init(alpha);
-                alg.run();
-                BHCTree tree = alg.resultAsBHCTree();
-                Double[] post = tree.allPosteriors().toArray(new Double[0]);
-                for (int i=0 ; i<post.length ; ++i){
-                    if (post[i] >= 0.5){
-                        Element ele = tree.cutTreeAtThreshold(post[i-1]);
-                        List<Element> eleList = ele.getChildren("GaussianMixtureModel");
-                        stream.printf("%e\t%f\t%d\n",alpha,prec,eleList.size());
-                        break;
-                    }
-                }
-                stream.flush();
-            }
-        }
-    }
-    */
+       
+
     // determine the number of microclusters to form given the number of voxels in the segmented tiff
     static int clusterCount(int nVox){
         int ret = nVox/microClusterSize;
@@ -242,50 +185,40 @@ public class Nuclei_Identification implements Runnable {
         }
         return ret;
     }
-/*    
-    static public void submitStudyTimes(File directory,TreeMap<Integer,String[]> tiffs)throws Exception {
-        if (tiffs.isEmpty()) return;
+
+    static public void submitFromMap(Set<TreeMap<String,Object>> jobs) throws Exception {
         
-        File scriptFile = new File(directory,"SubmitStudyTimes.sh");
-       
+        System.getProperty("user.name");
+        long t = System.currentTimeMillis();
+        File scriptFile = new File("/net/waterston/vol9/diSPIM",System.getProperty("user.name")+Long.toString(t)+"Submit.sh");
+        scriptFile.setWritable(true,false);
+        
         PrintStream scriptStream = new PrintStream(scriptFile);
-        scriptStream.printf("cd %s\n", directory.getPath());
-        
-        for (int time : tiffs.keySet()){
-            String[] names = tiffs.get(time);
-            String fileName = new File(names[1]).getName();
-            String baseName = baseName(fileName);
-            File[] xmls = xmlFiles(directory,baseName);
+        for (TreeMap<String,Object> map : jobs){
+            String grid = (String)map.get("Grid");
+            File directory = (File)map.get("Directory");
+            Integer time = (Integer)map.get("Time");
+            Integer cores = (Integer)map.get("Cores");
+            Integer memory = (Integer)map.get("Memory");
+            Integer logConc = (Integer)map.get("LogConc");
+            BoundingBox box = (BoundingBox)map.get("BoundingBox");
+            Double variance = (Double)map.get("Variance");
+            Integer dfs = (Integer)map.get("DegreesFreedom");
+            Integer prob = (Integer)map.get("ProbThresh");
 
-           
-            scriptStream.printf("qsub -e %s -o %s %s.qsub\n",directory.getPath(),directory.getPath(),baseName);
             
-            // write the qsub file
-            PrintStream qsubStream = new PrintStream(new File(directory,baseName+".qsub"));
-            qsubStream.println("#$ -S /bin/bash");
-            qsubStream.println("#$ -l mfree=40G");
+            if (directory.mkdir()) directory.setWritable(true, false);  // makes the directory if needed
+             
+            scriptStream.printf("cd %s\n", directory.getPath());
             
-     //       qsubStream.println("#$ -l h=w014");
-            qsubStream.println("#$ -pe serial 1-10");
-            qsubStream.println("cd /nfs/waterston/Ace3D");
-            qsubStream.println("PATH=/nfs/waterston/jdk1.8.0_102/bin:$PATH");
-            qsubStream.println("JAVA_HOME=/nfs/waterston/jdk1.8.0_102");
-            qsubStream.println("M2_HOME=/nfs/waterston/apache-maven-3.3.9");
-            qsubStream.print("/nfs/waterston/apache-maven-3.3.9/bin/mvn \"-Dexec.args=-Xms36000m -Xmx36000m -classpath %classpath org.rhwlab.BHC.Nuclei_Identification ");
-            qsubStream.printf("-study -first %d -last %d -segTiff \"%s\"  -lineageTiff \"%s\" -dir %s  ",time,time,names[1],names[0],directory.getPath());
-
-            qsubStream.print("\" -Dexec.executable=/nfs/waterston/jdk1.8.0_102/bin/java -Dexec.classpathScope=runtime org.codehaus.mojo:exec-maven-plugin:1.2.1:exec");
-            qsubStream.println();
-            qsubStream.close();
+ //           scriptStream.printf("qsub -e %s -o %s \"%s.qsub\"\n",directory.getPath(),directory.getPath(),baseName);
         }
         scriptStream.close();
-         scriptFile.setExecutable(true, false);
- 
+        scriptFile.setExecutable(true, false);
         // start the submission script
         ProcessBuilder pb = new ProcessBuilder("ssh","grid.gs.washington.edu",scriptFile.getPath());
-        Process p = pb.start();        
+        Process p = pb.start();         
     }
-    */
     static public void submitTimePoints(boolean water,File directory,TreeMap<Integer,String[]> tiffs,String force,int cores,int memory,double alpha,double S,int nu,int th,BoundingBox box)throws Exception {
         if (tiffs.isEmpty()) return;
         directory.mkdir();
@@ -326,6 +259,7 @@ public class Nuclei_Identification implements Runnable {
             qsubStream.println("#$ -l h_rt=9:0:0");
      //       qsubStream.println("#$ -l h=w014");
             qsubStream.printf("#$ -pe serial %d\n",cores);
+            qsubStream.printf("#$ -binding linear_automatic:%d", cores);
             if (!water){
                 qsubStream.println("#$ -P sage");
             }

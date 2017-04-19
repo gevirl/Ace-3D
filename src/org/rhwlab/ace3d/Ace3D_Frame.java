@@ -15,10 +15,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,11 +44,12 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.rhwlab.BHC.BHCTree;
-import org.rhwlab.BHC.db.BHCTrackingPanel;
+import org.rhwlab.LMS.views.BHCPanel;
 import org.rhwlab.LMS.views.LabMan;
 import org.rhwlab.ace3d.dialogs.BHCSubmitDialog;
 import org.rhwlab.ace3d.dialogs.BHCTreeCutDialog;
 import org.rhwlab.ace3d.dialogs.PanelDisplay;
+import org.rhwlab.db.MySql;
 import org.rhwlab.dispim.HDF5DirectoryImageSource;
 import org.rhwlab.dispim.ImageSource;
 import org.rhwlab.dispim.ImagedEmbryo;
@@ -53,10 +57,8 @@ import org.rhwlab.dispim.TifDirectoryImageSource;
 import org.rhwlab.dispim.TimePointImage;
 import org.rhwlab.dispim.nucleus.BHCDirectory;
 import org.rhwlab.dispim.nucleus.LinkedNucleusFile;
-import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 import org.rhwlab.dispim.nucleus.NucleusFile;
-import org.rhwlab.spreadsheet.TrackingPanel;
 
 /**
  *
@@ -65,10 +67,10 @@ import org.rhwlab.spreadsheet.TrackingPanel;
 public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     public  Ace3D_Frame()  {
         InputStream[] xml = new InputStream[1];
-        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/BHC/db/BHC.xml");
+//        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/BHC/db/BHC.xml");
+        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/LMS/config/BHC.xml");
         try {
             labMan = new LabMan(xml);
-
             labMan.setVisible(true);
         } catch (Exception exc){
             exc.printStackTrace();
@@ -451,51 +453,23 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 
             }
         });
-/*        
-        JMenuItem outlierItem = new JMenuItem("Resegment Outliers");
-        outlierItem.addActionListener(new ActionListener(){
+        
+        JMenuItem backload = new JMenuItem("Backload BHC table");
+        backload.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-//                    cutTreeOutlier();
+                    backloadBHCTable();
                 } catch (Exception exc){
                     exc.printStackTrace();
                 }
             }
         });        
-        selectedTimePoint.add(outlierItem);
- */       
-
+        segmenting.add(backload);
         
         JMenu linking = new JMenu("Linking");
         menuBar.add(linking);
-/*        
-        JMenuItem linkItem = new JMenuItem("Auto Link");
-        linking.add(linkItem);
-        linkItem.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int fromTime = -1;
-                    while (fromTime == -1){
-                        try {
-                            String ans = JOptionPane.showInputDialog("Enter time to link back to");
-                            if (ans == null){
-                                return;
-                            }
-                            fromTime = Integer.valueOf(ans);
-                        } catch (Exception exc){}
-                    }
-                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLink(fromTime, getCurrentTime());
-                    
-//                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
-                } catch (Exception exc){
-                    exc.printStackTrace();
-                }
-                
-            }
-        });
-*/
+
         JMenuItem searchlinkItem = new JMenuItem("Auto Link - Tree Search");
         linking.add(searchlinkItem);
         searchlinkItem.addActionListener(new ActionListener(){
@@ -680,28 +654,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     public int getCurrentTime(){
         return panel.getTime();
     }
-/*    
-    private void openNucFile()throws Exception {
-        String f = props.getProperty("NucFile");
-        if (f != null){
-            nucChooser.setSelectedFile(new File(f));
-        }         
-        if (nucChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION){
-            nucFile = new NamedNucleusFile(nucChooser.getSelectedFile());
-            nucFile.open();
-
-            if (imagedEmbryo != null){
-                imagedEmbryo.setNucleusFile(nucFile);
-            }            
-            nucFile.addListener(navFrame);
-            nucFile.addSelectionOberver(selectedNucFrame);
-            nucFile.addSelectionOberver(panel);            
-            
-            props.setProperty("NucFile",nucFile.getFile().getPath());            
-
-        }
-    }
-*/    
+    
     // starting from BHC directory, no nucleus file exists yet
     private void openBHCDir(File sel)throws Exception {
         if (sel == null){
@@ -742,8 +695,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 ,Math.min(source.getMaxTime(),panel.getMaxTime()) );
         }
         imagedEmbryo.notifyListeners(); 
-        BHCTrackingPanel sheet = (BHCTrackingPanel)labMan.getPanel("BHC");
-        sheet.setEmbryo(bhc,imagedEmbryo);
+        BHCPanel sheet = (BHCPanel)labMan.getPanel("BHC");
+        sheet.setEmbryo(bhc.getDirectory().getParentFile().getName());
         Element dsEle = root.getChild("DataSets");
         for (Element props : dsEle.getChildren("DataSetProperties")){
             String name = props.getAttributeValue("Name");
@@ -826,81 +779,56 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
  //           bhcNucFile.setThreshold(nextThresh);
         }
     }
-/*
-    private void cutTreeOutlier()throws Exception {
-        int time = this.getCurrentTime();
-        BHCNucleusDirectory bhc = ((Ace3DNucleusFile)nucFile).getBHC();
-        BHCNucleusFile bhcNucFile = bhc.getFileforTime(time); 
-        BHCTree tree = imagedEmbryo.getBHCTree(time);
-        BHCNucleusFile replace = bhcNucFile.cutTreeOutlier(tree);
-        if (replace != null){
-            ((Ace3DNucleusFile)this.nucFile).replaceTime(replace);
-        }
-    }
-    private void saveAsNucFile()throws Exception {
-        buildChooser();
-        if (nucFile != null && nucFile.getFile()!=null){
-            nucChooser.setSelectedFile(nucFile.getFile().getParentFile());
-        } else {
-            java.util.Properties pros = System.getProperties();
-            Map<String,String> map = System.getenv();
-            nucChooser.setSelectedFile(new File(System.getProperty("user.home")));
-        }
-        if (nucChooser.showSaveDialog(panel) == JFileChooser.APPROVE_OPTION){
-            File f = nucChooser.getSelectedFile();
-            if (nucFile.getFile()!=null && f.getPath().equals(nucFile.getFile().getPath())){
+ 
 
-                if (JOptionPane.showConfirmDialog(rootPane,"Replace the original nucleus file?")==JOptionPane.OK_OPTION){
-                    nucFile.saveAs(f);
+
+
+   public void backloadBHCTable()throws Exception {
+        String diSpimName = bhc.getDirectory().getParentFile().getName();
+        PreparedStatement state = MySql.getMySql().getStatement("insert into BHC (LogConcentration,Variance,DegreesFreedom,diSPIMName,BHCTime,SegmentationThreshold,BHCID) "
+                + "values (?,?,?,?,?,?,?)");
+        PreparedStatement trackState = MySql.getMySql().getStatement("insert into LMSTracking (ID,DBTable,Project,Status) values (?,?,?,?) ");
+        LinkedNucleusFile nucFile = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
+        for (int time : bhc.getTimes()){
+            Integer probUsed = nucFile.getThresholdProb(time);
+            for (int prob : bhc.getThresholdProbs(time)){
+                File file = bhc.getTreeFile(time, prob);
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                String line = reader.readLine();
+                String[] tokens= line.split(" ");
+                state.setString(4, diSpimName);
+                state.setInt(5,time);
+                state.setString(6,Integer.toString(prob));
+                String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, time, prob);
+                state.setString(7,id);
+                
+                trackState.setString(1,id);
+                trackState.setString(2,"BHC");
+                trackState.setString(3, "Imaging");
+                
+                if (probUsed != null && prob == probUsed){
+                    trackState.setString(4, "Active");
+                } else {
+                    trackState.setString(4,"Complete");
                 }
-                
-            } else {
-                nucFile.saveAs(nucChooser.getSelectedFile());
-            }
-        }
-    }
- */   
-
-
-/*
-    private void buildLutMenu(){
-        lutMenu.removeAll();
-        Iterator<DataSetDesc> dataSetIter = source.getDataSets().iterator();
-        while(dataSetIter.hasNext()){
-            ButtonGroup buttonGroup = new ButtonGroup();
-            String dataset = dataSetIter.next().getName();
-            JMenu dataSetMenu = new JMenu(dataset);
-            lutMenu.add(dataSetMenu);
-            Set<String> lutNames = lookUpTables.getLutNames();
-            JCheckBoxMenuItem[] lutItems = new JCheckBoxMenuItem[lutNames.size()];
-            int i=0;
-            for (String lutName : lutNames){
-                
-                lutItems[i] = new JCheckBoxMenuItem(lutName);
-                lutItems[i].setName(dataset);
-                lutItems[i].addActionListener(new ActionListener(){
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        JCheckBoxMenuItem checked = (JCheckBoxMenuItem)e.getSource();
-                        if (checked.getState()){
-
-                            dataSetLuts.put(checked.getName(),lookUpTables.getLUT(checked.getText()));
-                            panel.showCurrentImage();
-                        }
+                for (int i=0 ; i<tokens.length; ++i){
+                    if (tokens[i].startsWith("nu=")){
+                        String[] values = tokens[i].split("\"");
+                        state.setInt(3, Integer.valueOf(values[1]));
                     }
-                });
-                dataSetMenu.add(lutItems[i]);
-                buttonGroup.add(lutItems[i]);
-                if (lutName.equalsIgnoreCase("Gray")){
-                    lutItems[i].setSelected(true);
+                    else if (tokens[i].startsWith("alpha")){
+                        String[] values = tokens[i].split("\"");
+                        state.setInt(1, (int)Math.log10(Double.valueOf(values[1])));
+                    }
+                    else if (tokens[i].startsWith("s=")){
+                        state.setDouble(2, Double.valueOf(tokens[i+1]));
+                    }
                 }
-                ++i;
+                state.execute();
+                trackState.execute();
             }
-            dataSetLuts.put(dataset,lookUpTables.getLUT("Gray"));
         }
     }
-*/
-
     @Override
     public void stateChanged(ChangeEvent e) {
         panel.stateChanged(e);
@@ -983,7 +911,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     BHCDirectory bhc;
     VolumeIntensityPlot viPlot;
     PanelDisplay viDialog;
-    LabMan labMan;
+    static public LabMan labMan;
+    
     
     static JCheckBoxMenuItem segmentedNuclei;
     static JCheckBoxMenuItem inactiveNuclei;
