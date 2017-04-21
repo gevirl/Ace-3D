@@ -13,12 +13,18 @@ import java.util.List;
 import java.util.Set;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
+import org.rhwlab.BHC.NucleusLogNode;
 
 /**
  *
  * @author gevirl
  */
 public class Division implements Comparable {
+    public Division(Nucleus parent,NucleusLogNode n1,NucleusLogNode n2,int time){
+        this(parent,n1.getNucleus(time),n2.getNucleus(time));
+        this.node1 = n1;
+        this.node2 = n2;
+    }
     public Division(Nucleus parent,Nucleus child1,Nucleus child2){
         this(parent,child1,parent.distance(child1),child2,parent.distance(child2));
     }
@@ -349,6 +355,8 @@ public class Division implements Comparable {
     Nucleus parent;
     Nucleus child1;
     Nucleus child2;
+    NucleusLogNode node1;
+    NucleusLogNode node2;
     double dist;  // sum of dist1 + dist2  
     double dist1;  //distance from parent to child1
     double dist2;  //distance from parent to child2

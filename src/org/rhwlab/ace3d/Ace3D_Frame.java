@@ -511,7 +511,50 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     }
                 }
             }
+        });      
+        JMenuItem neighborlinkItem = new JMenuItem("Auto Link - Limited Neighborhood");
+        linking.add(neighborlinkItem);
+        neighborlinkItem.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int fromTime = -1;
+                    while (fromTime == -1){
+                        try {
+                            int tp = imagedEmbryo.getNucleusFile().getAllTimes().size();
+                            String ans = JOptionPane.showInputDialog(null, "Enter time to link back to", String.valueOf(tp));
+                            if (ans == null){
+                                return;
+                            }
+                            fromTime = Integer.valueOf(ans);
+                        } catch (Exception exc){}
+                    }
+                    bhc.open();
+                    TreeMap<Integer,Integer> probMap = mapTimesToThreshProbs(fromTime,getCurrentTime());
+                    Set<Integer> timesSet = probMap.navigableKeySet();
+                    Integer[] timesArray = timesSet.toArray(new Integer[0]);
+                    Integer[] probsArray = new Integer[timesArray.length];
+                    for (int i=0 ; i<timesArray.length;++i){
+                        probsArray[i] = probMap.get(timesArray[i]);
+                    }
+                    
+                    new Thread(() -> {
+                        try {
+                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLinkLimited(timesArray,probsArray,minimumVolume,neighborhoodradius); // minvolume of 50
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                    }).start();
+
+//                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
+                } catch (Exception exc){
+                    if (!(exc instanceof NullPointerException)) {
+                        exc.printStackTrace();
+                    }
+                }
+            }
         });        
+        
         JMenuItem unlink = new JMenuItem("Unlink Current Time");
         linking.add(unlink);
         unlink.addActionListener(new ActionListener(){
@@ -927,6 +970,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     static TreeMap<String,DataSetProperties> dataSetProperties = new TreeMap<>();
     
     static public int minimumVolume = 50;
+    static public double neighborhoodradius = 100;
     static public void main(String[] args) {
         EventQueue.invokeLater(new Runnable(){
             @Override

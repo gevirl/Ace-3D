@@ -58,17 +58,19 @@ public class NucleusLogNode extends LogNode{
     
     // build a nucleus from this node
     public Nucleus getNucleus(int time){
-        if (nuc == null){
+        if (nuc == null && nucleusFormable){
             Element ele = this.formElementXML();
             if (ele == null){
-                return null;
+                nucleusFormable = false;
+                nuc = null;
+            } else {
+                nuc = new Nucleus(new BHCNucleusData(time,ele));  // do not have a time value
             }
-            nuc = new Nucleus(new BHCNucleusData(time,ele));  // do not have a time value
         }
         return nuc;
     }
 
-
+    boolean nucleusFormable = true;
     Nucleus nuc;
     double volume;
     double[] eccentricity;

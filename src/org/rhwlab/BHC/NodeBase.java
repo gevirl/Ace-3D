@@ -300,6 +300,13 @@ abstract public class NodeBase implements Node {
         }
         return null;
     }
+    public Node getAunt(){
+        NodeBase p = (NodeBase)this.getParent();
+        if (p != null){
+            return p.getSister();
+        }
+        return null;
+    }
     public int getLabel(){
         return label;
     }

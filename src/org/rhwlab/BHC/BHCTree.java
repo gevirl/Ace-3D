@@ -240,15 +240,36 @@ public class BHCTree {
         return ret;
     }
 */
-    public Match bestMatchInAvailableNodes(Nucleus nuc,int minVolume){
+    // find the neighbor nodes in the entire tree
+    public void  neighborNodes(Nucleus nuc,double distance,Set<NucleusLogNode> set){
+        for (Node root : this.roots){
+            neighborNodes(nuc,distance,(NucleusLogNode)root,set);
+        }
+    }
+            
+    // find all the nodes in a subtree that are within a given radius of a nucleus
+    public void  neighborNodes(Nucleus nuc,double distance,NucleusLogNode root,Set<NucleusLogNode> set){
+        Nucleus rootNuc = root.getNucleus(time);
+        if (root != null){
+            double d = nuc.distance(rootNuc);
+            if (d <=distance){
+                set.add(root);
+            }
+            if (!root.isLeaf()){
+                neighborNodes(nuc,distance,(NucleusLogNode)root.getRight(),set);
+                neighborNodes(nuc,distance,(NucleusLogNode)root.getLeft(),set);
+            }
+        }
+    }        
+    public Match bestMatchInAvailableNodes(Nucleus nuc,int minVolume,Sphere sphere){
         Match veryBest = null;
-        Set<NucleusLogNode> availableNodes = this.availableNodes(minVolume);
+        Set<NucleusLogNode> availableNodes = this.availableNodes(minVolume,sphere);  // determine the available nodes (roots of subtrees with only unused microclusters)
 
         for (NucleusLogNode availableNode : availableNodes){
-            Nucleus availNuc = availableNode.getNucleus(time);
+            Nucleus availNuc = availableNode.getNucleus(time);  //get the nucleus coresponding to the root of the available subtree 
             if (availNuc != null) {
                 double score = Nucleus.similarityScore(nuc,availNuc);
-                Match match = bestMatch(nuc,availableNode,score);
+                Match match = bestMatch(nuc,availableNode,score);  //determine the best match in the subtree rooted at the available node
                 if (veryBest == null){
                     veryBest = match;
                 }else {
@@ -260,14 +281,12 @@ public class BHCTree {
         }
         return veryBest;
     }
+
     // find the best nucleus to match in the subtree root at the given node
     public Match bestMatch(Nucleus nuc,NucleusLogNode node,double nodeScore){
         Match ret = new Match(node,nodeScore);
         boolean debug = false;
-        if (nuc.getName().equals("106_4710")&&node.label==2254) {
-            int sdifuhs=0;
-            debug = true;
-        }
+
  /*
 if (debug) System.out.printf("Matching nuc= %s(%.2f,%.2f,%.2f) V%.2f I%.2f to node =%d(%.2f) (%.2f,%.2f,%.2f) V%.2f I%.2f dist=%f\n", 
         nuc.getName(),c[0],c[1],c[2],nuc.getVolume(),nuc.getAvgIntensity(),
@@ -283,6 +302,7 @@ if (debug) System.out.printf("Volume returning from %d(%f) as best \n",node.labe
             return ret;  // nodes beyond here will be too small, so stop
         }
         
+        // find the best match is the left subtree
         Nucleus leftNuc = null;
         double leftScore = Double.MAX_VALUE;
         Match leftMatch = null;
@@ -336,7 +356,38 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         return new Match(node,nodeScore);
 */        
     }
-
+    public NucleusLogNode expandUpInNeighborhood(Nucleus source,NucleusLogNode match,Set<NucleusLogNode> neighborhood){
+        NucleusLogNode par = (NucleusLogNode)match.getParent();
+        if (par == null){
+            return match;
+        }
+        if (!neighborhood.contains(par)){
+            return match;
+        }
+        NodeBase matchSister = (NodeBase)match.getSister();
+        if (matchSister.isUsedRecursive()){   // cannot go up if any part of the sister has already been used
+            return match;
+        }
+        
+        if (Nucleus.matchForExpansion(source, par.getNucleus(time))){  // does the parent of the match still match?
+            return expandUpInNeighborhood(source,par,neighborhood);  // yes - continue to expand
+        } else {
+            // check if sister and match intersect
+            Nucleus matchSisterNuc = ((NucleusLogNode)matchSister).getNucleus(time);
+            Nucleus matchNuc = match.getNucleus(time);
+            double factor = 0.25;
+            if (time < 100){
+                factor = .6;  // allow early time point to expand up the tree more than later time points
+            }
+            if (matchSisterNuc != null && matchSisterNuc.getVolume() > factor*matchNuc.getVolume()){
+                return match;  // sister too large - do not expand up
+            }
+            if (matchSisterNuc == null || Nucleus.intersect(matchNuc, matchSisterNuc)){
+                return expandUpInNeighborhood(source,par,neighborhood);  // yes - continue to expand
+            }
+        }
+        return match;        
+    }
     // expand the given match to the largest possible match  - source already matches the match nucleus , can it be expanded?
     public NucleusLogNode expandUp(Nucleus source,NucleusLogNode match){
 
@@ -377,26 +428,32 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         }
         return false;
     }
-    public Set<NucleusLogNode> availableNodes(int minVolume){
+    // determine the set of subtrees that contain only available microclusters (have not been used in a nucleus)
+    // the nucleus formed at the root of the subtree must have a volume > minVolume
+    // the nucleus 
+    public Set<NucleusLogNode> availableNodes(int minVolume,Sphere sphere){
+    
         HashSet<NucleusLogNode> ret = new HashSet<>();
         for (Node root : roots){
-            availableNodes(time,(NucleusLogNode)root,ret,minVolume);
+            availableNodes(time,(NucleusLogNode)root,ret,minVolume,sphere);
         }
         return ret;
     }
     
-    static public void availableNodes(int t,NucleusLogNode root,HashSet<NucleusLogNode> availNodes,int minVolume){
+    // available nodes in a neighborhood defined by a sphere (radius and center)
+    // if sphere is null, gets neighborhood is unlimited
+    static public void availableNodes(int t,NucleusLogNode root,HashSet<NucleusLogNode> availNodes,int minVolume,Sphere sphere){
+
         if (!root.isUsedRecursive()){
+            // no part of the subtree has been used
             Nucleus nuc = root.getNucleus(t);  
             if (nuc == null) return;
             if (nuc.getVolume() < minVolume) return;
             double[] ecc = nuc.eccentricity();
             if (ecc[1]<.95 || ecc[2]<.95){  // don't include very elongated regions
-//                long[] radii = nuc.getRadii();
-//                if (radii[2]<50){
+                if (sphere == null || sphere.isInside(nuc))
                     availNodes.add(root); //no part of the root node has been used and it is big enough and not elongated
                     return;
-//                }
             }
             //return; This was the change that broke autolinking
         }
@@ -407,8 +464,8 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         if (root.isUsed()){
             return;
         }
-        availableNodes(t,(NucleusLogNode)root.getLeft(),availNodes,minVolume);
-        availableNodes(t,(NucleusLogNode)root.getRight(),availNodes,minVolume);
+        availableNodes(t,(NucleusLogNode)root.getLeft(),availNodes,minVolume,sphere);
+        availableNodes(t,(NucleusLogNode)root.getRight(),availNodes,minVolume,sphere);
     }
     
     public static void saveXML(String file,Element root)throws Exception {
