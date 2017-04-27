@@ -468,7 +468,7 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         return ret;
     }
-    public void conflictResolvingAutoLink(Integer[] times,Integer[] threshs,int minVolume)throws Exception {
+    public void conflictResolvingAutoLink(Integer[] times,Integer[] threshs,int minVolume,double distance)throws Exception {
         Nucleus[] toNucs;
         for (int i=1 ; i<times.length ; ++i){
             Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);
@@ -491,24 +491,42 @@ public class LinkedNucleusFile implements NucleusFile {
             if (isCurated(t)){
                 
             } else {
+                TreeMap<String,Nucleus> remnantMap = this.remnants.get(t);
+                if (remnantMap == null){
+                    remnantMap = new TreeMap<>();
+                    remnants.put(t,remnantMap);
+                }    
+                remnantMap.clear();
+                this.removeNuclei(t, false);
+                this.thresholdProbs.put(t,threshs[i]);
                 
-            } 
+                uncuratedAutoLink(polar,nonPolar,t,tree,distance);
+            
+                for (NucleusLogNode avail : tree.availableNodes(minVolume,null)){   
+                    Nucleus availNuc = avail.getNucleus(t);
+                    if (availNuc !=null && availNuc.getVolume() > 500 )
+                    remnantMap.put(availNuc.getName(),availNuc);                
+                }  
+            }
         }
         this.notifyListeners();
     }
     private void uncuratedAutoLink(ArrayList<Nucleus> polar,ArrayList<Nucleus> nonPolar,int time,BHCTree tree,double distance){
         
         // find the best matching tree node for each given nucleus
-        HashMap<Nucleus,NucleusLogNode> timeLinks = new HashMap<>();
-        bestTimeLinks(polar,time,tree,distance,timeLinks);
-        bestTimeLinks(nonPolar,time,tree,distance,timeLinks);
+        List<Binding> bindings = new ArrayList<>();       
+        bestTimeLinks(nonPolar,time,tree,distance,bindings);
+        TreeMap<Nucleus,NucleusLogNode> timeLinks = new TreeMap<>();  // nonpolar nuclei with time links
+        for (Binding nonPolarBind : bindings){
+            timeLinks.put(nonPolarBind.getNucleus(), nonPolarBind.getNode());
+        }
+        bestTimeLinks(polar,time,tree,distance,bindings);  // add any polar bindings
         
         // find potential divisions from nonpolar nuclei
-        List<Division> divisions = new ArrayList<>();
         for (Nucleus nuc : nonPolar){
             NucleusLogNode timeLink = timeLinks.get(nuc);
-            if (timeLink != null){
-                TreeSet<NucleusLogNode> neighbors = new TreeSet<>();
+            if (timeLink != null){  // did the nucleus get linked in time (or is it dying)
+                TreeSet<NucleusLogNode> neighbors = new TreeSet<>(); // potential set of nodes that could be part of the division
                 NucleusLogNode sisterNode = (NucleusLogNode)timeLink.getSister();
                 if (sisterNode != null){
                     tree.neighborNodes(nuc, distance, sisterNode, neighbors);
@@ -521,75 +539,63 @@ public class LinkedNucleusFile implements NucleusFile {
                 if (divNode != null){
                     Division div = new Division(nuc,timeLink,divNode,time);
                     if (div.isPossible()){
-                        divisions.add(div);
+                        bindings.add(new Binding(nuc,divNode));
                     }
                 }
             }
         }
         
-        // resolve conflicts
-    }
-    // fix any time link conflicts - return true if any were fixed
-    private boolean fixLinkConflicts(HashMap<Nucleus,NucleusLogNode> timeLinks,int time){
-        Object[] links = timeLinks.entrySet().toArray();
-        boolean ret = false;
-        // find a conflict
-        for (int i=0 ; i<links.length-1 ; ++i){
-            Entry<Nucleus,NucleusLogNode> entry1 = (Entry<Nucleus,NucleusLogNode>)links[i];
-            Nucleus nuc1 = entry1.getKey();
-            NucleusLogNode node1 = entry1.getValue();
-            int label1 = node1.getLabel();
-            for (int j=i+1 ; j<links.length ; ++j){
-                Entry<Nucleus,NucleusLogNode> entry2 = (Entry<Nucleus,NucleusLogNode>)links[j];
-                Nucleus nuc2 = entry2.getKey();
-                NucleusLogNode node2 = entry2.getValue();
-                int label2 = node2.getLabel();
-                
-                if (label1 == label2){
-                    // conflict - same exact node linked to different nuclei
-                    NucleusLogNode left = (NucleusLogNode)node1.getLeft();
-                    NucleusLogNode right = (NucleusLogNode)node1.getRight();
-                    double dleft = nuc1.distance(left.getNucleus(time));
-                    double dright = nuc1.distance(right.getNucleus(time));
-                    if (dleft < dright){
-                        timeLinks.put(nuc1, left);
-                        timeLinks.put(nuc2, right);
-                    } else {
-                        timeLinks.put(nuc2, left);
-                        timeLinks.put(nuc1, right);                        
-                    }
-                } else if (node1.isDescendent(node2)){
-                    // demote node2
-                    timeLinks.put(nuc2, (NucleusLogNode)node1.getSister());
-                    
-                } else if (node2.isDescendent(node1)){
-                    timeLinks.put(nuc1, (NucleusLogNode)node2.getSister());
-                }
+        // resolve conflicting bindings
+        Conflict conflict = findConflict(bindings);
+        while (conflict != null){
+            conflict.resolve(time);
+            // remove conflicted binding and add the resolved bindings
+            for (Binding b : conflict.getConflicted()){
+                bindings.remove(b);
             }
-
+            for (Binding b : conflict.getResolved()){
+                bindings.add(b);
+            }
+            conflict = findConflict(bindings);
         }
-        return ret;
-    }
-/*    
-    private NucleusLogNode findConflict(List<Division> divisions,HashMap<Nucleus,NucleusLogNode> timeLinks){
-        HashMap<NucleusLogNode,Object> map = new HashMap<>();
-        for (Entry<Nucleus,NucleusLogNode> entry : timeLinks.entrySet()){
-
+        
+        // make all the links with the resolved bindings
+        for (Binding bind : bindings){
+            Nucleus toAdd = bind.getNode().getNucleus(time);
+            this.addNucleus(toAdd);           
+            bind.getNode().markedAsUsed();
+            bind.getNucleus().linkTo(toAdd);
         }
+       
     }
-*/
-    private void bestTimeLinks(List<Nucleus> nucs,int time,BHCTree tree,double distance,Map<Nucleus,NucleusLogNode> matches){
+    // finds a conflicting binding if there is one
+    // returns null if all bindings are not conflicting
+    private Conflict findConflict(List<Binding> bindings){
+        TreeMap<NucleusLogNode,Binding> map = new TreeMap<>(new NodeCompare());
+        for (Binding binding : bindings){
+            Binding other = map.get((binding.node));
+            if (other == null){
+                map.put(binding.node,binding);
+            } else {
+                return new Conflict(binding,other);
+            }
+        }
+        return null;
+    }
+
+    private void bestTimeLinks(List<Nucleus> nucs,int time,BHCTree tree,double distance,List<Binding> bindings){
         for (Nucleus nuc : nucs){
-            matches.put(nuc,bestInSubtree(nuc,time,tree,distance));
+            Binding b = bestInSubtree(nuc,time,tree,distance);
+            bindings.add(b);
         }
     }
     // finds the best matching node in a BHC subtree to a given nucleus
-    private NucleusLogNode bestInSubtree(Nucleus nuc,int time,BHCTree tree,double distance){
+    private Binding bestInSubtree(Nucleus nuc,int time,BHCTree tree,double distance){
         // make the neighborhood
         TreeSet<NucleusLogNode> neighborhood = new TreeSet<>();
         tree.neighborNodes(nuc, distance, neighborhood);  // finds nodes close to the given nucleus
         
-        NucleusLogNode ret = bestInNeighborhood(nuc,time,neighborhood,tree);
+        Binding ret = new Binding(nuc,bestInNeighborhood(nuc,time,neighborhood,tree));
         return ret;
     }
     // finds the best matching node in a neighborhood of nodes to a given nucleus
@@ -786,15 +792,18 @@ System.out.println("Division by split")   ;
                 
                 // do the polar bodies - no division considered
                 for (Nucleus nuc : polar){
-                    NucleusLogNode best = tree.bestMatchInAvailableNodes(nuc,minVolume,new Sphere(nuc,neighborhoodRadius)).getNode();
-                    NucleusLogNode expand = tree.expandUp(nuc, best);
-                    Nucleus bestNuc = best.getNucleus(t);
-                    Nucleus expandNuc = expand.getNucleus(t);
-                    if (bestNuc != null){
-                        expand.markedAsUsed();
-                        toList.add(expandNuc);
-                        this.addNucleus(expandNuc);
-                        nuc.linkTo(expandNuc);  
+                    Match match = tree.bestMatchInAvailableNodes(nuc,minVolume,new Sphere(nuc,neighborhoodRadius));
+                    if (match != null){
+                        NucleusLogNode best = match.getNode();
+                        NucleusLogNode expand = tree.expandUp(nuc, best);
+                        Nucleus bestNuc = best.getNucleus(t);
+                        Nucleus expandNuc = expand.getNucleus(t);
+                        if (bestNuc != null){
+                            expand.markedAsUsed();
+                            toList.add(expandNuc);
+                            this.addNucleus(expandNuc);
+                            nuc.linkTo(expandNuc);  
+                        }
                     }
                 }
                 
@@ -1034,15 +1043,81 @@ System.out.println("Division by split")   ;
             }            
             
             return l1 -l2;
+        }
+    }
+    // two conflicting bindings
+    public class Conflict {
+        Binding bind1;
+        Binding bind2;
+        Binding resolved1;
+        Binding resolved2;
+        
+        public Conflict(Binding b1,Binding b2){
+            this.bind1 = b1;
+            this.bind2 = b2;
             
         }
-        
+        public Binding[] getConflicted(){
+            Binding[] ret = new Binding[2];
+            ret[0] = bind1;
+            ret[1] = bind2;
+            return ret;
+        }
+        public Binding[] getResolved(){
+            Binding[] ret = new Binding[2];
+            ret[0] = resolved1;
+            ret[1] = resolved2;
+            return ret;
+        }        
+        public void resolve(int time){
+            if (bind1.getNode().getLabel() == bind2.getNode().getLabel()){
+                Nucleus left = ((NucleusLogNode)bind1.getNode().getLeft()).getNucleus(time);
+                Nucleus right = ((NucleusLogNode)bind1.getNode().getRight()).getNucleus(time);
+                double s1 = Nucleus.similarityScore(left, bind1.getNucleus()) + Nucleus.similarityScore(right, bind2.getNucleus());
+                double s2 = Nucleus.similarityScore(left, bind2.getNucleus()) + Nucleus.similarityScore(right, bind2.getNucleus());
+                if (s1 < s2){
+                    resolved1 = new Binding(bind1.getNucleus(),((NucleusLogNode)bind1.getNode().getLeft()));
+                    resolved2 = new Binding(bind2.getNucleus(),((NucleusLogNode)bind1.getNode().getRight()));
+                    
+                }else {
+                    resolved1 = new Binding(bind2.getNucleus(),((NucleusLogNode)bind1.getNode().getLeft()));
+                    resolved2 = new Binding(bind1.getNucleus(),((NucleusLogNode)bind1.getNode().getRight()));                    
+                }
+            } else {
+                if (bind2.getNode().isDescendent(bind1.getNode().getRight()) ){
+                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind1.getNode().getRight());
+                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind1.getNode().getLeft());
+                }
+                else if(bind2.getNode().isDescendent(bind1.getNode().getLeft()) ) {
+                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind1.getNode().getLeft());
+                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind1.getNode().getRight());                    
+                }                
+                else if(bind1.getNode().isDescendent(bind2.getNode().getRight()) ) {
+                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind2.getNode().getLeft());
+                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind2.getNode().getRight());                    
+                }
+       
+                else if(bind1.getNode().isDescendent(bind2.getNode().getLeft()) ) {
+                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind2.getNode().getRight());
+                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind2.getNode().getLeft());                    
+                }                
+            }
+        }
     }
-    // two different nuclei linked to two nodes that share some or all voxels
-    public class Conflict {
-        Nucleus nuc1;
-        Nucleus nuc2;
-        NucleusLogNode node1;
-        NucleusLogNode node2;
+    public class Binding  {
+        Nucleus nuc;
+        NucleusLogNode node;
+        
+        public Binding(Nucleus nuc,NucleusLogNode node){
+            this.node = node;
+            this.nuc = nuc;
+        }
+        NucleusLogNode getNode(){
+            return this.node;
+        }
+        public Nucleus getNucleus(){
+            return nuc;
+        }
+
     }
 }

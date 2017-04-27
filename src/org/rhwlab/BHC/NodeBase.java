@@ -368,7 +368,7 @@ abstract public class NodeBase implements Node {
         }
         this.used = u;
     }
-    private NodeBase findDescendent(int lab){
+    public NodeBase findDescendent(int lab){
         if (this.label == lab){
             return this;
         }
@@ -385,7 +385,7 @@ abstract public class NodeBase implements Node {
         }  
         return null;
     }
-    private NodeBase findAncestor(int label){
+    public NodeBase findAncestor(int label){
         if (this.getParent()==null){
             return null;
         }

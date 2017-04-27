@@ -384,11 +384,14 @@ public class NucleusData implements Comparable {
         return buf.toString();
     }
     public static RealMatrix precisionFromString(String s){
-        double [][] ret = new double[3][3];
         String[] tokens = s.split(" ");
-        for (int i=0 ; i<3 ; ++i){
-            for (int j=i ; j<3 ; ++j){
-                ret[i][j] = Double.valueOf(tokens[3*i+j]);
+        int d = (int)Math.sqrt(tokens.length);
+        
+        double [][] ret = new double[d][d];
+        
+        for (int i=0 ; i<d ; ++i){
+            for (int j=i ; j<d ; ++j){
+                ret[i][j] = Double.valueOf(tokens[d*i+j]);
                 ret[j][i] = ret[i][j];
             }
         }
