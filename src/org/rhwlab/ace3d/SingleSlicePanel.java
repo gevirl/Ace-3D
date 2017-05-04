@@ -33,9 +33,11 @@ import javax.swing.JSlider;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import static org.rhwlab.ace3d.Ace3D_Frame.minimumVolume;
 import org.rhwlab.dispim.CompositeTimePointImage;
 import org.rhwlab.dispim.ImagedEmbryo;
 import org.rhwlab.dispim.TimePointImage;
+import org.rhwlab.dispim.nucleus.LinkedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
 import org.rhwlab.dispim.nucleus.NucleusData;
 import org.rhwlab.dispim.nucleus.NucleusFile;
@@ -521,7 +523,7 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
            Shape nucShape = nuc.getShape(slice, dim, bufW, bufH);   
            if (nucShape != null){
 
-               g2.setColor(Color.MAGENTA);
+               g2.setColor(Color.YELLOW);
                g2.draw(nucShape);               
            }
        }
