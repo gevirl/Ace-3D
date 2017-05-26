@@ -114,7 +114,7 @@ public class NamedNucleusFile extends LinkedNucleusFile{
                 RealVector delV = v2.subtract(v1);
                 
                 RealVector divDir = div.getVector();
-/*                
+/*               
                 RealVector direction = v2.subtract(v1);
                 double dot = direction.dotProduct(divDir);
                 double d0 = R.operate(direction).dotProduct(div.getVector());

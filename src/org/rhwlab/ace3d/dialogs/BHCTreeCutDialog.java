@@ -243,11 +243,11 @@ public class BHCTreeCutDialog extends JDialog {
     BHCTree tree;
     JList jList;
     JTextField volumeField = new JTextField("1000");
-    JTextField maxItemsField  = new JTextField("30");
+    JTextField maxItemsField  = new JTextField("600");
     JComboBox segBox = new JComboBox();
 //    JTextField minSegProbField = new JTextField("50");
-    int maxItems=60;
-    int minVolume=1000;
+    int maxItems=600;
+    int minVolume=200;
     ImagedEmbryo embryo;
     
     class CutDescriptor {
