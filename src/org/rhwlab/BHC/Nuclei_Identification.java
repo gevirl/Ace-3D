@@ -259,7 +259,7 @@ public class Nuclei_Identification implements Runnable {
             qsubStream.println("#$ -l h_rt=9:0:0");
      //       qsubStream.println("#$ -l h=w014");
             qsubStream.printf("#$ -pe serial %d\n",cores);
-            qsubStream.printf("#$ -binding linear_automatic:%d", cores);
+            qsubStream.printf("#$ -binding linear_automatic:%d\n", cores);
             if (!water){
                 qsubStream.println("#$ -P sage");
             }

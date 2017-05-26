@@ -33,4 +33,5 @@ public interface Node extends Comparable {
     public boolean isDescendent(Node other);
     public Node commonAncestor(Node other);
     public boolean isUsed();
+    public int getLabel();
 }

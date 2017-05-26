@@ -289,6 +289,10 @@ public class Nucleus implements Comparable {
         return ret;
     }
    
+    public String briefReport(){
+        double[] c = this.getCenter();
+        return String.format("V=%.0f (%.0f,%.0f,%.0f)",this.getVolume(),c[0],c[1],c[2]);
+    }
     public void report(PrintStream stream){
          
         if (cellName != null){

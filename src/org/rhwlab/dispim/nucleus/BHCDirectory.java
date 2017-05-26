@@ -97,6 +97,7 @@ public class BHCDirectory {
                 File file = filesAtTime.get(thresh);
                 if (file != null){  // is there a file for the given threshold
                     tree = new BHCTree(file.getPath(),time);  
+                    treesAtTime.put(thresh, tree);
                 }
             }
         }

@@ -8,9 +8,11 @@ package org.rhwlab.dispim.nucleus;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +29,13 @@ import org.rhwlab.BHC.BHCTree;
 import org.rhwlab.BHC.BHCTree.Match;
 import org.rhwlab.BHC.NucleusLogNode;
 import org.rhwlab.BHC.Sphere;
+import org.rhwlab.ace3d.Ace3D_Frame;
+import org.rhwlab.machinelearning.DecisionTreeNode;
+import org.rhwlab.machinelearning.DecisionTreeSet;
+import org.rhwlab.machinelearning.DividingNucleusSet;
+import org.rhwlab.machinelearning.DivisionLinkSet;
+import org.rhwlab.machinelearning.DivisionSet;
+import org.rhwlab.machinelearning.TimeLinkageSet;
 
 /**
  *
@@ -468,6 +477,178 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         return ret;
     }
+    public void decisionTreeAutoLink(Integer[] times,Integer[] threshs,int minVolume,double distance)throws Exception {
+        File treeDir = new File("/net/waterston/vol9/diSPIM");
+        
+        DividingNucleusSet dividingNucleusSet = new DividingNucleusSet();
+        DecisionTreeSet dividingNucleusDecisionTreeSet = new DecisionTreeSet("DividingNucleusTree",treeDir,dividingNucleusSet);
+        
+        TimeLinkageSet timeLinkageSet= new TimeLinkageSet();
+        DecisionTreeSet timeLinkageDecisionTreeSet = new DecisionTreeSet("TimeLinkageTree",treeDir,timeLinkageSet);
+        
+        DivisionLinkSet divisionLink = new DivisionLinkSet();
+        DecisionTreeSet divisionLinkDecisionTreeSet = new DecisionTreeSet("DivisionLinkTree",treeDir,divisionLink);
+        
+        DivisionSet divisionSet = new DivisionSet();
+        DecisionTreeSet divisionDecisionTreeSet = new DecisionTreeSet("DivisionsTree",treeDir,divisionSet);
+        
+        for (int i=1 ; i<times.length ; ++i){
+            // clear the remants for the time
+            TreeMap<String,Nucleus> remnantMap = this.remnants.get(times[i]);
+            if (remnantMap == null){
+                remnantMap = new TreeMap<>();
+                remnants.put(times[i],remnantMap);
+            }    
+            remnantMap.clear();   
+            
+            BHCTree tree = bhcTreeDir.getTree(times[i],threshs[i]);
+            tree.clearUsed();
+            this.thresholdProbs.put(times[i],threshs[i]);
+            
+            // separate the 'from' nuclei into dividing and not dividing nuclei
+            TreeSet<Nucleus> dividing = new TreeSet<>();
+            TreeSet<Nucleus> notDividing = new TreeSet<>();
+            Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);  
+            for (int j=0 ; j<fromNucs.length ; ++j){
+                if (fromNucs[j].getName().equals("185_17192")){
+                    int sjkdhfs=0;
+                }                
+                Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
+                DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
+                if (decisionNode.getClassification().equals("+")){
+                    dividing.add(fromNucs[j]);
+                }else {
+                    notDividing.add(fromNucs[j]);
+                }
+            }
+            
+            for (Nucleus nuc : dividing){
+                if (nuc.getName().equals("185_17192")){
+                    int sjkdhfs=0;
+                }
+                // find potential daughters of the dividing nuclei
+                LinkedList<DecisionBinding> potentialList = new LinkedList<>();
+                // getting the availble roots with a volume <= the dividing nucleus
+                Set<NucleusLogNode> availRoots = tree.availableRoots((int)nuc.getVolume());
+
+                for (NucleusLogNode node : availRoots){
+
+                    Nucleus nodeNuc = node.getNucleus(times[i]);
+                    if (nodeNuc != null && nodeNuc.getVolume() >= 0.2*nuc.getVolume()){
+                        Comparable[] divLinkVector = divisionLink.formDataVector("", nuc, nodeNuc);
+                        DecisionTreeNode decisionNode = divisionLinkDecisionTreeSet.classify(times[i], divLinkVector);
+                        potentialList.add(new DecisionBinding(nuc,node,decisionNode));
+                    }
+                }
+
+                // try to link to the best two potential daughters
+                if (potentialList.size()>=2){
+                    Collections.sort(potentialList);
+                    NucleusLogNode node1 = potentialList.pollLast().getNode();  
+                    NucleusLogNode node2 = potentialList.pollLast().getNode();
+                    
+                    Nucleus[] daughters = new Nucleus[2];
+                    daughters[0] = node1.getNucleus(times[i]);
+                    daughters[1] = node2.getNucleus(times[i]);
+                    Comparable[] divVector = divisionSet.formDataVector("", nuc, daughters);
+                    DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
+                    if (decisionNode.probability() >= 0.95){
+                        // form the division
+                        node1.markedAsUsed();
+                        node2.markedAsUsed();
+                        this.addNucleus(daughters[0]);
+                        this.addNucleus(daughters[1]);
+                        nuc.linkTo(daughters[0]);                        
+                        nuc.linkTo(daughters[1]);
+                    }                    
+                }
+            }
+            // put any nuclei that did not divide onto the noc dividing list
+            for (Nucleus nuc : dividing){
+                if (nuc.nextNuclei().length == 0){
+                    notDividing.add(nuc);
+                }
+            }
+            boolean finished = false;
+            while (!finished){
+                
+                ArrayList<DecisionBinding> bestBindingsList = new ArrayList<>();
+                for (Nucleus nuc : notDividing){
+                    if (nuc.getName().equals("184_1464")){
+                        int jisdfuis=0;
+                    }
+                    if (nuc.nextNuclei().length != 0) continue;
+                    Set<NucleusLogNode> neighbors = new TreeSet<>();
+                    tree.neighborNodes(nuc, distance, .2*nuc.getVolume(),1.5*nuc.getVolume(), neighbors);
+                    LinkedList<DecisionBinding> potential = new LinkedList<>();
+                   
+                    for (NucleusLogNode neighbor : neighbors){
+                        if (neighbor.getLabel()==10968 ) {
+                            int asjdfhis=0;
+                        }
+                        Nucleus[] nextArray = new Nucleus[1];
+                        nextArray[0] = neighbor.getNucleus(times[i]);
+                        Comparable[] timeLinkage = timeLinkageSet.formDataVector("", nuc, nextArray);
+                        DecisionTreeNode linkDecision = timeLinkageDecisionTreeSet.classify(times[i], timeLinkage);
+                        potential.add(new DecisionBinding(nuc,neighbor,linkDecision));
+                    }
+                    Collections.sort(potential);
+                    DecisionBinding bestBinding = potential.pollLast();
+                    
+                    // remove any bindings that do not classify as positive
+                    ArrayList<DecisionBinding> positives = new ArrayList<>();
+                    for (DecisionBinding b : potential){
+                        if (b.decisionNode.getClassification().equals("+")){
+                            positives.add(b);
+                        }
+                    }
+                    
+                    // is there a parent on the remaining potential list
+                    for (DecisionBinding b : positives){
+                        if (b.getNode().isDescendent(bestBinding.getNode())){
+                            bestBinding = b;
+                        }
+                    }
+                    if (bestBinding != null){
+                        bestBindingsList.add(bestBinding);
+                    }
+                }
+                Conflict conflict = this.findConflict(bestBindingsList);
+                if (conflict != null){
+                    // pick the best binding from the conflict
+                    DecisionBinding decBind1 = (DecisionBinding)conflict.bind1;
+                    DecisionBinding decBind2 = (DecisionBinding)conflict.bind2;
+                    DecisionBinding bestBinding = decBind2;
+                    if (decBind1.compareTo(decBind2) >0) {
+                        bestBinding = decBind1;
+                    } 
+                    NucleusLogNode best = bestBinding.getNode();
+                    // link to the best 
+                    if (best != null){
+                        Nucleus daughter = best.getNucleus(times[i]);
+                        best.markedAsUsed();
+                        this.addNucleus(daughter);
+                        bestBinding.nuc.linkTo(daughter);
+                    }  
+                }else {
+                    // link all the bindings
+                    for (DecisionBinding bestBinding : bestBindingsList){
+                        NucleusLogNode best = bestBinding.getNode();
+                        // link to the best 
+                        if (best != null){
+                            Nucleus daughter = best.getNucleus(times[i]);
+                            best.markedAsUsed();
+                            this.addNucleus(daughter);
+                            bestBinding.nuc.linkTo(daughter);
+                        }                    
+                    }
+                    finished = true;
+                }
+            }
+            // save the remants
+            this.buildRemnants(times[i], minVolume);
+        }
+    }    
     public void conflictResolvingAutoLink(Integer[] times,Integer[] threshs,int minVolume,double distance)throws Exception {
         Nucleus[] toNucs;
         for (int i=1 ; i<times.length ; ++i){
@@ -500,7 +681,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 this.removeNuclei(t, false);
                 this.thresholdProbs.put(t,threshs[i]);
                 
-                uncuratedAutoLink(polar,nonPolar,t,tree,distance);
+                uncuratedAutoLink(polar,nonPolar,t,tree,distance,minVolume);
             
                 for (NucleusLogNode avail : tree.availableNodes(minVolume,null)){   
                     Nucleus availNuc = avail.getNucleus(t);
@@ -511,22 +692,51 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         this.notifyListeners();
     }
-    private void uncuratedAutoLink(ArrayList<Nucleus> polar,ArrayList<Nucleus> nonPolar,int time,BHCTree tree,double distance){
+    private void uncuratedAutoLink(ArrayList<Nucleus> polar,ArrayList<Nucleus> nonPolar,int time,BHCTree tree,double distance,double minVolume){
         
         // find the best matching tree node for each given nucleus
         List<Binding> bindings = new ArrayList<>();       
-        bestTimeLinks(nonPolar,time,tree,distance,bindings);
+        bestTimeLinks(nonPolar,time,tree,distance,minVolume,bindings);
         TreeMap<Nucleus,NucleusLogNode> timeLinks = new TreeMap<>();  // nonpolar nuclei with time links
         for (Binding nonPolarBind : bindings){
             timeLinks.put(nonPolarBind.getNucleus(), nonPolarBind.getNode());
         }
-        bestTimeLinks(polar,time,tree,distance,bindings);  // add any polar bindings
+        bestTimeLinks(polar,time,tree,distance,minVolume,bindings);  // add any polar bindings
         
         // find potential divisions from nonpolar nuclei
+        HashSet<Division> divisions = new HashSet<>();
         for (Nucleus nuc : nonPolar){
-            NucleusLogNode timeLink = timeLinks.get(nuc);
-            if (timeLink != null){  // did the nucleus get linked in time (or is it dying)
-                TreeSet<NucleusLogNode> neighbors = new TreeSet<>(); // potential set of nodes that could be part of the division
+            if (nuc.getName().equals("250_10100")){
+                int sdhfui=0;
+            }
+            TreeSet<NucleusLogNode> neighbors = new TreeSet<>(); // potential set of nodes that could be part of the division
+            tree.neighborNodes(nuc, distance,minVolume,2.0*nuc.getVolume(), neighbors);
+            Binding bind1 = this.bestInNeighborhood(nuc, time, neighbors, tree);
+            bind1.getNode().markedAsUsed();
+            neighbors.clear();
+            tree.neighborNodes(nuc, distance,minVolume,2.0*nuc.getVolume(), neighbors);
+            Binding bind2 = this.bestInNeighborhood(nuc, time, neighbors, tree);
+            int isdfuids=0;
+/*
+            
+            // find potential dvisions
+            for (NucleusLogNode[] pair : nodePairs){
+                Division div = new Division(nuc,pair[0],pair[1],time);
+                if (div.isPossible()){
+                    divisions.add(div);
+                }
+            }
+        }
+                // make a set of node pairs from the neighbors that do not share any voxels
+                
+                
+                for (NucleusLogNode node1 : neighbors){
+                    for (NucleusLogNode node2 : neighbors){
+                        if(compareer.compare(node1,node2)!=0) {
+                            NucleusLogNode{} pair = new NucleusLogNode
+                        }
+                    }
+                
                 NucleusLogNode sisterNode = (NucleusLogNode)timeLink.getSister();
                 if (sisterNode != null){
                     tree.neighborNodes(nuc, distance, sisterNode, neighbors);
@@ -535,17 +745,18 @@ public class LinkedNucleusFile implements NucleusFile {
                 if (auntNode != null){
                     tree.neighborNodes(nuc, distance, sisterNode, neighbors);
                 }
-                NucleusLogNode divNode = bestInNeighborhood(nuc,time,neighbors,tree); // node that matchs best excluding the timeLink node
-                if (divNode != null){
-                    Division div = new Division(nuc,timeLink,divNode,time);
+                Binding divBind = bestInNeighborhood(nuc,time,neighbors,tree); // node that matchs best excluding the timeLink node
+                if (divBind != null){
+                    Division div = new Division(nuc,timeLink,divBind.getNode(),time);
                     if (div.isPossible()){
-                        bindings.add(new Binding(nuc,divNode));
+                        bindings.add(divBind);
                     }
                 }
-            }
-        }
+*/
+                }
         
-        // resolve conflicting bindings
+        
+        // remove conflicting bindings
         Conflict conflict = findConflict(bindings);
         while (conflict != null){
             conflict.resolve(time);
@@ -570,9 +781,16 @@ public class LinkedNucleusFile implements NucleusFile {
     }
     // finds a conflicting binding if there is one
     // returns null if all bindings are not conflicting
-    private Conflict findConflict(List<Binding> bindings){
+    private Conflict findConflict(List bindings){
         TreeMap<NucleusLogNode,Binding> map = new TreeMap<>(new NodeCompare());
-        for (Binding binding : bindings){
+        for (Object obj : bindings){
+            Binding binding = (Binding)obj;
+            if (binding == null){
+                int oshdfis=0;
+            }
+            if (binding.node == null){
+                int isohfdisoud=0;
+            }
             Binding other = map.get((binding.node));
             if (other == null){
                 map.put(binding.node,binding);
@@ -583,37 +801,52 @@ public class LinkedNucleusFile implements NucleusFile {
         return null;
     }
 
-    private void bestTimeLinks(List<Nucleus> nucs,int time,BHCTree tree,double distance,List<Binding> bindings){
+    private void bestTimeLinks(List<Nucleus> nucs,int time,BHCTree tree,double distance,double minVolume,List<Binding> bindings){
         for (Nucleus nuc : nucs){
-            Binding b = bestInSubtree(nuc,time,tree,distance);
+            Binding b = bestInSubtree(nuc,time,tree,distance,minVolume);
             bindings.add(b);
         }
     }
     // finds the best matching node in a BHC subtree to a given nucleus
-    private Binding bestInSubtree(Nucleus nuc,int time,BHCTree tree,double distance){
+    private Binding bestInSubtree(Nucleus nuc,int time,BHCTree tree,double distance,double minVolume){
         // make the neighborhood
         TreeSet<NucleusLogNode> neighborhood = new TreeSet<>();
-        tree.neighborNodes(nuc, distance, neighborhood);  // finds nodes close to the given nucleus
+        tree.neighborNodes(nuc, distance, minVolume,2.0*nuc.getVolume(),neighborhood);  // finds nodes close to the given nucleus
         
-        Binding ret = new Binding(nuc,bestInNeighborhood(nuc,time,neighborhood,tree));
+        Binding ret = bestInNeighborhood(nuc, time, neighborhood, tree);
         return ret;
     }
     // finds the best matching node in a neighborhood of nodes to a given nucleus
-    private NucleusLogNode bestInNeighborhood(Nucleus nuc,int time,TreeSet<NucleusLogNode> neighborhood,BHCTree tree){
-        NucleusLogNode ret = null;
+    private Binding bestInNeighborhood(Nucleus nuc,int time,TreeSet<NucleusLogNode> neighborhood,BHCTree tree){
+        boolean debug = false;
+        if (nuc.getName().equals("250_10100")) debug = true;
+if (debug) System.out.printf("Nucleus: %s %s\n",nuc.getName(),nuc.briefReport());
+        NucleusLogNode bestLogNode = null;
         double minScore = Double.MAX_VALUE;
         for (NucleusLogNode logNode : neighborhood){
             Nucleus nodeNuc = logNode.getNucleus(time);
+
             if (nodeNuc != null){
                 double score = Nucleus.similarityScore(nuc,nodeNuc);
+if (debug) System.out.printf("\t%s  %s score=%.3f dist=%.1f\n",nodeNuc.getName(), nodeNuc.briefReport(),score,nuc.distance(nodeNuc));                
                 if (score < minScore){
-                    ret = logNode;  // the node with the lowest score
+                    minScore = score;
+                    bestLogNode = logNode; // the node with the lowest score
+                }
+            
+                if (nodeNuc.getName().equals("251_15818")){
+                    int asdfhuishf=0;
                 }
             }
         }
-        if (tree != null){
-            ret = tree.expandUpInNeighborhood(nuc, ret,neighborhood);  // try to expand the node up the tree, staying in the neighborhood
+//if (debug) System.out.printf("Before xpand: %s %.2f\n",ret.node.getNucleus(time).briefReport(),minScore);     
+        Binding ret = null;
+        if (tree != null && bestLogNode != null){
+            NucleusLogNode expandedNode = tree.expandUpInNeighborhood(nuc,bestLogNode,neighborhood);  // try to expand the node up the tree, staying in the neighborhood
+            ret = new Binding(nuc,bestLogNode,minScore);
         }
+//if (debug) System.out.printf("After xpand: %s \n",ret.node.getNucleus(time).briefReport());      
+
         return ret;
     } 
     public void bestMatchAutoLink(Integer[] times,Integer[] threshs,int minVolume)throws Exception {
@@ -1013,7 +1246,8 @@ System.out.println("Division by split")   ;
         }
         this.notifyListeners();
     }
-    // find the set of nuclei in the local region of a source nucleus
+    
+    // find the set of nuclei in the local region of a source nucleus in the next time point
     public Set<Nucleus> localRegion(Nucleus source,double radius){
         HashSet<Nucleus> ret = new HashSet<>();
         for (Nucleus nuc : this.getNuclei(source.getTime()+1)){
@@ -1023,7 +1257,18 @@ System.out.println("Division by split")   ;
         }
         return ret;
     }
+    public Set<Nucleus> localRegionPlusRemnants(Nucleus source,double radius,double minSize){
+        Set<Nucleus> ret = localRegion(source,radius);
+        for (Nucleus nuc : this.getRemnants(source.getTime()+1, minSize)){
+            if (source.distance(nuc)<=radius){
+                ret.add(nuc);
+            }
+        }
+        return ret;
+    }
 
+    // compare two nodes in a BHC Tree
+    // return 0 if they share any voxels
     public class NodeCompare implements Comparator {
 
         @Override
@@ -1068,7 +1313,8 @@ System.out.println("Division by split")   ;
             ret[0] = resolved1;
             ret[1] = resolved2;
             return ret;
-        }        
+        }   
+
         public void resolve(int time){
             if (bind1.getNode().getLabel() == bind2.getNode().getLabel()){
                 Nucleus left = ((NucleusLogNode)bind1.getNode().getLeft()).getNucleus(time);
@@ -1076,41 +1322,43 @@ System.out.println("Division by split")   ;
                 double s1 = Nucleus.similarityScore(left, bind1.getNucleus()) + Nucleus.similarityScore(right, bind2.getNucleus());
                 double s2 = Nucleus.similarityScore(left, bind2.getNucleus()) + Nucleus.similarityScore(right, bind2.getNucleus());
                 if (s1 < s2){
-                    resolved1 = new Binding(bind1.getNucleus(),((NucleusLogNode)bind1.getNode().getLeft()));
-                    resolved2 = new Binding(bind2.getNucleus(),((NucleusLogNode)bind1.getNode().getRight()));
+                    resolved1 = new Binding(bind1.getNucleus(),((NucleusLogNode)bind1.getNode().getLeft()),0);
+                    resolved2 = new Binding(bind2.getNucleus(),((NucleusLogNode)bind1.getNode().getRight()),0);
                     
                 }else {
-                    resolved1 = new Binding(bind2.getNucleus(),((NucleusLogNode)bind1.getNode().getLeft()));
-                    resolved2 = new Binding(bind1.getNucleus(),((NucleusLogNode)bind1.getNode().getRight()));                    
+                    resolved1 = new Binding(bind2.getNucleus(),((NucleusLogNode)bind1.getNode().getLeft()),0);
+                    resolved2 = new Binding(bind1.getNucleus(),((NucleusLogNode)bind1.getNode().getRight()),0);                    
                 }
             } else {
-                if (bind2.getNode().isDescendent(bind1.getNode().getRight()) ){
-                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind1.getNode().getRight());
-                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind1.getNode().getLeft());
+                if ((bind1.getNode().getLeft().getLabel()==bind2.getNode().getLabel()) || bind1.getNode().getLeft().isDescendent(bind2.getNode())){
+                    resolved2 = bind2;
+                    resolved1 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind1.getNode().getRight(),0);
                 }
-                else if(bind2.getNode().isDescendent(bind1.getNode().getLeft()) ) {
-                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind1.getNode().getLeft());
-                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind1.getNode().getRight());                    
-                }                
-                else if(bind1.getNode().isDescendent(bind2.getNode().getRight()) ) {
-                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind2.getNode().getLeft());
-                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind2.getNode().getRight());                    
+                else if ( (bind1.getNode().getRight().getLabel() == bind2.getNode().getLabel())  || bind1.getNode().getRight().isDescendent(bind2.getNode())  ){
+                    resolved2 = bind2;
+                    resolved1 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind1.getNode().getLeft(),0);                    
                 }
-       
-                else if(bind1.getNode().isDescendent(bind2.getNode().getLeft()) ) {
-                    resolved1 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind2.getNode().getRight());
-                    resolved2 = new Binding(bind1.getNucleus(),(NucleusLogNode)bind2.getNode().getLeft());                    
+                else if ((bind2.getNode().getLeft().getLabel() == bind2.getNode().getLabel())   || bind2.getNode().getLeft().isDescendent(bind1.getNode())){
+                    resolved1 = bind1;
+                    resolved2 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind2.getNode().getRight(),0);
+                }
+                else if ((bind2.getNode().getRight().getLabel() == bind1.getNode().getLabel()) || bind2.getNode().getRight().isDescendent(bind1.getNode())   ){
+                    resolved1 = bind1;
+                    resolved2 = new Binding(bind2.getNucleus(),(NucleusLogNode)bind2.getNode().getLeft(),0);                    
                 }                
             }
         }
+
     }
     public class Binding  {
         Nucleus nuc;
         NucleusLogNode node;
+        double score;
         
-        public Binding(Nucleus nuc,NucleusLogNode node){
+        public Binding(Nucleus nuc,NucleusLogNode node,double score){
             this.node = node;
             this.nuc = nuc;
+            this.score = score;
         }
         NucleusLogNode getNode(){
             return this.node;
@@ -1119,5 +1367,23 @@ System.out.println("Division by split")   ;
             return nuc;
         }
 
+    }
+    public class DecisionBinding extends Binding implements Comparable {
+        DecisionTreeNode decisionNode;
+        
+        public DecisionBinding(Nucleus nuc,NucleusLogNode bhcNode,DecisionTreeNode decisionNode){
+            super(nuc,bhcNode,-1);
+            this.decisionNode = decisionNode;
+        }
+
+        @Override
+        public int compareTo(Object o) {
+            DecisionBinding other = (DecisionBinding)o;
+            int ret = Double.compare(this.decisionNode.probability(),other.decisionNode.probability());
+            if (ret == 0){  
+                ret = Double.compare(this.node.getVolume(),other.node.getVolume());
+            }
+            return ret;
+        }
     }
 }

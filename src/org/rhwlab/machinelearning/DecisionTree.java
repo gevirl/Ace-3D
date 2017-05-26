@@ -1,17 +1,42 @@
 package org.rhwlab.machinelearning;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
+import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 
 /**
  *
  * @author gevirl
  */
 public class DecisionTree {
-    public DecisionTree(String xml){
-        root = new DecisionTreeNode(xmlRoot(xml));
+    public DecisionTree(String xml,TrainingSet train)throws Exception {
+        this(xmlRoot(xml),train);
+    }
+    public DecisionTree(Element rootEle,TrainingSet train)throws  Exception {
+        if (train == null){
+            String className = rootEle.getAttributeValue("training");
+            if (className != null){
+                Class cl = Class.forName(className);
+                trainingSet = (TrainingSet)cl.newInstance();    
+            }
+        } else {
+            trainingSet = train;
+        }
+        root = new DecisionTreeNode(rootEle);
+        this.labelMap = trainingSet.getLabelsAsMap();        
     }
     static public Element xmlRoot(String file) {
         SAXBuilder saxBuilder = new SAXBuilder();
@@ -22,17 +47,99 @@ public class DecisionTree {
         } catch (Exception exc){
             exc.printStackTrace();
         }
-          
         return null;
     }   
-    
+    // classify a data vector 
+    public DecisionTreeNode classify(Comparable[] data){
+        return root.classify(data, labelMap);
+    }
+    // return the decicion node wth the highest probability
+    public DecisionTreeNode highestProbability(Comparable[] data){
+        return root.highestPositiveProb(data, labelMap);
+    }    
     // return the probability that the data is a positive case
-    public double positiveClassification(Comparable[] data,TreeMap<String,Integer> labelIndexes){
-        return root.positiveClassificaion(data, labelIndexes);
+    public double positiveClassification(Comparable[] data){
+        return root.positiveClassificaion(data, labelMap);
+    }
+    public void reducedErrorPruning (File file)throws Exception {
+        List<Comparable[]> data = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line = reader.readLine();
+        line = reader.readLine();
+        while (line != null){
+            String[] tokens = line.split(",");
+            data.add(trainingSet.formData(tokens));
+            line = reader.readLine();
+        }
+        reader.close();
+        reducedErrorPruning(data);
+    }
+    // prune this tree using the reduced error pruning algorithm
+    public void reducedErrorPruning(List<Comparable[]> dataList){
+        for (Comparable[] data : dataList){
+            classify(data);
+        }
+        this.root.prune();
     }
     
+    public void saveAsXML(String file) throws Exception {
+            OutputStream stream = new FileOutputStream(file);
+            XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+            Element rootEle = root.toXML("Root");
+            String name = trainingSet.getClass().getName();
+            rootEle.setAttribute("training", name);            
+            out.output(rootEle, stream);
+            stream.close();         
+    }
+    
+    // test pruning
     static public void main(String[] args)throws Exception {
-        DecisionTree tree = new DecisionTree("/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/DecisionTree.xml");
+        String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
+                           "/net/waterston/vol9/diSPIM/20161229_hmbx-1_OP656/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170103_B0310.2_OP642/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170105_M03D4.4_OP696/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170118_sptf-1_OP722/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170125_lsl-1_OP720/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
+                };
+        
+        String[] trainingSetClasses = {"org.rhwlab.machinelearning.TimeLinkageSet",
+                                        "org.rhwlab.machinelearning.DividingNucleusSet",
+                                        "org.rhwlab.machinelearning.DivisionLinkSet",
+                                        "org.rhwlab.machinelearning.DivisionSet"};
+        double[] radii = {100.0,50.0,100.0,50.0};
+        String[] names = {"TimeLinkageTree","DividingNucleusTree","DivisionLinkTree","DivisionsTree"};
+        
+        
+        NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
+        for (int i=0 ; i<files.length ; ++i){
+            nucFiles[i] = TrainingSet.readNucleusFile(new File(files[i]));
+        }
+        
+        int delTime = 50;
+        int overlap = 10;
+        for (int i=0 ; i<5 ; ++i){
+            for (int c = 0 ; c<trainingSetClasses.length ; ++c){
+                Constructor contruct =Class.forName(trainingSetClasses[c]).getConstructor(Integer.class,Integer.class);
+                TrainingSet trainingSet = (TrainingSet)contruct.newInstance(i * delTime - overlap, (i + 1) * delTime + overlap);
+                for (int f=0 ; f<nucFiles.length ; ++f){
+                    trainingSet.addNucleiFrom(nucFiles[f],radii[c],0.3);
+                }
+                trainingSet.formDecisionTree(0);
+                Element rootEle = trainingSet.toXML("Root");
+                String name = trainingSet.getClass().getName();
+                rootEle.setAttribute("training", name);             
+                DecisionTree decisionTree = new DecisionTree(rootEle,null);
+                decisionTree.reducedErrorPruning(trainingSet.getTestSet());
+                decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/%s%03d.xml",names[c],delTime*(i+1)));
+            }
+        
+        }
     }    
     DecisionTreeNode root;
+    TrainingSet trainingSet;
+    TreeMap<String,Integer> labelMap;
 }

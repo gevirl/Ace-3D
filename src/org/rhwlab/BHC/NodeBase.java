@@ -335,6 +335,7 @@ abstract public class NodeBase implements Node {
         ratio = new GammaRatio(mu.length,n);
     }    
     
+
     // determine if a given node is a descendent
     public boolean isDescendent(Node other){
         if (this.isLeaf()){

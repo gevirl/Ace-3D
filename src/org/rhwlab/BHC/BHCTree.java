@@ -240,25 +240,33 @@ public class BHCTree {
         return ret;
     }
 */
-    // find the neighbor nodes in the entire tree
-    public void  neighborNodes(Nucleus nuc,double distance,Set<NucleusLogNode> set){
+    // find the neighbor nodes in the entire tree (excludes used voxels)
+    public void  neighborNodes(Nucleus nuc,double distance,double minVolume,double maxVolume,Set<NucleusLogNode> set){
         for (Node root : this.roots){
-            neighborNodes(nuc,distance,(NucleusLogNode)root,set);
+            neighborNodes(nuc,distance,(NucleusLogNode)root,minVolume,maxVolume,set);
         }
     }
             
     // find all the nodes in a subtree that are within a given radius of a nucleus
-    public void  neighborNodes(Nucleus nuc,double distance,NucleusLogNode root,Set<NucleusLogNode> set){
+    public void  neighborNodes(Nucleus nuc,double distance,NucleusLogNode root,double minVolume,double maxVolume,Set<NucleusLogNode> set){
+       
+        if (root.getLabel() == 18532 || root.getLabel()==18530){
+            int sadfhuisd=0;
+        }
+        if (root.isUsed()) return;
         Nucleus rootNuc = root.getNucleus(time);
-        if (root != null){
+        if (rootNuc == null) return;
+        if (rootNuc.getVolume() < minVolume) return;
+        
+        if (!root.isUsedRecursive()){
             double d = nuc.distance(rootNuc);
-            if (d <=distance){
+            if (d <=distance && rootNuc.getVolume() <= maxVolume){
                 set.add(root);
             }
-            if (!root.isLeaf()){
-                neighborNodes(nuc,distance,(NucleusLogNode)root.getRight(),set);
-                neighborNodes(nuc,distance,(NucleusLogNode)root.getLeft(),set);
-            }
+        }
+        if (!root.isLeaf()){
+            neighborNodes(nuc,distance,(NucleusLogNode)root.getRight(),minVolume,maxVolume,set);
+            neighborNodes(nuc,distance,(NucleusLogNode)root.getLeft(),minVolume,maxVolume,set);
         }
     }        
     public Match bestMatchInAvailableNodes(Nucleus nuc,int minVolume,Sphere sphere){
@@ -428,6 +436,41 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
         }
         return false;
     }
+    // all roots (from available voxels only) below a maximum volume
+    // partitions the available voxels into roots of size less than the maximum volume
+    // each returned node is a subtree made up of only available voxels
+    public Set<NucleusLogNode> availableRoots(int maxVolume){
+        HashSet<NucleusLogNode> result = new HashSet<>();
+        for (Node root : this.roots){
+            availableRoots(maxVolume,(NucleusLogNode)root,result);
+        }
+        return result;
+    }
+    public void availableRoots(int maxVolume,NucleusLogNode subtreeRoot,Set<NucleusLogNode> result){
+        if (subtreeRoot.isUsed()) return ;  // nothing can be added, this subtree has already been used completely (no available voxels)
+        
+        Nucleus nuc = subtreeRoot.getNucleus(time);
+        if (nuc == null) return;  //cannot make a nucleus (too few voxels in this node)
+        
+        if (nuc.getVolume() <= maxVolume){
+            if (!subtreeRoot.isUsedRecursive()){  // is the entire subtree unused??
+                result.add(subtreeRoot);  // only gets added to result if all the voxels are available and the size is less than maximum
+                return;
+            }
+        }
+        
+        if (subtreeRoot.isLeaf()) return;
+        
+        // to get here the volume must be large enough and there must be some available voxels in it
+        NucleusLogNode leftLogNode = (NucleusLogNode)subtreeRoot.getLeft();
+        if (leftLogNode != null){
+            availableRoots(maxVolume,leftLogNode,result);
+        }
+        NucleusLogNode rightLogNode = (NucleusLogNode)subtreeRoot.getRight();
+        if (rightLogNode != null){
+            availableRoots(maxVolume,rightLogNode,result);
+        }        
+    }
     // determine the set of subtrees that contain only available microclusters (have not been used in a nucleus)
     // the nucleus formed at the root of the subtree must have a volume > minVolume
     // the nucleus 
@@ -441,7 +484,7 @@ if (debug) System.out.printf("returning from %d(%f) as best \n",node.label ,node
     }
     
     // available nodes in a neighborhood defined by a sphere (radius and center)
-    // if sphere is null, gets neighborhood is unlimited
+    // if sphere is null, neighborhood is unlimited
     static public void availableNodes(int t,NucleusLogNode root,HashSet<NucleusLogNode> availNodes,int minVolume,Sphere sphere){
 
         if (!root.isUsedRecursive()){

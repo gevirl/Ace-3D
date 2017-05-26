@@ -213,7 +213,10 @@ public class Division implements Comparable {
         }
         return ret;
     }
-    private static double cosineAngleBetween(RealVector v1,RealVector v2){
+    public static double cosineAngleBetween(RealVector v1,RealVector v2){
+        if (v2.getNorm() == 0.0 || v1.getNorm()==0.0){
+            int asjdfhishdf=0;
+        }
         return Math.abs(v1.unitVector().dotProduct(v2.unitVector()));
     }
     public double getDistance(){

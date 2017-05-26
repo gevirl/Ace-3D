@@ -416,12 +416,15 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         removeAll.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                Integer[] times = imagedEmbryo.getNucleusFile().getAllTimes().toArray(new Integer[0]);
-                for (int i=0 ; i<times.length ; ++i){
-                    LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
-                    nf.removeNuclei(i, false);
+                int resp = JOptionPane.showConfirmDialog(rootPane, "Are you sure you want to remove all the nuclei?");
+                if (resp == JOptionPane.YES_OPTION){
+                    Integer[] times = imagedEmbryo.getNucleusFile().getAllTimes().toArray(new Integer[0]);
+                    for (int i=0 ; i<times.length ; ++i){
+                        LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
+                        nf.removeNuclei(i, false);
+                    }
+                    imagedEmbryo.notifyListeners();
                 }
-                imagedEmbryo.notifyListeners();
             }
             
         });
@@ -512,9 +515,11 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 }
             }
         });      
-        JMenuItem neighborlinkItem = new JMenuItem("Auto Link - Limited Neighborhood");
-        linking.add(neighborlinkItem);
-        neighborlinkItem.addActionListener(new ActionListener(){
+ 
+
+        JMenuItem decisionTreelinkItem = new JMenuItem("Auto Link - DecisionTree");
+        linking.add(decisionTreelinkItem);
+        decisionTreelinkItem.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -540,7 +545,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     
                     new Thread(() -> {
                         try {
-                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLinkLimited(timesArray,probsArray,minimumVolume,neighborhoodradius); // minvolume of 50
+                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).decisionTreeAutoLink(timesArray,probsArray,Ace3D_Frame.minimumVolume,neighborhoodradius); // minvolume of 50
                         } catch (Exception exc) {
                             exc.printStackTrace();
                         }
@@ -553,49 +558,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     }
                 }
             }
-        });        
-        JMenuItem conflictlinkItem = new JMenuItem("Auto Link - Conflict Resolving");
-        linking.add(conflictlinkItem);
-        conflictlinkItem.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int fromTime = -1;
-                    while (fromTime == -1){
-                        try {
-                            int tp = imagedEmbryo.getNucleusFile().getAllTimes().size();
-                            String ans = JOptionPane.showInputDialog(null, "Enter time to link back to", String.valueOf(tp));
-                            if (ans == null){
-                                return;
-                            }
-                            fromTime = Integer.valueOf(ans);
-                        } catch (Exception exc){}
-                    }
-                    bhc.open();
-                    TreeMap<Integer,Integer> probMap = mapTimesToThreshProbs(fromTime,getCurrentTime());
-                    Set<Integer> timesSet = probMap.navigableKeySet();
-                    Integer[] timesArray = timesSet.toArray(new Integer[0]);
-                    Integer[] probsArray = new Integer[timesArray.length];
-                    for (int i=0 ; i<timesArray.length;++i){
-                        probsArray[i] = probMap.get(timesArray[i]);
-                    }
-                    
-                    new Thread(() -> {
-                        try {
-                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).conflictResolvingAutoLink(timesArray,probsArray,minimumVolume,neighborhoodradius); // minvolume of 50
-                        } catch (Exception exc) {
-                            exc.printStackTrace();
-                        }
-                    }).start();
-
-//                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
-                } catch (Exception exc){
-                    if (!(exc instanceof NullPointerException)) {
-                        exc.printStackTrace();
-                    }
-                }
-            }
-        });           
+        });
+        
         JMenuItem unlink = new JMenuItem("Unlink Current Time");
         linking.add(unlink);
         unlink.addActionListener(new ActionListener(){
@@ -1010,8 +974,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     
     static TreeMap<String,DataSetProperties> dataSetProperties = new TreeMap<>();
     
-    static public int minimumVolume = 50;
-    static public double neighborhoodradius = 100;
+    static public int minimumVolume = 1000;  // minimum volume of a remnant nucleus
+    static public double neighborhoodradius = 50;
     static public void main(String[] args) {
         EventQueue.invokeLater(new Runnable(){
             @Override

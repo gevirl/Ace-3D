@@ -6,10 +6,13 @@
 package org.rhwlab.machinelearning;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Set;
 import java.util.TreeMap;
+import org.jdom2.Element;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
@@ -21,119 +24,129 @@ import org.rhwlab.dispim.nucleus.Nucleus;
  **/
 
 public class TimeLinkageSet extends TrainingSet {
+    
+    public TimeLinkageSet(){
+        super();
+    }
+    
+    public TimeLinkageSet(Integer minTime,Integer maxTime){
+        super(minTime,maxTime);
 
-   
-    @Override
-    public void addNucleiFrom(File sessionXML,double localRegion)throws Exception {
-        NamedNucleusFile nucFile = super.readNucleusFile(sessionXML);
+    }
+    public void addNucleiFrom(NamedNucleusFile nucFile,double localRegion,double prob)throws Exception {
+        
         for (Integer time : nucFile.getAllTimes()){
-            Set<Nucleus> nucs = nucFile.getNuclei(time);
-            // create the positive set
-            for (Nucleus nuc : nucs){
-                if (!nuc.isDividing() && !nuc.isLeaf()){
-                    Nucleus[] next = nuc.nextNuclei();
-                    data.add(formDataVector("+",nuc,next));
-                }
-            }
-            // create a negative set
-            for (Nucleus source : nucs){
-                if (!source.isLeaf()){
-                    Nucleus[] next = source.nextNuclei();
-                    for (Nucleus nuc : nucFile.getNuclei(source.getTime()+1)){
-                        if (nuc != next[0]){
-                            if (next.length==2 && nuc != next[1]){
-                                if (source.distance(nuc) <= localRegion){
-                                    Nucleus[] negNuc = new Nucleus[1];
-                                    negNuc[0] = nuc;
-                                    data.add(formDataVector("-",source,negNuc));
+            if (minTime == null || time >= minTime){
+                if ((maxTime == null | time <=maxTime)){
+                    Set<Nucleus> nucs = nucFile.getNuclei(time);
+                    // create the positive set
+                    for (Nucleus nuc : nucs){
+                        if (!nuc.isDividing() && !nuc.isLeaf()){
+                            Nucleus[] next = nuc.nextNuclei();
+                            addDataRecord(formDataVector("+",nuc,next),prob);
+                        }
+                    }
+                    // create a negative set
+                    for (Nucleus source : nucs){
+                        if (!source.isLeaf()){  // source cannot be a leaf
+                            Nucleus[] next = source.nextNuclei();
+                            for (Nucleus nuc : nucFile.getNuclei(source.getTime()+1)){  // all the nuclei in the following time point
+                                if (nuc != next[0]){   // exclude the nucleus that the source is linked to (ie the positive case)
+                                    if (next.length==2 && nuc != next[1]){  // also make sure the nucleus is not part of a division from the source
+                                        if (source.distance(nuc) <= localRegion){  // make sure it is ion the local region 
+                                            Nucleus[] negNuc = new Nucleus[1];
+                                            negNuc[0] = nuc;
+                                            addDataRecord(formDataVector("-",source,negNuc),prob);
+                                        }
+                                    }
                                 }
                             }
+                            for (Nucleus remnant : nucFile.getRemnants(source.getTime(), 100)){
+                                if (source.distance(remnant)<=localRegion){
+                                    Nucleus[] negNuc = new Nucleus[1];
+                                    negNuc[0] = remnant;
+                                    addDataRecord(formDataVector("-",source,negNuc),prob);
+                                }
+                            }
+
                         }
-                    }
-                    for (Nucleus remnant : nucFile.getRemnants(source.getTime(), 100)){
-                        if (source.distance(remnant)<=localRegion){
-                            Nucleus[] negNuc = new Nucleus[1];
-                            negNuc[0] = remnant;
-                            data.add(formDataVector("-",source,negNuc));
-                        }
-                    }
-                    
+                    }                    
                 }
             }
+
         }
-    }
-
-
+    }  
     @Override
-    public Comparable[] formDataVector(String classification,Nucleus source, Nucleus[] next) {
+    public Comparable[] formDataVector(String classification,Nucleus source, Object nextObj) {
+        Nucleus[] next = (Nucleus[])nextObj;
         Comparable[] data = new Comparable[labels.length];
         data[0] = classification;
         data[1] = source.getTime();
         data[2] = source.getCellName();
         data[3] = source.distance(next[0]); 
-        double volratio = source.getVolume()/next[0].getVolume();
-        if (volratio < 1.0) volratio = 1.0/volratio;
-        data[4] = volratio;
-        double intratio = source.getAvgIntensity()/next[0].getAvgIntensity();
-        if (intratio < 1.0) intratio = 1.0/intratio;
-        data[5] = intratio;
+        data[4] = source.getVolume()/next[0].getVolume();
+        data[5] = source.getAvgIntensity()/next[0].getAvgIntensity();
         int postTime = source.timeSinceDivsion();
         if (postTime == -1) postTime = 0;
         data[6] = postTime;
         return data;
     }  
+    @Override
     public String[] getLabels(){
         return labels;
     }
+    @Override
+    public String[] getDataClasses() {
+        return TimeLinkageSet.dataClasses;
+    }    
+    @Override
     public TreeMap<String,Integer> getLabelsAsMap(){
         if (labelMap == null){
-            labelMap = new TreeMap<>();
-            for (int i=0 ; i<labels.length ; ++i){
-                labelMap.put(labels[i],i);
-            }
+            labelMap = super.buildLabelsMap(labels);
         }
         return labelMap;
     }
     static public void main(String[] args)throws Exception{
-        TimeLinkageSet ts = new TimeLinkageSet();
-        ts.addNucleiFrom(new File("/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml"),100.0);
-/*      
-        double delMax = 0.0;
-        int count=0;
-        double splitValue  = 0;
-        for (double v =2.0 ; v<=98.0 ; v = v + 1.0){
-            ts.split(3, v);
-            double del = ts.getDelta();
-            if (del > delMax){
-                delMax = del;
-                count = ts.lessSet.data.size();
-                splitValue = v;
+        String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
+                           "/net/waterston/vol9/diSPIM/20161229_hmbx-1_OP656/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170103_B0310.2_OP642/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170105_M03D4.4_OP696/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170118_sptf-1_OP722/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170125_lsl-1_OP720/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
+                };
+        NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
+        for (int i=0 ; i<files.length ; ++i){
+            nucFiles[i] = TrainingSet.readNucleusFile(new File(files[i]));
+        }
+        
+        int delTime = 50;
+        int overlap = 10;
+        for (int i=0 ; i<5 ; ++i){
+            TimeLinkageSet trainingSet = new TimeLinkageSet(i*delTime-overlap,(i+1)*delTime+overlap);
+            for (int f=0 ; f<nucFiles.length ; ++f){
+                trainingSet.addNucleiFrom(nucFiles[f],100.0,0.1);
             }
-            System.out.printf("value=%.0f  delta=%s\n", v,del);
-        }
-        System.out.println(count);
-        System.out.println(splitValue);
-        ts.split(3,splitValue);
-       
-        for (int c =3 ; c<labels.length ; ++c){
-            ts.sort(c);
-            ColumnGain gain = ts.bestSplitInRange(0,ts.data.size());
-            System.out.printf("%s,%d,%s,%f\n",labels[c], gain.index,ts.data.get(gain.index)[c].toString(),gain.gain);
-        }
-  //      ts.saveData(System.out, labels);
-  */
-        ts.formDecisionTree(0);
+            trainingSet.formDecisionTree(0);
+            Element rootEle = trainingSet.toXML("Root");
+            String name = trainingSet.getClass().getName();
+            rootEle.setAttribute("training", name);             
+            DecisionTree decisionTree = new DecisionTree(rootEle,null);
+            decisionTree.reducedErrorPruning(trainingSet.getTestSet());
+            decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/TimeLinkageTree%03d.xml",delTime*(i+1)));
         
-//        OutputStream stream = new FileOutputStream(xml);     
-        OutputStream stream = System.out;
-        XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-        out.output(ts.toXML("Root"), stream);
-        stream.close(); 
-        
+        }
         int iusagdfugsd=0;
     }
     static String[] labels = {"Class","Time","Cell","Distance","VolumeRatio","IntensityRatio","PostDivisionTime"};
+    static String[] dataClasses = 
+    {"java.lang.String","java.lang.Integer","java.lang.String","java.lang.Double","java.lang.Double","java.lang.Double","java.lang.Integer"};
     static TreeMap<String,Integer> labelMap;
+
+
 
 
 }
