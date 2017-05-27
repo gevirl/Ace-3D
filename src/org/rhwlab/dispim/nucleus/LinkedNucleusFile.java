@@ -510,12 +510,13 @@ public class LinkedNucleusFile implements NucleusFile {
             TreeSet<Nucleus> notDividing = new TreeSet<>();
             Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);  
             for (int j=0 ; j<fromNucs.length ; ++j){
-                if (fromNucs[j].getName().equals("185_17192")){
+                if (fromNucs[j].getName().equals("186_15794")){
+
                     int sjkdhfs=0;
                 }                
                 Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
-                if (decisionNode.getClassification().equals("+")){
+                if (decisionNode.probability()> 0.15){
                     dividing.add(fromNucs[j]);
                 }else {
                     notDividing.add(fromNucs[j]);
@@ -523,7 +524,7 @@ public class LinkedNucleusFile implements NucleusFile {
             }
             
             for (Nucleus nuc : dividing){
-                if (nuc.getName().equals("185_17192")){
+                if (nuc.getName().equals("186_15794")){
                     int sjkdhfs=0;
                 }
                 // find potential daughters of the dividing nuclei
@@ -552,7 +553,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     daughters[1] = node2.getNucleus(times[i]);
                     Comparable[] divVector = divisionSet.formDataVector("", nuc, daughters);
                     DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
-                    if (decisionNode.probability() >= 0.95){
+                    if (decisionNode.probability() >= 0.5){
                         // form the division
                         node1.markedAsUsed();
                         node2.markedAsUsed();
@@ -574,16 +575,16 @@ public class LinkedNucleusFile implements NucleusFile {
                 
                 ArrayList<DecisionBinding> bestBindingsList = new ArrayList<>();
                 for (Nucleus nuc : notDividing){
-                    if (nuc.getName().equals("184_1464")){
+                    if (nuc.getName().equals("185_13090")){
                         int jisdfuis=0;
                     }
                     if (nuc.nextNuclei().length != 0) continue;
                     Set<NucleusLogNode> neighbors = new TreeSet<>();
-                    tree.neighborNodes(nuc, distance, .2*nuc.getVolume(),1.5*nuc.getVolume(), neighbors);
+                    tree.neighborNodes(nuc, distance, .2*nuc.getVolume(),2.0*nuc.getVolume(), neighbors);
                     LinkedList<DecisionBinding> potential = new LinkedList<>();
                    
                     for (NucleusLogNode neighbor : neighbors){
-                        if (neighbor.getLabel()==10968 ) {
+                        if (neighbor.getLabel()==6612  || neighbor.getLabel()==6590|| neighbor.getLabel()==6602) {
                             int asjdfhis=0;
                         }
                         Nucleus[] nextArray = new Nucleus[1];
@@ -605,6 +606,9 @@ public class LinkedNucleusFile implements NucleusFile {
                     
                     // is there a parent on the remaining potential list
                     for (DecisionBinding b : positives){
+                        if (b.getNode().getLabel()==6612 || b.getNode().getLabel()==6590|| b.getNode().getLabel()==6602){
+                            int isdfhudfi=0;
+                        }
                         if (b.getNode().isDescendent(bestBinding.getNode())){
                             bestBinding = b;
                         }

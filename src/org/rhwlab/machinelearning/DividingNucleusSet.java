@@ -10,16 +10,18 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.TreeMap;
+import org.jdom2.Element;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
+import static org.rhwlab.machinelearning.DivisionSet.delTime;
 
 /**
  *
  * @author gevirl
  */
-public class DividingNucleusSet extends TrainingSet {
+public class DividingNucleusSet extends TrainingSet implements Runnable {
     public DividingNucleusSet(){
         super();
     }
@@ -55,27 +57,36 @@ public class DividingNucleusSet extends TrainingSet {
     public Comparable[] formDataVector(String cl, Nucleus source, Object nextObj) {
         Nucleus parent = source.getParent();
         if (parent == null) return null; // need a parent to form a data vector
+        Nucleus grand = parent.getParent();
+        if (grand == null) return null;
         
         Comparable[] data = new Comparable[DividingNucleusSet.labels.length];
-        data[0] = cl;  
-        data[1] = source.getTime();
-        data[2] = source.getCellName();
-        data[3] = parent.getName();
-        data[4] = source.getVolume();
-        data[5] = parent.getVolume();
+        int i = 0;
+        data[i++] = cl;  
+        data[i++] = source.getTime();
+//        data[2] = source.getCellName();
+//        data[3] = parent.getName();
+        data[i++] = parent.getVolume()/source.getVolume();
+        data[i++] = grand.getVolume()/parent.getVolume();
+//        data[i++] = parent.getVolume();
         int postTime = source.timeSinceDivsion();
         if (postTime == -1) postTime = source.getTime();
-        data[6] = postTime;   
+        data[i++] = postTime;   
         double[] ecc = source.eccentricity();
-        data[7] = ecc[0];
-        data[8] = ecc[1];
-        data[9] = ecc[2];
+        data[i++] = ecc[0];
+        data[i++] = ecc[1];
+        data[i++] = ecc[2];
         double[] parentEcc = parent.eccentricity();
-        data[10] = parentEcc[0];
-        data[11] = parentEcc[1];
-        data[12] = parentEcc[2];
-        data[13] = source.getAvgIntensity();
-        data[14] = parent.getAvgIntensity();
+        data[i++] = parentEcc[0];
+        data[i++] = parentEcc[1];
+        data[i++] = parentEcc[2];
+        double[] grandEcc = grand.eccentricity();
+        data[i++] = grandEcc[0];
+        data[i++] = grandEcc[1];
+        data[i++] = grandEcc[2];        
+        data[i++] = parent.getAvgIntensity()/source.getAvgIntensity();
+        data[i++] = grand.getAvgIntensity()/parent.getAvgIntensity();
+//        data[i++] = parent.getAvgIntensity();
         return data;
     }
 
@@ -90,43 +101,52 @@ public class DividingNucleusSet extends TrainingSet {
         }
         return labelMap;
     }    
-    static public void main(String[] args)throws Exception{
-        String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
-                           "/net/waterston/vol9/diSPIM/20161229_hmbx-1_OP656/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170103_B0310.2_OP642/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170105_M03D4.4_OP696/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170118_sptf-1_OP722/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170125_lsl-1_OP720/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
-                };
-        NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
-        for (int i=0 ; i<files.length ; ++i){
-            nucFiles[i] = TrainingSet.readNucleusFile(new File(files[i]));
-            System.out.printf("Read file: %s\n",files[i]);
-        }
-        
-        int delTime = 50;
-        int overlap = 10;
-        for (int i=0 ; i<5 ; ++i){
-            DividingNucleusSet ts = new DividingNucleusSet(i*delTime-overlap,(i+1)*delTime+overlap);
-            for (int f=0 ; f<nucFiles.length ; ++f){
-                ts.addNucleiFrom(nucFiles[f],50.0,0.1);
-                System.out.printf("Added nuclei from %s\n",files[f]);
+
+    @Override
+    public void run() {
+        try {
+            String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
+                               "/net/waterston/vol9/diSPIM/20161229_hmbx-1_OP656/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170103_B0310.2_OP642/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170105_M03D4.4_OP696/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170118_sptf-1_OP722/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170125_lsl-1_OP720/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
+                                "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
+                    };
+            NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
+            for (int i=0 ; i<files.length ; ++i){
+                nucFiles[i] = TrainingSet.readNucleusFile(new File(files[i]));
+                System.out.printf("Read file: %s\n",files[i]);
             }
-            System.out.println("Forming tree");
-            ts.formDecisionTree(0);
-            OutputStream stream = new FileOutputStream(String.format("/net/waterston/vol9/diSPIM/DividingNucleusTree%03d.xml",delTime*(i+1)));
-            XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-            out.output(ts.toXML("Root"), stream);
-            stream.close();             
-            
-        } 
+            for (int i=0 ; i<5 ; ++i){
+                DividingNucleusSet trainingSet = new DividingNucleusSet(i*delTime-overlap,(i+1)*delTime+overlap);
+                for (int f=0 ; f<nucFiles.length ; ++f){
+                    trainingSet.addNucleiFrom(nucFiles[f],50.0,0.3);
+                }
+                trainingSet.formDecisionTree(0);
+                Element rootEle = trainingSet.toXML("Root");
+                String name = trainingSet.getClass().getName();
+                rootEle.setAttribute("training", name);             
+                DecisionTree decisionTree = new DecisionTree(rootEle,null);
+                decisionTree.reducedErrorPruning(trainingSet.getTestSet());
+                decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/DividingNucleusTree%03d.xml",delTime*(i+1)));  
+            }
+        } catch (Exception exc){
+            exc.printStackTrace();
+        }
     }    
-    static String[] labels ={"Class","Time","Cell","Parent","Volume","ParentVolume","PostDivisionTime",
-    "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","Intensity","ParentIntensity"};    
+    static public void main(String[] args)throws Exception{
+        DividingNucleusSet set = new DividingNucleusSet();
+        set.run();
+    }  
+    int delTime = 50;
+    int overlap = 10;
+    
+    static String[] labels ={"Class","Time","PCVolumeRatio","GPVolumeRatio","PostDivisionTime",
+    "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","grandEcc1","grandEcc2","grandEcc3","PCIntensityRatio","GPIntensityRatio"};    
     static TreeMap<String,Integer> labelMap;
 
     @Override
