@@ -575,7 +575,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 
                 ArrayList<DecisionBinding> bestBindingsList = new ArrayList<>();
                 for (Nucleus nuc : notDividing){
-                    if (nuc.getName().equals("185_13090")){
+                    if (nuc.getName().equals("179_2858")||nuc.getName().equals("179_2944")){
                         int jisdfuis=0;
                     }
                     if (nuc.nextNuclei().length != 0) continue;
@@ -584,7 +584,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     LinkedList<DecisionBinding> potential = new LinkedList<>();
                    
                     for (NucleusLogNode neighbor : neighbors){
-                        if (neighbor.getLabel()==6612  || neighbor.getLabel()==6590|| neighbor.getLabel()==6602) {
+                        if (neighbor.getLabel()==940  || neighbor.getLabel()==938|| neighbor.getLabel()==1032) {
                             int asjdfhis=0;
                         }
                         Nucleus[] nextArray = new Nucleus[1];
@@ -606,7 +606,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     
                     // is there a parent on the remaining potential list
                     for (DecisionBinding b : positives){
-                        if (b.getNode().getLabel()==6612 || b.getNode().getLabel()==6590|| b.getNode().getLabel()==6602){
+                        if (b.getNode().getLabel()==940 || b.getNode().getLabel()==938|| b.getNode().getLabel()==1032){
                             int isdfhudfi=0;
                         }
                         if (b.getNode().isDescendent(bestBinding.getNode())){
@@ -623,7 +623,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     DecisionBinding decBind1 = (DecisionBinding)conflict.bind1;
                     DecisionBinding decBind2 = (DecisionBinding)conflict.bind2;
                     DecisionBinding bestBinding = decBind2;
-                    if (decBind1.compareTo(decBind2) >0) {
+                    if (decBind2.getNode().isDescendent(decBind1.getNode())) {
                         bestBinding = decBind1;
                     } 
                     NucleusLogNode best = bestBinding.getNode();
