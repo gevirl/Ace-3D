@@ -518,7 +518,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
                 if (decisionNode.probability()> 0.1){
-System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
+//System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
                     dividing.add(fromNucs[j]);
                     decisions.put(fromNucs[j].getName(), decisionNode);
                 }else {
