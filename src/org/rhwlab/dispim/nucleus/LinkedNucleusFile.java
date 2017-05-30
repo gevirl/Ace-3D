@@ -662,7 +662,8 @@ public class LinkedNucleusFile implements NucleusFile {
                         if (availsParent.isDescendent(binding.getNode())){
                             NucleusLogNode combined = (NucleusLogNode)avail.getParent();
                             Nucleus daughter = combined.getNucleus(times[i]);
-                            if (daughter.getVolume() < 3.0*binding.getNucleus().getVolume()){
+ //                           if (daughter.getVolume() < 3.0*binding.getNucleus().getVolume()){
+                            if (availsParent.getLogPosterior() > binding.getNode().getLogPosterior() - 2.0 ){
                                 // remove the current linked nucleus
                                 Nucleus[] daughters = binding.getNucleus().nextNuclei();
                                 this.removeNucleus(daughters[0],false);
