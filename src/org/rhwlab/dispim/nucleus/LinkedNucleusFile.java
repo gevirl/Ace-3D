@@ -508,9 +508,10 @@ public class LinkedNucleusFile implements NucleusFile {
             // separate the 'from' nuclei into dividing and not dividing nuclei
             TreeSet<Nucleus> dividing = new TreeSet<>();
             TreeSet<Nucleus> notDividing = new TreeSet<>();
+            TreeMap<String,DecisionTreeNode> decisions = new TreeMap<>();
             Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);  
             for (int j=0 ; j<fromNucs.length ; ++j){
-                if (fromNucs[j].getName().equals("190_17368")){
+                if (fromNucs[j].getName().equals("190_7112")){
 
                     int sjkdhfs=0;
                 }                
@@ -518,13 +519,14 @@ public class LinkedNucleusFile implements NucleusFile {
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
                 if (decisionNode.probability()> 0.15){
                     dividing.add(fromNucs[j]);
+                    decisions.put(fromNucs[j].getName(), decisionNode);
                 }else {
                     notDividing.add(fromNucs[j]);
                 }
             }
             
             for (Nucleus nuc : dividing){
-                if (nuc.getName().equals("186_15794")){
+                if (nuc.getName().equals("190_7112")){
                     int sjkdhfs=0;
                 }
                 // find potential daughters of the dividing nuclei
@@ -553,7 +555,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     daughters[1] = node2.getNucleus(times[i]);
                     Comparable[] divVector = divisionSet.formDataVector("", nuc, daughters);
                     DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
-                    if (decisionNode.probability() > 0.1){
+                    if (decisionNode.probability() > 0.1 || decisions.get(nuc.getName()).probability()>.95){
                         // form the division
                         node1.markedAsUsed();
                         node2.markedAsUsed();
