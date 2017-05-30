@@ -518,6 +518,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
                 if (decisionNode.probability()> 0.1){
+System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
                     dividing.add(fromNucs[j]);
                     decisions.put(fromNucs[j].getName(), decisionNode);
                 }else {
@@ -526,7 +527,7 @@ public class LinkedNucleusFile implements NucleusFile {
             }
             
             for (Nucleus nuc : dividing){
-                if (nuc.getName().equals("192_532") || nuc.getName().equals("192_18150")){
+                if (nuc.getName().equals("188_6938") || nuc.getName().equals("192_18150")){
                     int sjkdhfs=0;
                 }
                 // find potential daughters of the dividing nuclei
@@ -555,7 +556,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     daughters[1] = node2.getNucleus(times[i]);
                     Comparable[] divVector = divisionSet.formDataVector("", nuc, daughters);
                     DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
-                    if (decisionNode.probability() > 0.1 || decisions.get(nuc.getName()).probability()>.95){
+                    if (decisionNode.probability() > 0.1 || (decisions.get(nuc.getName()).probability()>.95&&decisionNode.probability()>0.01) ){
                         // form the division
                         node1.markedAsUsed();
                         node2.markedAsUsed();
