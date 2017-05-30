@@ -510,7 +510,7 @@ public class LinkedNucleusFile implements NucleusFile {
             TreeSet<Nucleus> notDividing = new TreeSet<>();
             Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);  
             for (int j=0 ; j<fromNucs.length ; ++j){
-                if (fromNucs[j].getName().equals("186_15794")){
+                if (fromNucs[j].getName().equals("190_17368")){
 
                     int sjkdhfs=0;
                 }                
@@ -535,7 +535,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 for (NucleusLogNode node : availRoots){
 
                     Nucleus nodeNuc = node.getNucleus(times[i]);
-                    if (nodeNuc != null && nodeNuc.getVolume() >= 0.2*nuc.getVolume()){
+                    if (nodeNuc != null && nodeNuc.getVolume() >= 0.2*nuc.getVolume() && nuc.distance(nodeNuc)<=distance){
                         Comparable[] divLinkVector = divisionLink.formDataVector("", nuc, nodeNuc);
                         DecisionTreeNode decisionNode = divisionLinkDecisionTreeSet.classify(times[i], divLinkVector);
                         potentialList.add(new DecisionBinding(nuc,node,decisionNode));
@@ -553,7 +553,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     daughters[1] = node2.getNucleus(times[i]);
                     Comparable[] divVector = divisionSet.formDataVector("", nuc, daughters);
                     DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
-                    if (decisionNode.probability() >= 0.5){
+                    if (decisionNode.probability() > 0.1){
                         // form the division
                         node1.markedAsUsed();
                         node2.markedAsUsed();
@@ -570,10 +570,11 @@ public class LinkedNucleusFile implements NucleusFile {
                     notDividing.add(nuc);
                 }
             }
+            ArrayList<DecisionBinding> bestBindingsList = new ArrayList<>();
             boolean finished = false;
             while (!finished){
-                
-                ArrayList<DecisionBinding> bestBindingsList = new ArrayList<>();
+                // find the best node to link to for each nucleus
+                ArrayList<DecisionBinding> potentialBindingsList = new ArrayList<>();
                 for (Nucleus nuc : notDividing){
                     if (nuc.getName().equals("179_2858")||nuc.getName().equals("179_2944")){
                         int jisdfuis=0;
@@ -614,12 +615,12 @@ public class LinkedNucleusFile implements NucleusFile {
                         }
                     }
                     if (bestBinding != null){
-                        bestBindingsList.add(bestBinding);
+                        potentialBindingsList.add(bestBinding);
                     }
                 }
-                Conflict conflict = this.findConflict(bestBindingsList);
+                Conflict conflict = this.findConflict(potentialBindingsList);
                 if (conflict != null){
-                    // pick the best binding from the conflict
+                    // resolve the conflict - use the descendent node
                     DecisionBinding decBind1 = (DecisionBinding)conflict.bind1;
                     DecisionBinding decBind2 = (DecisionBinding)conflict.bind2;
                     DecisionBinding bestBinding = decBind2;
@@ -629,26 +630,56 @@ public class LinkedNucleusFile implements NucleusFile {
                     NucleusLogNode best = bestBinding.getNode();
                     // link to the best 
                     if (best != null){
-                        Nucleus daughter = best.getNucleus(times[i]);
                         best.markedAsUsed();
+                        Nucleus daughter = best.getNucleus(times[i]);
                         this.addNucleus(daughter);
                         bestBinding.nuc.linkTo(daughter);
+                        bestBindingsList.add(bestBinding);
                     }  
                 }else {
-                    // link all the bindings
-                    for (DecisionBinding bestBinding : bestBindingsList){
+                    // no conflicts - link all the bindings
+                    for (DecisionBinding bestBinding : potentialBindingsList){
                         NucleusLogNode best = bestBinding.getNode();
                         // link to the best 
                         if (best != null){
-                            Nucleus daughter = best.getNucleus(times[i]);
                             best.markedAsUsed();
+                            Nucleus daughter = best.getNucleus(times[i]);
                             this.addNucleus(daughter);
                             bestBinding.nuc.linkTo(daughter);
+                            bestBindingsList.add(bestBinding);
                         }                    
                     }
                     finished = true;
                 }
             }
+            // can any of the unused voxels be incorporated into nuclei
+            Set<NucleusLogNode> avails = tree.availableNodes(minVolume,null);
+            for (NucleusLogNode avail : avails){
+                if (avail.getNucleus(times[i]) != null){
+                    // is this available node the sister of a linked node?
+                    NucleusLogNode availsParent = (NucleusLogNode)avail.getParent();
+                    for (DecisionBinding binding : bestBindingsList){
+                        if (availsParent.isDescendent(binding.getNode())){
+                            NucleusLogNode combined = (NucleusLogNode)avail.getParent();
+                            Nucleus daughter = combined.getNucleus(times[i]);
+                            if (daughter.getVolume() < 3.0*binding.getNucleus().getVolume()){
+                                // remove the current linked nucleus
+                                Nucleus[] daughters = binding.getNucleus().nextNuclei();
+                                this.removeNucleus(daughters[0],false);
+
+                                // link to the combined node
+                                combined.markedAsUsed();
+                                this.addNucleus(daughter);
+                                binding.getNucleus().linkTo(daughter); 
+                                break;
+                            }
+                        }
+                        
+                    }
+                }
+            }            
+
+            
             // save the remants
             this.buildRemnants(times[i], minVolume);
         }
