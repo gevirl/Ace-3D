@@ -511,13 +511,14 @@ public class LinkedNucleusFile implements NucleusFile {
             TreeMap<String,DecisionTreeNode> decisions = new TreeMap<>();
             Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);  
             for (int j=0 ; j<fromNucs.length ; ++j){
-                if (fromNucs[j].getName().equals("190_7112")){
+                if (fromNucs[j].getName().equals("192_532") || fromNucs[j].getName().equals("192_18150")){
 
                     int sjkdhfs=0;
                 }                
                 Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
-                if (decisionNode.probability()> 0.15){
+                if (decisionNode.probability()> 0.1){
+System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
                     dividing.add(fromNucs[j]);
                     decisions.put(fromNucs[j].getName(), decisionNode);
                 }else {
@@ -526,7 +527,7 @@ public class LinkedNucleusFile implements NucleusFile {
             }
             
             for (Nucleus nuc : dividing){
-                if (nuc.getName().equals("190_7112")){
+                if (nuc.getName().equals("192_532") || nuc.getName().equals("192_18150")){
                     int sjkdhfs=0;
                 }
                 // find potential daughters of the dividing nuclei
