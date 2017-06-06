@@ -606,8 +606,7 @@ public class NucleusData implements Comparable {
     public void setTime(int t){
         this.time = t;
     }
-    
-    
+
 
     private int time;
     private String name;
@@ -627,6 +626,7 @@ public class NucleusData implements Comparable {
     RealMatrix adjustedA;  // the adjusted precsion matrix  
     double ff;
     List<InvalidationListener> listeners = new ArrayList<>();
+
 
     
     public class Coeff {

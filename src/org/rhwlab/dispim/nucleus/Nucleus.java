@@ -653,7 +653,15 @@ public class Nucleus implements Comparable {
         }
         return true;
     }
-
+    public String getLineage(){
+        for (String lineage : lineages){
+            if (cellName.startsWith(lineage)){
+                return lineage;
+            }
+        }
+        return "";
+    }
+    
     private Nucleus child1;
     private Nucleus child2;
     private Nucleus parent; 
@@ -663,5 +671,5 @@ public class Nucleus implements Comparable {
     
     static double distThreshold=50;
     static double expansionDistanceThresh = 25;
-
+    static String[] lineages = {"ABa","ABp","MS","E","C","D","Z"};
 }

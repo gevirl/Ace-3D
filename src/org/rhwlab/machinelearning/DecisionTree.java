@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -103,7 +102,8 @@ public class DecisionTree {
                             "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
                             "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
                             "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
+                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170509_tbx-7_OP331/pete.xml"
                 };
         
         String[] trainingSetClasses = {"org.rhwlab.machinelearning.TimeLinkageSet",
@@ -121,7 +121,7 @@ public class DecisionTree {
         
         int delTime = 50;
         int overlap = 10;
-        for (int i=0 ; i<5 ; ++i){
+        for (int i=0 ; i<6 ; ++i){
             for (int c = 0 ; c<trainingSetClasses.length ; ++c){
                 Constructor contruct =Class.forName(trainingSetClasses[c]).getConstructor(Integer.class,Integer.class);
                 TrainingSet trainingSet = (TrainingSet)contruct.newInstance(i * delTime - overlap, (i + 1) * delTime + overlap);
@@ -134,7 +134,7 @@ public class DecisionTree {
                 rootEle.setAttribute("training", name);             
                 DecisionTree decisionTree = new DecisionTree(rootEle,null);
                 decisionTree.reducedErrorPruning(trainingSet.getTestSet());
-                decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/%s%03d.xml",names[c],delTime*(i+1)));
+                decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/Latest/%s%03d.xml",names[c],delTime*(i+1)));
             }
         
         }
