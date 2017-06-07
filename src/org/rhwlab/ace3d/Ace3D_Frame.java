@@ -389,29 +389,21 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         
-        JMenuItem removeRange = new JMenuItem("Remove Nuclei - Time Range");
-        removeRange.addActionListener(new ActionListener(){
+        JMenuItem removeTail = new JMenuItem("Remove Nuclei - Current and Later Times");
+        removeTail.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                int timeTo = -1;
-                while (timeTo == -1){
-                    String ans = JOptionPane.showInputDialog("Enter last time to delete");
-                    if (ans == null) return;
-                    try {
-                        timeTo = Integer.valueOf(ans.trim());
-                    } catch (Exception exc){
-                        JOptionPane.showMessageDialog(rootPane,"invalid entry");
-                    }
-                }
-                for (int t=getCurrentTime();t<=timeTo;++t){
+                
+                for (int t = panel.getTime(); t <= panel.getMaxTime(); t++) {
                     LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
                     nf.removeNuclei(t, false);
                 }
                imagedEmbryo.notifyListeners();
             }
         }); 
+        
         segmenting.add(remove);
-        segmenting.add(removeRange);
+        segmenting.add(removeTail);
         JMenuItem removeAll = new JMenuItem("Remove All Nuclei");
         removeAll.addActionListener(new ActionListener(){
             @Override
@@ -428,7 +420,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
             
         });
-        segmenting.add(removeAll);  
+        //segmenting.add(removeAll); 
         segmenting.addSeparator();
         
         JMenuItem submitBHC = new JMenuItem("Submit to Grid");

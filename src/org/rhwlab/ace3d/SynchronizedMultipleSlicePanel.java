@@ -47,7 +47,12 @@ public class SynchronizedMultipleSlicePanel extends JPanel implements ChangeList
         slider.addChangeListener(new ChangeListener(){
             @Override
             public void stateChanged(ChangeEvent e) {
-                time = slider.getValue();
+                if (embryo.getNucleusFile().getAllTimes().size() > 0) {
+                    time = embryo.getNucleusFile().getAllTimes().size();
+                }
+                else {
+                    time = 1;
+                    }
                 showCurrentImage();
             }
         });
