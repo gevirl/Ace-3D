@@ -186,6 +186,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 
                         imagedEmbryo.notifyListeners();                    
                         props.setProperty("MVRDir",sel.getPath());
+                        panel.changeTime(1);
                     }else {
                         imagedEmbryo.clearSources();
                         JOptionPane.showMessageDialog(Ace3D_Frame.this, "No Segmentation probability hdf5 files found");
@@ -710,7 +711,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         
         bhc  = new BHCDirectory(sel);
         imagedEmbryo.getNucleusFile().setBHCTreeDirectory(bhc);
-
+        
         props.setProperty("BHC",sel.getPath());            
         
     } 
@@ -745,7 +746,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             contrastDialog.setProperties(name, p);
         }
         this.sessionXML = xml;
-        
+        if (imagedEmbryo.getNucleusFile().getAllTimes().size() > 0) {
+            panel.changeTime(imagedEmbryo.getNucleusFile().getAllTimes().size());
+        }
 //        imagedEmbryo.reportDivisionEccengtricty();
     }
     private void saveAsSession()throws Exception {
