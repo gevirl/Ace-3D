@@ -252,11 +252,11 @@ public class BHCSubmitPanel extends JPanel {
     JTextField memory = new JTextField("22");
     JTextField seriesDir;
     JTextField startTime = new JTextField("1");
-    JTextField endTime = new JTextField("400");
-    JTextField lnAlpha = new JTextField("8");
+    JTextField endTime = new JTextField("300");
+    JTextField lnAlpha = new JTextField("10");
     JTextField variance = new JTextField("20");
     JTextField degrees = new JTextField("10");
-    JTextField segProb = new JTextField("75");
+    JTextField segProb = new JTextField("50");
     JTextField zMax;
     JTextField zMin;
     JTextField xMin;

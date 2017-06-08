@@ -55,7 +55,7 @@ public class NavigationHeaderPanel extends JPanel {
         
         this.add(new JLabel("Time Scale:"));
         timeScale = new JTextField("1.5");
-        timeScale.setColumns(10);
+        timeScale.setColumns(5);
         timeScale.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -65,8 +65,8 @@ public class NavigationHeaderPanel extends JPanel {
         this.add(timeScale);  
         
         this.add(new JLabel("Cell Width:"));
-        cellWidth = new JTextField("18.0");
-        cellWidth.setColumns(10);
+        cellWidth = new JTextField("15.0");
+        cellWidth.setColumns(5);
         cellWidth.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -77,7 +77,7 @@ public class NavigationHeaderPanel extends JPanel {
         
         this.add(new JLabel("Expression Scale Max: "));
         expMax = new JTextField("5000");
-        expMax.setColumns(12);
+        expMax.setColumns(6);
         expMax.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
