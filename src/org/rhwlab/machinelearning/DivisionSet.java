@@ -102,7 +102,7 @@ public class DivisionSet extends TrainingSet implements Runnable {
         Comparable[] data = new Comparable[labels.length];
         data[0] = classification;
         data[1] = source.getTime();
-        data[2] = source.getLineage();
+        data[2] = source.getCellName();
         data[3] = source.distance(next[0]); 
         data[4] = source.distance(next[1]); 
         data[5] = next[0].distance(next[1]);
@@ -183,7 +183,7 @@ public class DivisionSet extends TrainingSet implements Runnable {
     
     static int overlap = 10;
     static int delTime = 50;
-    static String[] labels ={"Class","Time","Lineage","Distance1","Distance2","Distance12","Volume1","Volume2","Axis","ParentAxis",
+    static String[] labels ={"Class","Time","Cell","Distance1","Distance2","Distance12","Volume1","Volume2","Axis","ParentAxis",
     "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","Intensity1","Intensity2"};  
     static TreeMap<String,Integer> labelMap;
 

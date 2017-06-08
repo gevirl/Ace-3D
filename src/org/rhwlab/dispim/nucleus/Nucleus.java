@@ -671,5 +671,5 @@ public class Nucleus implements Comparable {
     
     static double distThreshold=50;
     static double expansionDistanceThresh = 25;
-    static String[] lineages = {"ABa","ABp","MS","E","C","D","Z"};
+    static String[] lineages = {"AB","MS","E","C","D","Z","P"};
 }

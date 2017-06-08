@@ -15,6 +15,7 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
+import static org.rhwlab.machinelearning.DivisionSet.delTime;
 
 /**
  *
@@ -63,7 +64,6 @@ public class DividingNucleusSet extends TrainingSet implements Runnable {
         int i = 0;
         data[i++] = cl;  
         data[i++] = source.getTime();
-        data[i++] = source.getLineage();
 //        data[2] = source.getCellName();
 //        data[3] = parent.getName();
         data[i++] = parent.getVolume()/source.getVolume();
@@ -145,7 +145,7 @@ public class DividingNucleusSet extends TrainingSet implements Runnable {
     int delTime = 50;
     int overlap = 10;
     
-    static String[] labels ={"Class","Time","Lineage","PCVolumeRatio","GPVolumeRatio","PostDivisionTime",
+    static String[] labels ={"Class","Time","PCVolumeRatio","GPVolumeRatio","PostDivisionTime",
     "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","grandEcc1","grandEcc2","grandEcc3","PCIntensityRatio","GPIntensityRatio"};    
     static TreeMap<String,Integer> labelMap;
 

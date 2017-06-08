@@ -63,7 +63,7 @@ public class DivisionLinkSet extends TrainingSet {
         Comparable[] data = new Comparable[labels.length];
         data[0] = cl;
         data[1] = source.getTime();
-        data[2] = source.getLineage();
+        data[2] = source.getCellName();
         data[3] = source.distance(next); 
         data[4] = source.getVolume()/next.getVolume();
         data[5] = source.getAvgIntensity()/next.getAvgIntensity();
@@ -122,7 +122,7 @@ public class DivisionLinkSet extends TrainingSet {
             
         } 
     }
-    static String[] labels = {"Class","Time","Lineage","Distance","VolumeRatio","IntensityRatio","MinorAxisCosine",
+    static String[] labels = {"Class","Time","Cell","Distance","VolumeRatio","IntensityRatio","MinorAxisCosine",
                             "ChildEcc1","ChildEcc2","ChildEcc3"}; 
     static TreeMap<String,Integer> labelMap;
 

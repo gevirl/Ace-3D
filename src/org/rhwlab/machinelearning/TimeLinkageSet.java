@@ -82,7 +82,7 @@ public class TimeLinkageSet extends TrainingSet {
         Comparable[] data = new Comparable[labels.length];
         data[0] = classification;
         data[1] = source.getTime();
-        data[2] = source.getLineage();
+        data[2] = source.getCellName();
         data[3] = source.distance(next[0]); 
         data[4] = source.getVolume()/next[0].getVolume();
         data[5] = source.getAvgIntensity()/next[0].getAvgIntensity();
@@ -141,7 +141,7 @@ public class TimeLinkageSet extends TrainingSet {
         }
         int iusagdfugsd=0;
     }
-    static String[] labels = {"Class","Time","Lineage","Distance","VolumeRatio","IntensityRatio","PostDivisionTime"};
+    static String[] labels = {"Class","Time","Cell","Distance","VolumeRatio","IntensityRatio","PostDivisionTime"};
     static String[] dataClasses = 
     {"java.lang.String","java.lang.Integer","java.lang.String","java.lang.Double","java.lang.Double","java.lang.Double","java.lang.Integer"};
     static TreeMap<String,Integer> labelMap;

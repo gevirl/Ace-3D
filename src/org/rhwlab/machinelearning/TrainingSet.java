@@ -61,7 +61,8 @@ abstract public class TrainingSet {
         }
     }
   
-    public void formDecisionTree(int depth){
+    public void formDecisionTree(int minCases){
+        if (this.data.size() <= minCases) return;
         // find the split that creates the maximum gain in information
 //        ColumnGain bestGain = null;
         this.countPositiveCases();
@@ -79,17 +80,15 @@ abstract public class TrainingSet {
         }
 
         split(bestSplit.column,bestSplit.value);
-        for (int i=0 ; i<depth ; ++i){
-//            System.out.print(" ");
-        }
+
 //System.out.printf("%s,%s,%d,%d\n",labels[bestGain.column],bestGain.value.toString(),this.positiveCount,this.data.size());   
 
             // check if split is good enouch         
         if (bestSplit.lessPos > 0 && bestSplit.lessPos!=bestSplit.lessSize ){
-            lessSet.formDecisionTree(depth+1);
+            lessSet.formDecisionTree(minCases);
         }
         if (bestSplit.greatPos > 0 && bestSplit.greatPos!=bestSplit.greatSize){
-            greaterSet.formDecisionTree(depth+1);
+            greaterSet.formDecisionTree(minCases);
         }        
         
     }

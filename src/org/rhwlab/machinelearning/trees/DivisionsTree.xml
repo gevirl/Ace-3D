@@ -1,0 +1,302 @@
+<DecisionTreeSet>
+  <DecisionTree positiveProb="0.15542521994134897" positive="159" total="1023" variable="Volume1" value="1.2766249299776609" class="java.lang.Double" time="50" training="org.rhwlab.machinelearning.DivisionSet">
+    <LessOrEqual positiveProb="0.01624815361890694" positive="11" total="677" />
+    <Greater positiveProb="0.4277456647398844" positive="148" total="346" variable="Volume2" value="1.6639575945996226" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.12222222222222222" positive="22" total="180" />
+      <Greater positiveProb="0.7590361445783133" positive="126" total="166" variable="Distance2" value="29.523223704521094" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.8785714285714286" positive="123" total="140" variable="Intensity1" value="0.2593739732494305" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.0" positive="0" total="9" />
+          <Greater positiveProb="0.9389312977099237" positive="123" total="131" variable="Distance1" value="32.83035144969952" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.968" positive="121" total="125" />
+            <Greater positiveProb="0.3333333333333333" positive="2" total="6" />
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.11538461538461539" positive="3" total="26" />
+      </Greater>
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.03137254901960784" positive="424" total="13515" variable="Volume2" value="1.4534379815020702" class="java.lang.Double" time="100" training="org.rhwlab.machinelearning.DivisionSet">
+    <LessOrEqual positiveProb="0.0031191515907673115" positive="35" total="11221" />
+    <Greater positiveProb="0.16957279860505667" positive="389" total="2294" variable="Distance2" value="25.791364538245634" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.47375" positive="379" total="800" variable="Distance1" value="24.535522176677507" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.8289473684210527" positive="378" total="456" variable="Intensity2" value="0.65679567441721" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.2" positive="15" total="75" variable="Volume1" value="1.3312599990505316" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.0" positive="0" total="50" />
+            <Greater positiveProb="0.6" positive="15" total="25" />
+          </LessOrEqual>
+          <Greater positiveProb="0.952755905511811" positive="363" total="381" variable="Intensity1" value="0.4946409525463391" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.14285714285714285" positive="1" total="7" />
+            <Greater positiveProb="0.9679144385026738" positive="362" total="374" />
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.0029069767441860465" positive="1" total="344" />
+      </LessOrEqual>
+      <Greater positiveProb="0.006693440428380187" positive="10" total="1494" />
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.001631619849551446" positive="865" total="530148" variable="Ecc1" value="0.79579979041943" class="java.lang.Double" time="150" training="org.rhwlab.machinelearning.DivisionSet">
+    <LessOrEqual positiveProb="4.0930931524726634E-4" positive="207" total="505730" variable="parentEcc1" value="0.7810879128138296" class="java.lang.Double">
+      <LessOrEqual positiveProb="7.13513740385927E-5" positive="34" total="476515" />
+      <Greater positiveProb="0.005921615608420332" positive="173" total="29215" variable="Distance1" value="23.1493758768778" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.029183535762483132" positive="173" total="5928" variable="Distance2" value="22.909005286127645" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.3037300177619893" positive="171" total="563" variable="Volume2" value="1.256465975707898" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.05913978494623656" positive="22" total="372" variable="ParentAxis" value="0.874475372445241" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.0" positive="0" total="226" />
+              <Greater positiveProb="0.1506849315068493" positive="22" total="146" variable="Volume1" value="1.0477741387341428" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.012658227848101266" positive="1" total="79" />
+                <Greater positiveProb="0.31343283582089554" positive="21" total="67" variable="Intensity2" value="1.305065873347712" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.10638297872340426" positive="5" total="47" />
+                  <Greater positiveProb="0.8" positive="16" total="20" />
+                </Greater>
+              </Greater>
+            </LessOrEqual>
+            <Greater positiveProb="0.7801047120418848" positive="149" total="191" variable="Distance12" value="23.287920990927095" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.08" positive="2" total="25" />
+              <Greater positiveProb="0.8855421686746988" positive="147" total="166" variable="Distance2" value="20.653893585120084" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.9507042253521126" positive="135" total="142" variable="Distance2" value="7.140550463839509" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.16666666666666666" positive="1" total="6" />
+                  <Greater positiveProb="0.9852941176470589" positive="134" total="136" />
+                </LessOrEqual>
+                <Greater positiveProb="0.5" positive="12" total="24" />
+              </Greater>
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="3.727865796831314E-4" positive="2" total="5365" />
+        </LessOrEqual>
+        <Greater positiveProb="0.0" positive="0" total="23287" />
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="0.026947333933983127" positive="658" total="24418" variable="Axis" value="0.9103038532176387" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.0014585055180125431" positive="30" total="20569" />
+      <Greater positiveProb="0.16315926214601195" positive="628" total="3849" variable="Distance1" value="22.341604270539175" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.4469914040114613" positive="624" total="1396" variable="Distance2" value="21.246021360067463" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.9049034175334324" positive="609" total="673" variable="Volume1" value="1.3703796663661176" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.5061728395061729" positive="41" total="81" variable="Intensity1" value="1.1329026955320016" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.15789473684210525" positive="6" total="38" />
+              <Greater positiveProb="0.813953488372093" positive="35" total="43" />
+            </LessOrEqual>
+            <Greater positiveProb="0.9594594594594594" positive="568" total="592" />
+          </LessOrEqual>
+          <Greater positiveProb="0.02074688796680498" positive="15" total="723" variable="Distance2" value="24.972383262412187" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.21875" positive="14" total="64" variable="Volume1" value="1.7224284552727769" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.0784313725490196" positive="4" total="51" />
+              <Greater positiveProb="0.7692307692307693" positive="10" total="13" />
+            </LessOrEqual>
+            <Greater positiveProb="0.0015174506828528073" positive="1" total="659" />
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.0016306563391765185" positive="4" total="2453" />
+      </Greater>
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="3.779910501473933E-4" positive="1302" total="3444526" variable="Distance1" value="19.221250760443123" class="java.lang.Double" time="200" training="org.rhwlab.machinelearning.DivisionSet">
+    <LessOrEqual positiveProb="0.0031456854910847398" positive="1266" total="402456" variable="Distance2" value="18.504125290575516" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.10057152605988229" positive="1179" total="11723" variable="Ecc1" value="0.7960016840129973" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.03138672246528438" positive="330" total="10514" variable="parentEcc1" value="0.789830092792234" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.006112722751761293" positive="59" total="9652" variable="Volume1" value="1.2986837239415963" class="java.lang.Double">
+            <LessOrEqual positiveProb="5.027020233756441E-4" positive="4" total="7957" />
+            <Greater positiveProb="0.032448377581120944" positive="55" total="1695" variable="Volume2" value="1.1917705597450436" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.0" positive="0" total="1167" />
+              <Greater positiveProb="0.10416666666666667" positive="55" total="528" variable="Axis" value="0.9436839684398087" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.04" positive="18" total="450" />
+                <Greater positiveProb="0.47435897435897434" positive="37" total="78" variable="parentEcc2" value="0.8153987790600044" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.16279069767441862" positive="7" total="43" />
+                  <Greater positiveProb="0.8571428571428571" positive="30" total="35" />
+                </Greater>
+              </Greater>
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="0.314385150812065" positive="271" total="862" variable="Distance12" value="22.22730329342804" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.014613778705636743" positive="7" total="479" />
+            <Greater positiveProb="0.6892950391644909" positive="264" total="383" variable="Volume1" value="1.219998754255191" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.24822695035460993" positive="35" total="141" variable="ParentAxis" value="0.7886306710951293" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.0" positive="0" total="63" />
+                <Greater positiveProb="0.44871794871794873" positive="35" total="78" variable="Intensity1" value="1.2219089860927381" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.10526315789473684" positive="4" total="38" />
+                  <Greater positiveProb="0.775" positive="31" total="40" />
+                </Greater>
+              </LessOrEqual>
+              <Greater positiveProb="0.9462809917355371" positive="229" total="242" variable="ParentAxis" value="0.7973964110271885" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.16666666666666666" positive="1" total="6" />
+                <Greater positiveProb="0.9661016949152542" positive="228" total="236" variable="Distance1" value="15.501027038936876" class="java.lang.Double">
+                  <LessOrEqual positiveProb="1.0" positive="159" total="159" />
+                  <Greater positiveProb="0.8961038961038961" positive="69" total="77" variable="Intensity2" value="0.7679408109930064" class="java.lang.Double">
+                    <LessOrEqual positiveProb="0.2" positive="1" total="5" />
+                    <Greater positiveProb="0.9444444444444444" positive="68" total="72" />
+                  </Greater>
+                </Greater>
+              </Greater>
+            </Greater>
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.7022332506203474" positive="849" total="1209" variable="Axis" value="0.8940284665924783" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.0683453237410072" positive="19" total="278" />
+          <Greater positiveProb="0.8915145005370569" positive="830" total="931" variable="Volume2" value="1.1644383356928814" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.2558139534883721" positive="22" total="86" />
+            <Greater positiveProb="0.9562130177514793" positive="808" total="845" variable="Distance2" value="4.893315722634237" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.47368421052631576" positive="9" total="19" />
+              <Greater positiveProb="0.9673123486682809" positive="799" total="826" variable="Volume1" value="1.3461646909942497" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.8059701492537313" positive="54" total="67" variable="Distance1" value="6.038399411479537" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.0" positive="0" total="8" />
+                  <Greater positiveProb="0.9152542372881356" positive="54" total="59" />
+                </LessOrEqual>
+                <Greater positiveProb="0.9815546772068511" positive="745" total="759" />
+              </Greater>
+            </Greater>
+          </Greater>
+        </Greater>
+      </LessOrEqual>
+      <Greater positiveProb="2.2265843939467617E-4" positive="87" total="390733" variable="parentEcc2" value="0.8331824458552918" class="java.lang.Double">
+        <LessOrEqual positiveProb="1.7625907734248314E-5" positive="6" total="340408" />
+        <Greater positiveProb="0.001609538002980626" positive="81" total="50325" variable="Distance2" value="22.908038007921053" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.01755807671528903" positive="65" total="3702" variable="Distance12" value="26.98118792782088" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.0017283097131005876" positive="5" total="2893" />
+            <Greater positiveProb="0.07416563658838071" positive="60" total="809" variable="Time" value="178" class="java.lang.Integer">
+              <LessOrEqual positiveProb="0.3184713375796178" positive="50" total="157" variable="Volume2" value="1.2909087634608916" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.056818181818181816" positive="5" total="88" />
+                <Greater positiveProb="0.6521739130434783" positive="45" total="69" variable="ParentAxis" value="0.7516756958074073" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.0" positive="0" total="8" />
+                  <Greater positiveProb="0.7377049180327869" positive="45" total="61" variable="Distance2" value="20.995953438329863" class="java.lang.Double">
+                    <LessOrEqual positiveProb="0.9" positive="36" total="40" />
+                    <Greater positiveProb="0.42857142857142855" positive="9" total="21" />
+                  </Greater>
+                </Greater>
+              </LessOrEqual>
+              <Greater positiveProb="0.015337423312883436" positive="10" total="652" />
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="3.431782596572507E-4" positive="16" total="46623" />
+        </Greater>
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="1.1834047211273902E-5" positive="36" total="3042070" />
+  </DecisionTree>
+  <DecisionTree positiveProb="9.173506949070788E-5" positive="988" total="10770145" variable="Distance1" value="16.6040753244471" class="java.lang.Double" time="250" training="org.rhwlab.machinelearning.DivisionSet">
+    <LessOrEqual positiveProb="0.0011679156532796702" positive="946" total="809990" variable="Distance2" value="15.940338508448441" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.05529835390946502" positive="860" total="15552" variable="parentEcc1" value="0.7569082070922005" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.0073609006278415245" positive="102" total="13857" variable="Ecc1" value="0.7696723510605813" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.0011883541295306002" positive="16" total="13464" />
+          <Greater positiveProb="0.21882951653944022" positive="86" total="393" variable="Volume2" value="1.3661968703760718" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.014598540145985401" positive="4" total="274" />
+            <Greater positiveProb="0.6890756302521008" positive="82" total="119" variable="Volume1" value="1.2428465005568288" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.0" positive="0" total="24" />
+              <Greater positiveProb="0.8631578947368421" positive="82" total="95" variable="Axis" value="0.7087442057180087" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.0" positive="0" total="9" />
+                <Greater positiveProb="0.9534883720930233" positive="82" total="86" />
+              </Greater>
+            </Greater>
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.4471976401179941" positive="758" total="1695" variable="Volume2" value="1.2418649736750462" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.08452380952380953" positive="71" total="840" variable="Distance12" value="21.47998413364614" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.020604395604395604" positive="15" total="728" />
+            <Greater positiveProb="0.5" positive="56" total="112" variable="parentEcc1" value="0.8133948584093644" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.1" positive="4" total="40" />
+              <Greater positiveProb="0.7222222222222222" positive="52" total="72" variable="Intensity1" value="0.8400960716050413" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.0" positive="0" total="10" />
+                <Greater positiveProb="0.8387096774193549" positive="52" total="62" variable="Time" value="244" class="java.lang.Integer">
+                  <LessOrEqual positiveProb="0.9795918367346939" positive="48" total="49" />
+                  <Greater positiveProb="0.3076923076923077" positive="4" total="13" />
+                </Greater>
+              </Greater>
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="0.8035087719298246" positive="687" total="855" variable="Volume1" value="1.2380045785905738" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.2152777777777778" positive="31" total="144" variable="Intensity2" value="0.9989645544320304" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.0" positive="0" total="81" />
+              <Greater positiveProb="0.49206349206349204" positive="31" total="63" variable="Distance1" value="3.861707258416126" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.0" positive="0" total="19" />
+                <Greater positiveProb="0.7045454545454546" positive="31" total="44" />
+              </Greater>
+            </LessOrEqual>
+            <Greater positiveProb="0.9226441631504922" positive="656" total="711" variable="ParentAxis" value="0.734887360612998" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.18421052631578946" positive="7" total="38" />
+              <Greater positiveProb="0.9643387815750372" positive="649" total="673" variable="Distance1" value="15.256030384121338" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.9764890282131662" positive="623" total="638" variable="Intensity1" value="0.6516094544765184" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.42857142857142855" positive="3" total="7" />
+                  <Greater positiveProb="0.9825673534072901" positive="620" total="631" variable="Intensity2" value="0.9774232416732656" class="java.lang.Double">
+                    <LessOrEqual positiveProb="0.9326923076923077" positive="97" total="104" variable="parentEcc2" value="0.9232754916711818" class="java.lang.Double">
+                      <LessOrEqual positiveProb="0.9875" positive="79" total="80" variable="Distance1" value="4.243208084711142" class="java.lang.Double">
+                        <LessOrEqual positiveProb="0.0" positive="0" total="1" />
+                        <Greater positiveProb="1.0" positive="79" total="79" />
+                      </LessOrEqual>
+                      <Greater positiveProb="0.75" positive="18" total="24" />
+                    </LessOrEqual>
+                    <Greater positiveProb="0.9924098671726755" positive="523" total="527" />
+                  </Greater>
+                </LessOrEqual>
+                <Greater positiveProb="0.7428571428571429" positive="26" total="35" />
+              </Greater>
+            </Greater>
+          </Greater>
+        </Greater>
+      </LessOrEqual>
+      <Greater positiveProb="1.082526263849413E-4" positive="86" total="794438" variable="parentEcc1" value="0.7719860505576365" class="java.lang.Double">
+        <LessOrEqual positiveProb="1.455247822089339E-5" positive="11" total="755885" />
+        <Greater positiveProb="0.001945373900863746" positive="75" total="38553" variable="Distance2" value="19.140268990192112" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.05860113421550094" positive="62" total="1058" variable="Distance12" value="24.05377067815073" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.0024009603841536613" positive="2" total="833" />
+            <Greater positiveProb="0.26666666666666666" positive="60" total="225" variable="Volume2" value="0.9979417739124549" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.0" positive="0" total="97" />
+              <Greater positiveProb="0.46875" positive="60" total="128" variable="Time" value="244" class="java.lang.Integer">
+                <LessOrEqual positiveProb="0.6145833333333334" positive="59" total="96" variable="ParentAxis" value="0.7242485788557369" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.0" positive="0" total="15" />
+                  <Greater positiveProb="0.7283950617283951" positive="59" total="81" variable="Volume1" value="1.1665661252658057" class="java.lang.Double">
+                    <LessOrEqual positiveProb="0.2777777777777778" positive="5" total="18" />
+                    <Greater positiveProb="0.8571428571428571" positive="54" total="63" variable="Intensity1" value="0.5846584138335421" class="java.lang.Double">
+                      <LessOrEqual positiveProb="0.0" positive="0" total="3" />
+                      <Greater positiveProb="0.9" positive="54" total="60" />
+                    </Greater>
+                  </Greater>
+                </LessOrEqual>
+                <Greater positiveProb="0.03125" positive="1" total="32" />
+              </Greater>
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="3.467128950526737E-4" positive="13" total="37495" />
+        </Greater>
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="4.216801846959209E-6" positive="42" total="9960155" />
+  </DecisionTree>
+  <DecisionTree positiveProb="3.439135308839353E-5" positive="275" total="7996196" variable="Distance1" value="15.591901319617236" class="java.lang.Double" time="300" training="org.rhwlab.machinelearning.DivisionSet">
+    <LessOrEqual positiveProb="5.429845986152884E-4" positive="269" total="495410" variable="Distance2" value="15.453505721869902" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.0297029702970297" positive="258" total="8686" variable="parentEcc1" value="0.7946863430923875" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.00610798924993892" positive="50" total="8186" variable="Volume1" value="1.2991420037387873" class="java.lang.Double">
+          <LessOrEqual positiveProb="1.476886722788362E-4" positive="1" total="6771" />
+          <Greater positiveProb="0.03462897526501767" positive="49" total="1415" variable="Volume2" value="1.2627938623338442" class="java.lang.Double">
+            <LessOrEqual positiveProb="9.442870632672333E-4" positive="1" total="1059" />
+            <Greater positiveProb="0.1348314606741573" positive="48" total="356" variable="ParentAxis" value="0.9018071554088333" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.025362318840579712" positive="7" total="276" />
+              <Greater positiveProb="0.5125" positive="41" total="80" variable="parentEcc1" value="0.6934502669624777" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.15625" positive="5" total="32" />
+                <Greater positiveProb="0.75" positive="36" total="48" />
+              </Greater>
+            </Greater>
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.416" positive="208" total="500" variable="Volume1" value="1.2990710019349991" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.0546218487394958" positive="13" total="238" variable="Distance12" value="16.87073263188918" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.0" positive="0" total="167" />
+            <Greater positiveProb="0.18309859154929578" positive="13" total="71" variable="Volume2" value="1.1368861202831342" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.020833333333333332" positive="1" total="48" />
+              <Greater positiveProb="0.5217391304347826" positive="12" total="23" />
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="0.7442748091603053" positive="195" total="262" variable="ParentAxis" value="0.806795804806356" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.10256410256410256" positive="4" total="39" />
+            <Greater positiveProb="0.8565022421524664" positive="191" total="223" variable="Distance2" value="4.490358331337081" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.11764705882352941" positive="2" total="17" />
+              <Greater positiveProb="0.9174757281553398" positive="189" total="206" variable="Intensity2" value="0.4762509527822691" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.0" positive="0" total="5" />
+                <Greater positiveProb="0.9402985074626866" positive="189" total="201" />
+              </Greater>
+            </Greater>
+          </Greater>
+        </Greater>
+      </LessOrEqual>
+      <Greater positiveProb="2.260007725117315E-5" positive="11" total="486724" />
+    </LessOrEqual>
+    <Greater positiveProb="7.999161687855113E-7" positive="6" total="7500786" />
+  </DecisionTree>
+</DecisionTreeSet>
