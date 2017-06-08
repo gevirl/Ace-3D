@@ -4,11 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -22,10 +22,20 @@ import org.rhwlab.dispim.nucleus.NamedNucleusFile;
  * @author gevirl
  */
 public class DecisionTree {
+    public DecisionTree(TrainingSet train,String resource)throws Exception {
+        Element ele = xmlRootFromResource(resource);
+        buildTree(ele,train);
+    }    
     public DecisionTree(String xml,TrainingSet train)throws Exception {
         this(xmlRoot(xml),train);
     }
     public DecisionTree(Element rootEle,TrainingSet train)throws  Exception {
+        buildTree(rootEle,train);
+    }
+    public DecisionTree(Element rootEle)throws  Exception {
+        buildTree(rootEle,null);
+    }    
+    public void buildTree(Element rootEle,TrainingSet train)throws Exception {
         if (train == null){
             String className = rootEle.getAttributeValue("training");
             if (className != null){
@@ -36,7 +46,21 @@ public class DecisionTree {
             trainingSet = train;
         }
         root = new DecisionTreeNode(rootEle);
-        this.labelMap = trainingSet.getLabelsAsMap();        
+        this.labelMap = trainingSet.getLabelsAsMap();          
+    }
+    public Element xmlRootFromResource(String resource){
+        
+        InputStream stream = this.getClass().getResourceAsStream(resource);
+        SAXBuilder saxBuilder = new SAXBuilder();
+        try {
+            Document doc = saxBuilder.build(stream);
+            Element root = doc.getRootElement();
+            return root;
+        } catch (Exception exc){
+            exc.printStackTrace();
+        }
+        return null;        
+        
     }
     static public Element xmlRoot(String file) {
         SAXBuilder saxBuilder = new SAXBuilder();
@@ -82,6 +106,14 @@ public class DecisionTree {
         this.root.prune();
     }
     
+    public Element toXML(int time) throws Exception {
+        Element rootEle = root.toXML("DecisionTree");
+        rootEle.setAttribute("time", Integer.toString(time));
+        String name = trainingSet.getClass().getName();
+        rootEle.setAttribute("training", name);
+        return rootEle;
+    }
+    
     public void saveAsXML(String file) throws Exception {
             OutputStream stream = new FileOutputStream(file);
             XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
@@ -90,8 +122,7 @@ public class DecisionTree {
             rootEle.setAttribute("training", name);            
             out.output(rootEle, stream);
             stream.close();         
-    }
-    
+    }    
     // test pruning
     static public void main(String[] args)throws Exception {
         String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
@@ -103,16 +134,17 @@ public class DecisionTree {
                             "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
                             "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
                             "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
-                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
+                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170509_tbx-7_OP331/pete.xml"
                 };
         
         String[] trainingSetClasses = {"org.rhwlab.machinelearning.TimeLinkageSet",
                                         "org.rhwlab.machinelearning.DividingNucleusSet",
                                         "org.rhwlab.machinelearning.DivisionLinkSet",
                                         "org.rhwlab.machinelearning.DivisionSet"};
-        double[] radii = {100.0,50.0,100.0,50.0};
+        double[] radii = {100.0,50.0,50.0,50.0};
         String[] names = {"TimeLinkageTree","DividingNucleusTree","DivisionLinkTree","DivisionsTree"};
-        
+        int[] minCases = {50,50,50,50};
         
         NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
         for (int i=0 ; i<files.length ; ++i){
@@ -121,22 +153,27 @@ public class DecisionTree {
         
         int delTime = 50;
         int overlap = 10;
-        for (int i=0 ; i<5 ; ++i){
-            for (int c = 0 ; c<trainingSetClasses.length ; ++c){
+        
+        for (int c = 0 ; c<trainingSetClasses.length ; ++c){
+            DecisionTreeSet decisionTreeSet = new DecisionTreeSet();
+            for (int i=0 ; i<6 ; ++i){
                 Constructor contruct =Class.forName(trainingSetClasses[c]).getConstructor(Integer.class,Integer.class);
                 TrainingSet trainingSet = (TrainingSet)contruct.newInstance(i * delTime - overlap, (i + 1) * delTime + overlap);
                 for (int f=0 ; f<nucFiles.length ; ++f){
                     trainingSet.addNucleiFrom(nucFiles[f],radii[c],0.3);
                 }
-                trainingSet.formDecisionTree(0);
-                Element rootEle = trainingSet.toXML("Root");
+                trainingSet.formDecisionTree(minCases[c]);
+                Element rootEle = trainingSet.toXML("DecisionTree");
                 String name = trainingSet.getClass().getName();
-                rootEle.setAttribute("training", name);             
+                rootEle.setAttribute("training", name);
+                int time = delTime * (i + 1);
+                rootEle.setAttribute("time", Integer.toString(time));
                 DecisionTree decisionTree = new DecisionTree(rootEle,null);
                 decisionTree.reducedErrorPruning(trainingSet.getTestSet());
-                decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/%s%03d.xml",names[c],delTime*(i+1)));
+                decisionTreeSet.addDecisionTree(time, decisionTree);
             }
-        
+            String fileName = String.format("/net/waterston/vol2/home/gevirl/NetBeansProjects/Ace-3D/src/org/rhwlab/machinelearning/trees/%s.xml",names[c]);
+            decisionTreeSet.saveAsXML(fileName);
         }
     }    
     DecisionTreeNode root;

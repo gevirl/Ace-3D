@@ -70,8 +70,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 //        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/BHC/db/BHC.xml");
         xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/LMS/config/BHC.xml");
         try {
-            labMan = new LabMan(xml);
-            labMan.setVisible(true);
+ //           labMan = new LabMan(xml);
+ //           labMan.setVisible(true);
         } catch (Exception exc){
             exc.printStackTrace();
         }
@@ -736,8 +736,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 ,Math.min(source.getMaxTime(),panel.getMaxTime()) );
         }
         imagedEmbryo.notifyListeners(); 
-        BHCPanel sheet = (BHCPanel)labMan.getPanel("BHC");
-        sheet.setEmbryo(bhc.getDirectory().getParentFile().getName());
+ //       BHCPanel sheet = (BHCPanel)labMan.getPanel("BHC");
+ //       sheet.setEmbryo(bhc.getDirectory().getParentFile().getName());
         Element dsEle = root.getChild("DataSets");
         for (Element props : dsEle.getChildren("DataSetProperties")){
             String name = props.getAttributeValue("Name");

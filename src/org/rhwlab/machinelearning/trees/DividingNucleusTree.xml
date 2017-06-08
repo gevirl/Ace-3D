@@ -1,0 +1,278 @@
+<DecisionTreeSet>
+  <DecisionTree positiveProb="0.02753809436387002" positive="150" total="5447" variable="Ecc1" value="0.8386216363457641" class="java.lang.Double" time="50" training="org.rhwlab.machinelearning.DividingNucleusSet">
+    <LessOrEqual positiveProb="0.008661417322834646" positive="44" total="5080" variable="GPVolumeRatio" value="1.321194870060321" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.0013477088948787063" positive="6" total="4452" />
+      <Greater positiveProb="0.06050955414012739" positive="38" total="628" variable="PostDivisionTime" value="10" class="java.lang.Integer">
+        <LessOrEqual positiveProb="0.0019230769230769232" positive="1" total="520" />
+        <Greater positiveProb="0.3425925925925926" positive="37" total="108" variable="parentEcc1" value="0.814986772125021" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.18823529411764706" positive="16" total="85" />
+          <Greater positiveProb="0.9130434782608695" positive="21" total="23" />
+        </Greater>
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="0.2888283378746594" positive="106" total="367" variable="PCIntensityRatio" value="0.9449828675069545" class="java.lang.Double">
+      <LessOrEqual positiveProb="0.48148148148148145" positive="104" total="216" variable="parentEcc1" value="0.6883247088175599" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.05172413793103448" positive="3" total="58" />
+        <Greater positiveProb="0.6392405063291139" positive="101" total="158" variable="PostDivisionTime" value="3" class="java.lang.Integer">
+          <LessOrEqual positiveProb="0.0" positive="0" total="25" />
+          <Greater positiveProb="0.7593984962406015" positive="101" total="133" variable="GPVolumeRatio" value="1.0777395951635114" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.0" positive="0" total="11" />
+            <Greater positiveProb="0.8278688524590164" positive="101" total="122" />
+          </Greater>
+        </Greater>
+      </LessOrEqual>
+      <Greater positiveProb="0.013245033112582781" positive="2" total="151" />
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.02120083269420401" positive="387" total="18254" variable="Ecc1" value="0.8417070208847784" class="java.lang.Double" time="100" training="org.rhwlab.machinelearning.DividingNucleusSet">
+    <LessOrEqual positiveProb="0.005745805561939784" positive="100" total="17404" variable="GPVolumeRatio" value="1.2707467950188587" class="java.lang.Double">
+      <LessOrEqual positiveProb="3.8272628691713974E-4" positive="6" total="15677" variable="parentEcc1" value="0.7033581257088636" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.0" positive="0" total="14764" />
+        <Greater positiveProb="0.0065717415115005475" positive="6" total="913" variable="PostDivisionTime" value="20" class="java.lang.Integer">
+          <LessOrEqual positiveProb="0.0" positive="0" total="788" />
+          <Greater positiveProb="0.048" positive="6" total="125" variable="Ecc1" value="0.2202697731346702" class="java.lang.Double">
+            <LessOrEqual positiveProb="1.0" positive="2" total="2" />
+            <Greater positiveProb="0.032520325203252036" positive="4" total="123" variable="PCIntensityRatio" value="0.48636037437772217" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.6666666666666666" positive="2" total="3" />
+              <Greater positiveProb="0.016666666666666666" positive="2" total="120" variable="parentEcc1" value="0.9037944832506832" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.008403361344537815" positive="1" total="119" />
+                <Greater positiveProb="1.0" positive="1" total="1" />
+              </Greater>
+            </Greater>
+          </Greater>
+        </Greater>
+      </LessOrEqual>
+      <Greater positiveProb="0.05442964678633468" positive="94" total="1727" variable="PostDivisionTime" value="18" class="java.lang.Integer">
+        <LessOrEqual positiveProb="0.0" positive="0" total="1468" />
+        <Greater positiveProb="0.36293436293436293" positive="94" total="259" variable="parentEcc1" value="0.7498228413514475" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.06547619047619048" positive="11" total="168" />
+          <Greater positiveProb="0.9120879120879121" positive="83" total="91" />
+        </Greater>
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="0.3376470588235294" positive="287" total="850" variable="PostDivisionTime" value="17" class="java.lang.Integer">
+      <LessOrEqual positiveProb="0.0" positive="0" total="218" />
+      <Greater positiveProb="0.4541139240506329" positive="287" total="632" variable="parentEcc2" value="0.801400443300206" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.07011070110701106" positive="19" total="271" />
+        <Greater positiveProb="0.7423822714681441" positive="268" total="361" variable="GPIntensityRatio" value="0.9932611435183779" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.8426966292134831" positive="225" total="267" variable="GPVolumeRatio" value="1.6533403071596957" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.7318840579710145" positive="101" total="138" variable="PostDivisionTime" value="46" class="java.lang.Integer">
+              <LessOrEqual positiveProb="0.7709923664122137" positive="101" total="131" />
+              <Greater positiveProb="0.0" positive="0" total="7" />
+            </LessOrEqual>
+            <Greater positiveProb="0.9612403100775194" positive="124" total="129" />
+          </LessOrEqual>
+          <Greater positiveProb="0.4574468085106383" positive="43" total="94" variable="PostDivisionTime" value="32" class="java.lang.Integer">
+            <LessOrEqual positiveProb="0.5733333333333334" positive="43" total="75" />
+            <Greater positiveProb="0.0" positive="0" total="19" />
+          </Greater>
+        </Greater>
+      </Greater>
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.018379054970272243" positive="881" total="47935" variable="Ecc1" value="0.8043151807753444" class="java.lang.Double" time="150" training="org.rhwlab.machinelearning.DividingNucleusSet">
+    <LessOrEqual positiveProb="0.005055216853615673" positive="233" total="46091" variable="parentEcc1" value="0.777214649160496" class="java.lang.Double">
+      <LessOrEqual positiveProb="8.879781420765028E-4" positive="39" total="43920" />
+      <Greater positiveProb="0.08935974205435283" positive="194" total="2171" variable="PostDivisionTime" value="28" class="java.lang.Integer">
+        <LessOrEqual positiveProb="0.0" positive="0" total="1928" />
+        <Greater positiveProb="0.7983539094650206" positive="194" total="243" variable="GPIntensityRatio" value="0.8558296022374726" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.9602272727272727" positive="169" total="176" />
+          <Greater positiveProb="0.373134328358209" positive="25" total="67" variable="parentEcc1" value="0.8177552830053519" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.06451612903225806" positive="2" total="31" />
+            <Greater positiveProb="0.6388888888888888" positive="23" total="36" />
+          </Greater>
+        </Greater>
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="0.351409978308026" positive="648" total="1844" variable="PostDivisionTime" value="27" class="java.lang.Integer">
+      <LessOrEqual positiveProb="0.0" positive="0" total="533" />
+      <Greater positiveProb="0.494279176201373" positive="648" total="1311" variable="parentEcc1" value="0.7531497618839438" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.2217573221757322" positive="159" total="717" variable="GPVolumeRatio" value="1.2460938374912083" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.12792792792792793" positive="71" total="555" />
+          <Greater positiveProb="0.5432098765432098" positive="88" total="162" variable="GPIntensityRatio" value="0.7410648994554381" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.7666666666666667" positive="46" total="60" />
+            <Greater positiveProb="0.4117647058823529" positive="42" total="102" variable="grandEcc2" value="0.7120473281871413" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.296875" positive="19" total="64" />
+              <Greater positiveProb="0.6052631578947368" positive="23" total="38" />
+            </Greater>
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.8232323232323232" positive="489" total="594" variable="GPVolumeRatio" value="1.5830018664714027" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.7317073170731707" positive="270" total="369" variable="GPIntensityRatio" value="0.8519264278120209" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.8174273858921162" positive="197" total="241" />
+            <Greater positiveProb="0.5703125" positive="73" total="128" variable="PostDivisionTime" value="75" class="java.lang.Integer">
+              <LessOrEqual positiveProb="0.6033057851239669" positive="73" total="121" variable="grandEcc2" value="0.868507670610773" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.5596330275229358" positive="61" total="109" variable="grandEcc1" value="0.6962831778081279" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.6145833333333334" positive="59" total="96" />
+                  <Greater positiveProb="0.15384615384615385" positive="2" total="13" />
+                </LessOrEqual>
+                <Greater positiveProb="1.0" positive="12" total="12" />
+              </LessOrEqual>
+              <Greater positiveProb="0.0" positive="0" total="7" />
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="0.9733333333333334" positive="219" total="225" />
+        </Greater>
+      </Greater>
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.014997437795365257" positive="1317" total="87815" variable="Ecc1" value="0.7978843566347745" class="java.lang.Double" time="200" training="org.rhwlab.machinelearning.DividingNucleusSet">
+    <LessOrEqual positiveProb="0.004696825228661228" positive="399" total="84951" variable="parentEcc1" value="0.7924572268569283" class="java.lang.Double">
+      <LessOrEqual positiveProb="8.390077821011673E-4" positive="69" total="82240" />
+      <Greater positiveProb="0.1217263002582073" positive="330" total="2711" variable="PostDivisionTime" value="33" class="java.lang.Integer">
+        <LessOrEqual positiveProb="4.3554006968641115E-4" positive="1" total="2296" />
+        <Greater positiveProb="0.7927710843373494" positive="329" total="415" variable="parentEcc2" value="0.8737913938050095" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.3611111111111111" positive="26" total="72" variable="grandEcc2" value="0.7691213153512282" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.7391304347826086" positive="17" total="23" />
+            <Greater positiveProb="0.1836734693877551" positive="9" total="49" />
+          </LessOrEqual>
+          <Greater positiveProb="0.8833819241982507" positive="303" total="343" />
+        </Greater>
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="0.32053072625698326" positive="918" total="2864" variable="PostDivisionTime" value="32" class="java.lang.Integer">
+      <LessOrEqual positiveProb="0.002577319587628866" positive="2" total="776" />
+      <Greater positiveProb="0.4386973180076628" positive="916" total="2088" variable="parentEcc1" value="0.7697278419067137" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.19262981574539365" positive="230" total="1194" variable="GPIntensityRatio" value="0.7908947373207773" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.383248730964467" positive="151" total="394" variable="Time" value="187" class="java.lang.Integer">
+            <LessOrEqual positiveProb="0.5477386934673367" positive="109" total="199" variable="parentEcc2" value="0.8301806214997507" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.3867924528301887" positive="41" total="106" />
+              <Greater positiveProb="0.7311827956989247" positive="68" total="93" />
+            </LessOrEqual>
+            <Greater positiveProb="0.2153846153846154" positive="42" total="195" />
+          </LessOrEqual>
+          <Greater positiveProb="0.09875" positive="79" total="800" />
+        </LessOrEqual>
+        <Greater positiveProb="0.767337807606264" positive="686" total="894" variable="GPIntensityRatio" value="0.7255638449639529" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.8756756756756757" positive="324" total="370" variable="PCVolumeRatio" value="0.8909572386401106" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.6046511627906976" positive="26" total="43" />
+            <Greater positiveProb="0.9113149847094801" positive="298" total="327" variable="Ecc2" value="0.9299189699773218" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.9565217391304348" positive="198" total="207" variable="PCVolumeRatio" value="3.5459102893005494" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.9611650485436893" positive="198" total="206" variable="Ecc1" value="0.7981879694376225" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.0" positive="0" total="1" />
+                  <Greater positiveProb="0.9658536585365853" positive="198" total="205" />
+                </LessOrEqual>
+                <Greater positiveProb="0.0" positive="0" total="1" />
+              </LessOrEqual>
+              <Greater positiveProb="0.8333333333333334" positive="100" total="120" />
+            </Greater>
+          </LessOrEqual>
+          <Greater positiveProb="0.6908396946564885" positive="362" total="524" variable="parentEcc2" value="0.8587428074984579" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.40625" positive="26" total="64" variable="Ecc1" value="0.8441626465801046" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.15384615384615385" positive="4" total="26" />
+              <Greater positiveProb="0.5789473684210527" positive="22" total="38" />
+            </LessOrEqual>
+            <Greater positiveProb="0.7304347826086957" positive="336" total="460" variable="Ecc3" value="0.6889076201913574" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.7677261613691931" positive="314" total="409" variable="PCVolumeRatio" value="1.0390336203285642" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.6495726495726496" positive="76" total="117" />
+                <Greater positiveProb="0.815068493150685" positive="238" total="292" variable="Ecc2" value="0.9375619745508504" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.848605577689243" positive="213" total="251" variable="parentEcc1" value="0.8706744552291804" class="java.lang.Double">
+                    <LessOrEqual positiveProb="0.7987804878048781" positive="131" total="164" variable="PCIntensityRatio" value="0.7496099819225714" class="java.lang.Double">
+                      <LessOrEqual positiveProb="0.96875" positive="31" total="32" />
+                      <Greater positiveProb="0.7575757575757576" positive="100" total="132" variable="GPVolumeRatio" value="0.7513792394289351" class="java.lang.Double">
+                        <LessOrEqual positiveProb="0.0" positive="0" total="3" />
+                        <Greater positiveProb="0.7751937984496124" positive="100" total="129" />
+                      </Greater>
+                    </LessOrEqual>
+                    <Greater positiveProb="0.9425287356321839" positive="82" total="87" />
+                  </LessOrEqual>
+                  <Greater positiveProb="0.6097560975609756" positive="25" total="41" />
+                </Greater>
+              </LessOrEqual>
+              <Greater positiveProb="0.43137254901960786" positive="22" total="51" />
+            </Greater>
+          </Greater>
+        </Greater>
+      </Greater>
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.009788336849812614" positive="1016" total="103797" variable="parentEcc1" value="0.7734992891014071" class="java.lang.Double" time="250" training="org.rhwlab.machinelearning.DividingNucleusSet">
+    <LessOrEqual positiveProb="0.0014683697073317912" positive="146" total="99430" variable="Ecc1" value="0.769731657933852" class="java.lang.Double">
+      <LessOrEqual positiveProb="4.105933073290905E-4" positive="40" total="97420" />
+      <Greater positiveProb="0.0527363184079602" positive="106" total="2010" variable="GPIntensityRatio" value="0.8224095808162777" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.14512922465208747" positive="73" total="503" variable="PostDivisionTime" value="39" class="java.lang.Integer">
+          <LessOrEqual positiveProb="0.0" positive="0" total="77" />
+          <Greater positiveProb="0.17136150234741784" positive="73" total="426" variable="parentEcc1" value="0.7298327077705322" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.12146892655367232" positive="43" total="354" variable="Ecc3" value="0.36557175776657513" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.3939393939393939" positive="13" total="33" />
+              <Greater positiveProb="0.09345794392523364" positive="30" total="321" variable="parentEcc2" value="0.7518825624153503" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.0196078431372549" positive="2" total="102" />
+                <Greater positiveProb="0.1278538812785388" positive="28" total="219" variable="GPVolumeRatio" value="1.4840389748157137" class="java.lang.Double">
+                  <LessOrEqual positiveProb="0.09289617486338798" positive="17" total="183" variable="PCVolumeRatio" value="0.8671820328775802" class="java.lang.Double">
+                    <LessOrEqual positiveProb="0.0" positive="0" total="37" />
+                    <Greater positiveProb="0.11643835616438356" positive="17" total="146" variable="grandEcc3" value="0.3282910287795867" class="java.lang.Double">
+                      <LessOrEqual positiveProb="0.6" positive="3" total="5" />
+                      <Greater positiveProb="0.09929078014184398" positive="14" total="141" variable="GPVolumeRatio" value="1.0370238935162392" class="java.lang.Double">
+                        <LessOrEqual positiveProb="0.0" positive="0" total="32" />
+                        <Greater positiveProb="0.12844036697247707" positive="14" total="109" variable="GPIntensityRatio" value="0.8163504895071027" class="java.lang.Double">
+                          <LessOrEqual positiveProb="0.10576923076923077" positive="11" total="104" />
+                          <Greater positiveProb="0.6" positive="3" total="5" />
+                        </Greater>
+                      </Greater>
+                    </Greater>
+                  </LessOrEqual>
+                  <Greater positiveProb="0.3055555555555556" positive="11" total="36" />
+                </Greater>
+              </Greater>
+            </LessOrEqual>
+            <Greater positiveProb="0.4166666666666667" positive="30" total="72" />
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.021897810218978103" positive="33" total="1507" />
+      </Greater>
+    </LessOrEqual>
+    <Greater positiveProb="0.19922143347836044" positive="870" total="4367" variable="PostDivisionTime" value="39" class="java.lang.Integer">
+      <LessOrEqual positiveProb="0.0014503263234227702" positive="4" total="2758" />
+      <Greater positiveProb="0.5382224984462399" positive="866" total="1609" variable="parentEcc1" value="0.839546344547733" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.32391048292108365" positive="275" total="849" variable="Time" value="225" class="java.lang.Integer">
+          <LessOrEqual positiveProb="0.47235023041474655" positive="205" total="434" variable="parentEcc2" value="0.8702049048010572" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.26380368098159507" positive="43" total="163" variable="Ecc1" value="0.8438903974274882" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.171875" positive="22" total="128" />
+              <Greater positiveProb="0.6" positive="21" total="35" />
+            </LessOrEqual>
+            <Greater positiveProb="0.5977859778597786" positive="162" total="271" />
+          </LessOrEqual>
+          <Greater positiveProb="0.1686746987951807" positive="70" total="415" variable="parentEcc1" value="0.8082272204972026" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.08823529411764706" positive="24" total="272" />
+            <Greater positiveProb="0.32167832167832167" positive="46" total="143" variable="PCIntensityRatio" value="0.8805087632034891" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.7916666666666666" positive="19" total="24" />
+              <Greater positiveProb="0.226890756302521" positive="27" total="119" />
+            </Greater>
+          </Greater>
+        </LessOrEqual>
+        <Greater positiveProb="0.7776315789473685" positive="591" total="760" />
+      </Greater>
+    </Greater>
+  </DecisionTree>
+  <DecisionTree positiveProb="0.005496677521977298" positive="292" total="53123" variable="parentEcc1" value="0.7767718803693241" class="java.lang.Double" time="300" training="org.rhwlab.machinelearning.DividingNucleusSet">
+    <LessOrEqual positiveProb="9.517889747873043E-4" positive="49" total="51482" />
+    <Greater positiveProb="0.1480804387568556" positive="243" total="1641" variable="PostDivisionTime" value="51" class="java.lang.Integer">
+      <LessOrEqual positiveProb="0.0035460992907801418" positive="3" total="846" variable="parentEcc1" value="0.8777774841309685" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.0" positive="0" total="748" />
+        <Greater positiveProb="0.030612244897959183" positive="3" total="98" variable="grandEcc1" value="0.5111161851044957" class="java.lang.Double">
+          <LessOrEqual positiveProb="1.0" positive="2" total="2" />
+          <Greater positiveProb="0.010416666666666666" positive="1" total="96" />
+        </Greater>
+      </LessOrEqual>
+      <Greater positiveProb="0.3018867924528302" positive="240" total="795" variable="parentEcc1" value="0.8213558227467957" class="java.lang.Double">
+        <LessOrEqual positiveProb="0.12165450121654502" positive="50" total="411" />
+        <Greater positiveProb="0.4947916666666667" positive="190" total="384" variable="Ecc1" value="0.5966701091593017" class="java.lang.Double">
+          <LessOrEqual positiveProb="0.9512195121951219" positive="39" total="41" />
+          <Greater positiveProb="0.4402332361516035" positive="151" total="343" variable="parentEcc1" value="0.8594852059177119" class="java.lang.Double">
+            <LessOrEqual positiveProb="0.3263157894736842" positive="62" total="190" variable="Ecc3" value="0.6103328814455211" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.39849624060150374" positive="53" total="133" variable="PCIntensityRatio" value="0.8673076813152286" class="java.lang.Double">
+                <LessOrEqual positiveProb="0.7368421052631579" positive="14" total="19" />
+                <Greater positiveProb="0.34210526315789475" positive="39" total="114" />
+              </LessOrEqual>
+              <Greater positiveProb="0.15789473684210525" positive="9" total="57" />
+            </LessOrEqual>
+            <Greater positiveProb="0.5816993464052288" positive="89" total="153" variable="PCIntensityRatio" value="1.1499248044514525" class="java.lang.Double">
+              <LessOrEqual positiveProb="0.6267605633802817" positive="89" total="142" />
+              <Greater positiveProb="0.0" positive="0" total="11" />
+            </Greater>
+          </Greater>
+        </Greater>
+      </Greater>
+    </Greater>
+  </DecisionTree>
+</DecisionTreeSet>
