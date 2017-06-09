@@ -525,6 +525,7 @@ public class LinkedNucleusFile implements NucleusFile {
                 if (dividingNucleus == null) continue;
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
                 if (decisionNode.probability()>= probThresh){
+                
 //System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
                     dividing.add(fromNucs[j]);
                     decisions.put(fromNucs[j].getName(), decisionNode);
@@ -549,6 +550,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     Nucleus nodeNuc = node.getNucleus(times[i]);
                     if (nodeNuc != null && nodeNuc.getVolume() >= 0.2*nuc.getVolume() && nuc.distance(nodeNuc)<=distance){
                         Comparable[] divLinkVector = divisionLink.formDataVector("", nuc, nodeNuc);
+                        
                         DecisionTreeNode decisionNode = divisionLinkDecisionTreeSet.classify(times[i], divLinkVector);
                         potentialList.add(new DecisionBinding(nuc,node,decisionNode));
                     }
@@ -564,6 +566,7 @@ public class LinkedNucleusFile implements NucleusFile {
                     daughters[0] = node1.getNucleus(times[i]);
                     daughters[1] = node2.getNucleus(times[i]);
                     Comparable[] divVector = divisionSet.formDataVector("", nuc, daughters);
+
                     if (divVector != null){
                         DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
                         if (decisionNode.probability() >= divProbThresh || (decisions.get(nuc.getName()).probability()>.85&&decisionNode.probability()>0.001) ){

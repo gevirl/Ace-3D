@@ -186,6 +186,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 
                         imagedEmbryo.notifyListeners();                    
                         props.setProperty("MVRDir",sel.getPath());
+                        panel.changeTime(1);
                     }else {
                         imagedEmbryo.clearSources();
                         JOptionPane.showMessageDialog(Ace3D_Frame.this, "No Segmentation probability hdf5 files found");
@@ -389,29 +390,21 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         
-        JMenuItem removeRange = new JMenuItem("Remove Nuclei - Time Range");
-        removeRange.addActionListener(new ActionListener(){
+        JMenuItem removeTail = new JMenuItem("Remove Nuclei - Current and Later Times");
+        removeTail.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                int timeTo = -1;
-                while (timeTo == -1){
-                    String ans = JOptionPane.showInputDialog("Enter last time to delete");
-                    if (ans == null) return;
-                    try {
-                        timeTo = Integer.valueOf(ans.trim());
-                    } catch (Exception exc){
-                        JOptionPane.showMessageDialog(rootPane,"invalid entry");
-                    }
-                }
-                for (int t=getCurrentTime();t<=timeTo;++t){
+                
+                for (int t = panel.getTime(); t <= panel.getMaxTime(); t++) {
                     LinkedNucleusFile nf = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
                     nf.removeNuclei(t, false);
                 }
                imagedEmbryo.notifyListeners();
             }
         }); 
+        
         segmenting.add(remove);
-        segmenting.add(removeRange);
+        segmenting.add(removeTail);
         JMenuItem removeAll = new JMenuItem("Remove All Nuclei");
         removeAll.addActionListener(new ActionListener(){
             @Override
@@ -428,7 +421,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
             
         });
-        segmenting.add(removeAll);  
+        //segmenting.add(removeAll); 
         segmenting.addSeparator();
         
         JMenuItem submitBHC = new JMenuItem("Submit to Grid");
@@ -718,7 +711,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         
         bhc  = new BHCDirectory(sel);
         imagedEmbryo.getNucleusFile().setBHCTreeDirectory(bhc);
-
+        
         props.setProperty("BHC",sel.getPath());            
         
     } 
@@ -753,7 +746,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             contrastDialog.setProperties(name, p);
         }
         this.sessionXML = xml;
-        
+        if (imagedEmbryo.getNucleusFile().getAllTimes().size() > 0) {
+            panel.changeTime(imagedEmbryo.getNucleusFile().getAllTimes().size());
+        }
 //        imagedEmbryo.reportDivisionEccengtricty();
     }
     private void saveAsSession()throws Exception {
