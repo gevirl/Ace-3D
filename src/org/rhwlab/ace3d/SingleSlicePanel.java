@@ -229,11 +229,13 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                         pos = parent.getPosition();
                         pos[dim] = pos[dim] - 1;
                         setPosition(pos);
+                        embryo.setSelectedNucleus(null);
                         break;  
                     case 's':
                         pos = parent.getPosition();
                         pos[dim] = pos[dim] + 1;
                         setPosition(pos);
+                        embryo.setSelectedNucleus(null);
                         break; 
                     case 'a':
                         parent.decrementTime();
@@ -281,7 +283,26 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                             exc.printStackTrace();
                         }
                         break;
-                    }
+                    case 'g':
+                        try {
+                        int tp = embryo.getNucleusFile().getAllTimes().size();
+                        TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
+                        parent.getAce3D_Frame().autolinkTree(probMap);
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                        break;
+                    case 'h':
+                        try {
+                        int tp = embryo.getNucleusFile().getAllTimes().size();
+                        TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
+                        parent.getAce3D_Frame().autolinkDecision(probMap);
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                        break;
+                }
+            
                 }
             }
         });
