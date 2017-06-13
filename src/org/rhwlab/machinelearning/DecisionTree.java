@@ -123,6 +123,9 @@ public class DecisionTree {
             out.output(rootEle, stream);
             stream.close();         
     }    
+    public double getRootProbability(){
+        return root.probability();
+    }
     // test pruning
     static public void main(String[] args)throws Exception {
         String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
@@ -144,7 +147,7 @@ public class DecisionTree {
                                         "org.rhwlab.machinelearning.DivisionSet"};
         double[] radii = {100.0,50.0,50.0,50.0};
         String[] names = {"TimeLinkageTree","DividingNucleusTree","DivisionLinkTree","DivisionsTree"};
-        int[] minCases = {50,50,50,50};
+        int[] minCases = {20,20,20,20};
         
         NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
         for (int i=0 ; i<files.length ; ++i){

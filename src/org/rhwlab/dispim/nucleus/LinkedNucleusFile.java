@@ -515,6 +515,8 @@ public class LinkedNucleusFile implements NucleusFile {
             TreeSet<Nucleus> notDividing = new TreeSet<>();
             TreeMap<String,DecisionTreeNode> decisions = new TreeMap<>();
             Nucleus[] fromNucs = this.getNuclei(times[i-1]).toArray(new Nucleus[0]);  
+            double probThresh = dividingNucleusDecisionTreeSet.getTree(times[i]).getRootProbability();
+            double divProbThresh = divisionDecisionTreeSet.getTree(times[i]).getRootProbability();
             for (int j=0 ; j<fromNucs.length ; ++j){
                 if (fromNucs[j].getName().equals("192_532") ){
                     int sjkdhfs=0;
@@ -522,8 +524,8 @@ public class LinkedNucleusFile implements NucleusFile {
                 Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
                 if (dividingNucleus == null) continue;
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
+                if (decisionNode.probability()>= probThresh){
                 
-                if (decisionNode.probability()> 0.1){
 //System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
                     dividing.add(fromNucs[j]);
                     decisions.put(fromNucs[j].getName(), decisionNode);
@@ -567,8 +569,7 @@ public class LinkedNucleusFile implements NucleusFile {
 
                     if (divVector != null){
                         DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
-                        if (decisionNode.probability() > 0.1 || (decisions.get(nuc.getName()).probability()>.85&&decisionNode.probability()>0.001) ){
-
+                        if (decisionNode.probability() >= divProbThresh || (decisions.get(nuc.getName()).probability()>.85&&decisionNode.probability()>0.001) ){
                             // form the division
                             node1.markedAsUsed();
                             node2.markedAsUsed();

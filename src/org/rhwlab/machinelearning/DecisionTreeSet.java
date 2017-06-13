@@ -65,18 +65,10 @@ public class DecisionTreeSet {
         map.put(time,tree);
     }
     public DecisionTreeNode classify(int time,Comparable[] data){
-        Entry<Integer,DecisionTree> entry = map.ceilingEntry(time);
-        if (entry == null) {
-            entry = map.lastEntry();
-        }
-        return entry.getValue().classify(data);
+        return getTree(time).classify(data);
     }
     public DecisionTreeNode highestProbability(int time,Comparable[] data){
-        Entry<Integer,DecisionTree> entry = map.ceilingEntry(time);
-        if (entry == null) {
-            entry = map.lastEntry();
-        }
-        return entry.getValue().highestProbability(data);
+        return getTree(time).highestProbability(data);
     }    
     public void saveAsXML(String file) throws Exception {
         OutputStream stream = new FileOutputStream(file);
@@ -89,7 +81,14 @@ public class DecisionTreeSet {
         out.output(rootEle, stream);
         stream.close();         
     }  
-    
+   
+    public DecisionTree getTree(int time){
+        Entry<Integer,DecisionTree> entry = map.ceilingEntry(time);
+        if (entry == null) {
+            entry = map.lastEntry();
+        }
+        return entry.getValue();
+    }
     public static void main(String[] args) {
     }
     TreeMap<Integer,DecisionTree> map = new TreeMap<>();
