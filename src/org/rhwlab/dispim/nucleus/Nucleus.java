@@ -565,6 +565,12 @@ public class Nucleus implements Comparable {
     public boolean between(Nucleus nuc1,Nucleus nuc2){
         return between(this.getCenter(),nuc1,nuc2);
     }
+    public double getDirectionCosine(Nucleus other1,Nucleus other2){
+        RealVector v = new ArrayRealVector(this.getCenter());
+        RealVector v1 = new ArrayRealVector(other1.getCenter());
+        RealVector v2 = new ArrayRealVector(other2.getCenter());
+        return v1.subtract(v).cosine(v2.subtract(v));
+    }
     
     // determine if a given point is between two nuclei
     static public boolean between(double[] p,Nucleus nuc1,Nucleus nuc2){
@@ -662,6 +668,9 @@ public class Nucleus implements Comparable {
         return "";
     }
     
+    public double getIntensityRSD(){
+        return ((BHCNucleusData)nucData).getIntensityRSD();
+    }
     private Nucleus child1;
     private Nucleus child2;
     private Nucleus parent; 

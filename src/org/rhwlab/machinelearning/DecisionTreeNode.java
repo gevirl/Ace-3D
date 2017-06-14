@@ -18,6 +18,7 @@ public class DecisionTreeNode {
     int positive;
     int total;
     double prob;
+    double highestProb;
     String variable;
     Comparable value;
     DecisionTreeNode less;
@@ -85,14 +86,25 @@ public class DecisionTreeNode {
         ++testTotal;
         
         if (variable == null){
+            highestProb = this.probability();
             return this;  // the node is a leaf
         }
         
         Integer i = labelIndexes.get(variable);
         if (data[i].compareTo(value) <= 0 ) {
-            return less.classify(data, labelIndexes);
+            DecisionTreeNode ret = less.classify(data, labelIndexes);
+            if (this.probability() > ret.getHighest()){
+                ret.highestProb = this.probability();
+                
+            }
+            return ret;
         } else {
-            return greater.classify(data, labelIndexes);
+            DecisionTreeNode ret= greater.classify(data, labelIndexes);
+            if (this.probability() > ret.getHighest()){
+                ret.highestProb = this.probability();
+                
+            } 
+            return ret;
         }        
     }
     public double positiveClassificaion(Comparable[] data,TreeMap<String,Integer> labelIndexes){
@@ -158,6 +170,8 @@ public class DecisionTreeNode {
     public boolean isLeaf(){
         return variable == null;
     }
-    
+    public double getHighest(){
+        return this.highestProb;
+    }
 
 }
