@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.rhwlab.ace3d;
 
 import ij.macro.Interpreter;
@@ -293,19 +288,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         fileMenu.add(exit);
-/*      
-        JMenu navigate = new JMenu("Navigate");
-        JMenuItem toTime = new JMenuItem("To Time Point");
-        toTime.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                moveToTime();
-            }
-        });
-        navigate.add(toTime);
-        
-        menuBar.add(navigate);
- */       
+
         JMenu segmenting = new JMenu("Segmenting");
         menuBar.add(segmenting);
         

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.rhwlab.ace3d;
 
 import java.awt.BasicStroke;
@@ -212,19 +207,7 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                     case 'x':
                         parent.changeRadiusSelectedNucleus(1);
                         break;
-                    case 'A':
-                        parent.moveSelectedNucleus(imageXDirection(), -1);
-                        break;
-                    case 'D':
-                        parent.moveSelectedNucleus(imageXDirection(), 1);
-                        break;
-                    case 'S':
-                        parent.moveSelectedNucleus(imageYDirection(), 1);
-                        break;
-                    case 'W':
-                        parent.moveSelectedNucleus(imageYDirection(), -1);
-                        break;
-*/                        
+*/
                     case 'w':
                         pos = parent.getPosition();
                         pos[dim] = pos[dim] - 1;
@@ -285,18 +268,32 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                         break;
                     case 'g':
                         try {
-                        int tp = embryo.getNucleusFile().getAllTimes().size();
-                        TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
-                        parent.getAce3D_Frame().autolinkTree(probMap);
+                            int tp = embryo.getNucleusFile().getAllTimes().size();
+                            TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
+                            parent.getAce3D_Frame().autolinkTree(probMap);
                         } catch (Exception exc) {
                             exc.printStackTrace();
                         }
                         break;
                     case 'h':
                         try {
-                        int tp = embryo.getNucleusFile().getAllTimes().size();
-                        TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
-                        parent.getAce3D_Frame().autolinkDecision(probMap);
+                            int tp = embryo.getNucleusFile().getAllTimes().size();
+                            TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
+                            parent.getAce3D_Frame().autolinkDecision(probMap);
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                        break;
+                    case 'c':
+                        try {
+                            parent.changeTime(embryo.getNucleusFile().getAllTimes().size());
+                        } catch (Exception exc) {
+                            exc.printStackTrace();
+                        }
+                        break;
+                    case 'C':
+                        try {
+                            parent.changeTime(embryo.getNucleusFile().getAllTimes().size() + 5);
                         } catch (Exception exc) {
                             exc.printStackTrace();
                         }
