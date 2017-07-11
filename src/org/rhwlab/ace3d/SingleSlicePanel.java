@@ -266,8 +266,9 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                             exc.printStackTrace();
                         }
                         break;
-                    case 'g':
+                    case 'g': //Tree Search
                         try {
+                            parent.getAce3D_Frame().bhc.open();
                             int tp = embryo.getNucleusFile().getAllTimes().size();
                             TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
                             parent.getAce3D_Frame().autolinkTree(probMap);
@@ -275,8 +276,9 @@ public class SingleSlicePanel extends JPanel implements ChangeListener {
                             exc.printStackTrace();
                         }
                         break;
-                    case 'h':
+                    case 'h': //DecisionTree
                         try {
+                            parent.getAce3D_Frame().bhc.open();
                             int tp = embryo.getNucleusFile().getAllTimes().size();
                             TreeMap<Integer,Integer> probMap = parent.getAce3D_Frame().mapTimesToThreshProbs(tp, parent.getTime());
                             parent.getAce3D_Frame().autolinkDecision(probMap);
