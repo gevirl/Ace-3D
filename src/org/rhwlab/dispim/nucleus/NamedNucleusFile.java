@@ -1,4 +1,3 @@
-
 package org.rhwlab.dispim.nucleus;
 
 import java.io.BufferedReader;

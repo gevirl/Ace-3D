@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.rhwlab.ace3d;
 
 import ij.macro.Interpreter;
@@ -293,19 +288,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             }
         });
         fileMenu.add(exit);
-/*      
-        JMenu navigate = new JMenu("Navigate");
-        JMenuItem toTime = new JMenuItem("To Time Point");
-        toTime.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                moveToTime();
-            }
-        });
-        navigate.add(toTime);
-        
-        menuBar.add(navigate);
- */       
+
         JMenu segmenting = new JMenu("Segmenting");
         menuBar.add(segmenting);
         
@@ -485,20 +468,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     }
                     bhc.open();
                     TreeMap<Integer,Integer> probMap = mapTimesToThreshProbs(fromTime,getCurrentTime());
-                    Set<Integer> timesSet = probMap.navigableKeySet();
-                    Integer[] timesArray = timesSet.toArray(new Integer[0]);
-                    Integer[] probsArray = new Integer[timesArray.length];
-                    for (int i=0 ; i<timesArray.length;++i){
-                        probsArray[i] = probMap.get(timesArray[i]);
-                    }
-                    
-                    new Thread(() -> {
-                        try {
-                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
-                        } catch (Exception exc) {
-                            exc.printStackTrace();
-                        }
-                    }).start();
+                    autolinkTree(probMap);
 
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
@@ -529,20 +499,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     }
                     bhc.open();
                     TreeMap<Integer,Integer> probMap = mapTimesToThreshProbs(fromTime,getCurrentTime());
-                    Set<Integer> timesSet = probMap.navigableKeySet();
-                    Integer[] timesArray = timesSet.toArray(new Integer[0]);
-                    Integer[] probsArray = new Integer[timesArray.length];
-                    for (int i=0 ; i<timesArray.length;++i){
-                        probsArray[i] = probMap.get(timesArray[i]);
-                    }
-                    
-                    new Thread(() -> {
-                        try {
-                            ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).decisionTreeAutoLink(timesArray,probsArray,Ace3D_Frame.minimumVolume,neighborhoodradius); // minvolume of 50
-                        } catch (Exception exc) {
-                            exc.printStackTrace();
-                        }
-                    }).start();
+                    autolinkDecision(probMap);
 
 //                    ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).autoLinkBetweenCuratedTimes(getCurrentTime());
                 } catch (Exception exc){
@@ -641,7 +598,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         view.add(nucleiLabeled);
         this.setJMenuBar(menuBar);        
     }
-    private TreeMap<Integer,Integer> mapTimesToThreshProbs(int fromTime,int toTime){
+    public TreeMap<Integer,Integer> mapTimesToThreshProbs(int fromTime,int toTime){
         // determine which probabilities to use for each time point
         TreeMap<Integer,Integer> map = new TreeMap();
         for (int t=fromTime ; t<=toTime ; ++t){
@@ -931,6 +888,40 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     }
     public ImagedEmbryo getEmbryo(){
         return this.imagedEmbryo;
+    }
+    
+    public void autolinkTree(TreeMap<Integer,Integer> probMap) {
+        Set<Integer> timesSet = probMap.navigableKeySet();
+        Integer[] timesArray = timesSet.toArray(new Integer[0]);
+        Integer[] probsArray = new Integer[timesArray.length];
+        for (int i=0 ; i<timesArray.length;++i){
+            probsArray[i] = probMap.get(timesArray[i]);
+        }
+
+        new Thread(() -> {
+            try {
+                ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).bestMatchAutoLink(timesArray,probsArray,minimumVolume); // minvolume of 50
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        }).start();
+    }
+    
+    public void autolinkDecision(TreeMap<Integer,Integer> probMap) {
+        Set<Integer> timesSet = probMap.navigableKeySet();
+        Integer[] timesArray = timesSet.toArray(new Integer[0]);
+        Integer[] probsArray = new Integer[timesArray.length];
+        for (int i=0 ; i<timesArray.length;++i){
+            probsArray[i] = probMap.get(timesArray[i]);
+        }
+
+        new Thread(() -> {
+            try {
+                ((LinkedNucleusFile)imagedEmbryo.getNucleusFile()).decisionTreeAutoLink(timesArray,probsArray,Ace3D_Frame.minimumVolume,neighborhoodradius); // minvolume of 50
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        }).start();
     }
     
     File sessionXML;
