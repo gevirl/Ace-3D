@@ -513,13 +513,15 @@ public class LinkedNucleusFile implements NucleusFile {
             double probThresh = dividingNucleusDecisionTreeSet.getTree(times[i]).getRootProbability();
             double divProbThresh = divisionDecisionTreeSet.getTree(times[i]).getRootProbability();
             for (int j=0 ; j<fromNucs.length ; ++j){
-                if (fromNucs[j].getName().equals("192_532") ){
+                if (fromNucs[j].getName().equals("185_17192") ){
                     int sjkdhfs=0;
                 }                
                 Comparable[] dividingNucleus = dividingNucleusSet.formDataVector("",fromNucs[j], null);
                 if (dividingNucleus == null) continue;
+                int postTime = fromNucs[j].timeSinceDivsion();
                 DecisionTreeNode decisionNode = dividingNucleusDecisionTreeSet.classify(times[i], dividingNucleus);
-                if (decisionNode.probability()>= probThresh){
+//System.out.printf("%s   %f  %f\n",fromNucs[j].getName(),decisionNode.probability(),decisionNode.getHighest()) ;
+                if (decisionNode.getHighest()>= 0.3 && !(postTime == -1 || postTime <=10)){
                 
 //System.out.printf("%s   %f\n",fromNucs[j].getName(),decisionNode.probability());                    
                     dividing.add(fromNucs[j]);
@@ -530,23 +532,26 @@ public class LinkedNucleusFile implements NucleusFile {
             }
             
             for (Nucleus nuc : dividing){
-                if (nuc.getName().equals("192_532")){
+                debug = false;
+                if (nuc.getName().equals("185_17192")){
+ //                   debug=true;
                     int sjkdhfs=0;
                 }
                 // find potential daughters of the dividing nuclei
                 LinkedList<DecisionBinding> potentialList = new LinkedList<>();
                 // getting the availble roots with a volume <= the dividing nucleus
-                Set<NucleusLogNode> availRoots = tree.availableRoots((int)nuc.getVolume());
+                Set<NucleusLogNode> availRoots = tree.availableRoots((int)(1.25*nuc.getVolume()));
 
                 for (NucleusLogNode node : availRoots){
-                    if (node.getLabel() == 6188){
+                    if (node.getLabel() == 10968 || node.getLabel() == 10924){
                         int hjsdfhusd=0;
                     }
                     Nucleus nodeNuc = node.getNucleus(times[i]);
-                    if (nodeNuc != null && nodeNuc.getVolume() >= 0.2*nuc.getVolume() && nuc.distance(nodeNuc)<=distance){
+                    if (nodeNuc != null && nodeNuc.getVolume() >= 0.3*nuc.getVolume() && nuc.distance(nodeNuc)<=distance){
                         Comparable[] divLinkVector = divisionLink.formDataVector("", nuc, nodeNuc);
                         
                         DecisionTreeNode decisionNode = divisionLinkDecisionTreeSet.classify(times[i], divLinkVector);
+//System.out.printf("%d   %f  %f\n",node.getLabel(),decisionNode.probability(),decisionNode.getHighest()) ;                        
                         potentialList.add(new DecisionBinding(nuc,node,decisionNode));
                     }
                 }
@@ -564,7 +569,9 @@ public class LinkedNucleusFile implements NucleusFile {
 
                     if (divVector != null){
                         DecisionTreeNode decisionNode = divisionDecisionTreeSet.classify(times[i], divVector);
-                        if (decisionNode.probability() >= divProbThresh || (decisions.get(nuc.getName()).probability()>.85&&decisionNode.probability()>0.001) ){
+//System.out.printf("div %s   %f  %f\n",nuc.getName(),decisionNode.probability(),decisionNode.getHighest()) ;                        
+//                        if (decisionNode.getClassification().equals("+") || (decisions.get(nuc.getName()).probability()>.85&&decisionNode.getHighest()>0.001) ){
+                        if (decisionNode.probability()>=.45 || (decisions.get(nuc.getName()).probability()>.96&&decisionNode.getHighest()>0.1) ){    
                             // form the division
                             node1.markedAsUsed();
                             node2.markedAsUsed();
@@ -1167,11 +1174,21 @@ System.out.println("Division by split")   ;
         @Override
         public int compareTo(Object o) {
             DecisionBinding other = (DecisionBinding)o;
-            int ret = Double.compare(this.decisionNode.probability(),other.decisionNode.probability());
+            int time = nuc.getTime()+1;
+            double d1 = 1.0/nuc.distance(this.node.getNucleus(time));
+            double d2 = 1.0/nuc.distance(other.node.getNucleus(time));            
+            double h1 = this.decisionNode.getHighest();
+            double h2 = other.decisionNode.getHighest();
+          
+            int ret = Double.compare(h1,h2);
             if (ret == 0){  
-                ret = Double.compare(this.node.getVolume(),other.node.getVolume());
+                ret = Double.compare(d1,d2);
+                if (debug) System.out.printf("%s %d %d %f,%f     %d %f,%f\n","Equal h",ret,this.node.getLabel(),h1,d1,other.node.getLabel(),h2,d2);
+            } else {
+                if (debug) System.out.printf("%s %d %d %f,%f     %d %f,%f\n","Not   h",ret,this.node.getLabel(),h1,d1,other.node.getLabel(),h2,d2);
             }
             return ret;
         }
     }
+    static boolean debug = false;
 }

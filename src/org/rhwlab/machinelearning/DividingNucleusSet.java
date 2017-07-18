@@ -10,7 +10,6 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
-import static org.rhwlab.machinelearning.DivisionSet.delTime;
 
 /**
  *
@@ -47,7 +46,9 @@ public class DividingNucleusSet extends TrainingSet implements Runnable {
             }
         }
     }
-
+    static String[] labels ={"Class","Time","Lineage","PCVolumeRatio","GPVolumeRatio","PostDivisionTime",
+    "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","grandEcc1","grandEcc2","grandEcc3","PCIntensityRatio","GPIntensityRatio",
+    "IntensityRSD","ParentRSD","GrandRSD"};    
     @Override
     public Comparable[] formDataVector(String cl, Nucleus source, Object nextObj) {
         Nucleus parent = source.getParent();
@@ -59,7 +60,7 @@ public class DividingNucleusSet extends TrainingSet implements Runnable {
         int i = 0;
         data[i++] = cl;  
         data[i++] = source.getTime();
-//        data[2] = source.getCellName();
+        data[i++] = source.getLineage();
 //        data[3] = parent.getName();
         data[i++] = parent.getVolume()/source.getVolume();
         data[i++] = grand.getVolume()/parent.getVolume();
@@ -82,6 +83,9 @@ public class DividingNucleusSet extends TrainingSet implements Runnable {
         data[i++] = parent.getAvgIntensity()/source.getAvgIntensity();
         data[i++] = grand.getAvgIntensity()/parent.getAvgIntensity();
 //        data[i++] = parent.getAvgIntensity();
+        data[i++] = source.getIntensityRSD();
+        data[i++] = parent.getIntensityRSD();
+        data[i++] = grand.getIntensityRSD();
         return data;
     }
 
@@ -140,8 +144,7 @@ public class DividingNucleusSet extends TrainingSet implements Runnable {
     int delTime = 50;
     int overlap = 10;
     
-    static String[] labels ={"Class","Time","PCVolumeRatio","GPVolumeRatio","PostDivisionTime",
-    "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","grandEcc1","grandEcc2","grandEcc3","PCIntensityRatio","GPIntensityRatio"};    
+
     static TreeMap<String,Integer> labelMap;
 
     @Override

@@ -2,15 +2,12 @@ package org.rhwlab.machinelearning;
 
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.util.Set;
 import java.util.TreeMap;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.jdom2.Element;
-import org.jdom2.output.Format;
-import org.jdom2.output.XMLOutputter;
 import org.rhwlab.dispim.nucleus.Division;
 import org.rhwlab.dispim.nucleus.NamedNucleusFile;
 import org.rhwlab.dispim.nucleus.Nucleus;
@@ -21,7 +18,7 @@ import org.rhwlab.machinelearning.Utils.Pair;
  * @author gevirl
  */
 
-public class DivisionSet extends TrainingSet implements Runnable {
+public class DivisionSet extends TrainingSet  {
     
     public DivisionSet(){
         super();
@@ -38,27 +35,21 @@ public class DivisionSet extends TrainingSet implements Runnable {
                 if ((maxTime == null | time <=maxTime)){            
                     Set<Nucleus> nucs = nucFile.getNuclei(time);
                     // create the positive set
-                    Comparable distMax = new Double(0.0);
                     for (Nucleus nuc : nucs){
                         if (nuc.isDividing()){
                             Nucleus[] next = nuc.nextNuclei();
                             Comparable[] dataArray = formDataVector("+",nuc,next);
                             if (dataArray != null){
                                 addDataRecord(dataArray,prob);
-                                if (dataArray[3].compareTo(distMax) > 0){
-                                    distMax = dataArray[3];
-                                }
-                                if (dataArray[4].compareTo(distMax) > 0){
-                                    distMax = dataArray[4];
-                                }                                
+                                
                             }
                         }
                     }
-                    System.out.printf("Distance max = %f\n",distMax);
+                    
                     // create a negative set
                     for (Nucleus source : nucs){
                         Nucleus[] children = source.nextNuclei();                
-                        Set<Nucleus> region = nucFile.localRegion(source, 40.0);
+                        Set<Nucleus> region = nucFile.localRegion(source, localRegion);
                         if (!region.isEmpty()){
                             int uiasdfuih=0;
                         }
@@ -87,7 +78,8 @@ public class DivisionSet extends TrainingSet implements Runnable {
             }
         }
     }
-
+    static String[] labels ={"Class","Time","Lineage","DistanceRatio","Cosine","Distance12","Volume1","Volume2","Axis","ParentAxis",
+    "Ecc1","Ecc2","parentEcc1","parentEcc2","Intensity1","Intensity2"};  
     @Override
     public Comparable[] formDataVector(String classification, Nucleus source, Object nextobj) {
         Nucleus[] next = (Nucleus[])nextobj;
@@ -95,31 +87,34 @@ public class DivisionSet extends TrainingSet implements Runnable {
         if (sourceParent == null) return null;
         
         Comparable[] data = new Comparable[labels.length];
-        data[0] = classification;
-        data[1] = source.getTime();
-        data[2] = source.getCellName();
-        data[3] = source.distance(next[0]); 
-        data[4] = source.distance(next[1]); 
-        data[5] = next[0].distance(next[1]);
-        data[6] = source.getVolume()/next[0].getVolume();
-        data[7] = source.getVolume()/next[1].getVolume();
+        int i = 0;
+        data[i++] = classification;
+        data[i++] = source.getTime();
+        data[i++] = source.getLineage();
+        double d= source.distance(next[0])/source.distance(next[1]);
+        if (d <1.0) d= 1.0/d;
+        data[i++] = d; 
+        data[i++] = source.getDirectionCosine(next[0],next[1]); 
+        data[i++] = next[0].distance(next[1]);
+        data[i++] = source.getVolume()/next[0].getVolume();
+        data[i++] = source.getVolume()/next[1].getVolume();
         RealVector minorAxis = source.getAxes()[0];
         RealVector parentMinorAxis = sourceParent.getAxes()[0];
         RealVector v1 = new ArrayRealVector(next[0].getCenter());
         RealVector v2 = new ArrayRealVector(next[1].getCenter());
         RealVector divAxis = v2.subtract(v1);      
-        data[8] = Division.cosineAngleBetween(minorAxis,divAxis);
-        data[9] = Division.cosineAngleBetween(parentMinorAxis,divAxis);
+        data[i++] = Division.cosineAngleBetween(minorAxis,divAxis);
+        data[i++] = Division.cosineAngleBetween(parentMinorAxis,divAxis);
         double[] ecc =source.eccentricity();
         double[] parentEcc = sourceParent.eccentricity();
-        data[10] = ecc[0];
-        data[11] = ecc[1];
-        data[12] = ecc[2];
-        data[13] = parentEcc[0];
-        data[14] = parentEcc[1];
-        data[15] = parentEcc[2];
-        data[16] = source.getAvgIntensity()/next[0].getAvgIntensity();
-        data[17] = source.getAvgIntensity()/next[1].getAvgIntensity();
+        data[i++] = ecc[0];
+        data[i++] = ecc[1];
+ //       data[i++] = ecc[2];
+        data[i++] = parentEcc[0];
+        data[i++] = parentEcc[1];
+//        data[i++] = parentEcc[2];
+        data[i++] = source.getAvgIntensity()/next[0].getAvgIntensity();
+        data[i++] = source.getAvgIntensity()/next[1].getAvgIntensity();
         return data;
     }
 
@@ -128,42 +123,7 @@ public class DivisionSet extends TrainingSet implements Runnable {
         return labels;
     } 
 
-    @Override
-    public void run() {
-        try {
-            String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
-                               "/net/waterston/vol9/diSPIM/20161229_hmbx-1_OP656/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170103_B0310.2_OP642/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170105_M03D4.4_OP696/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170118_sptf-1_OP722/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170125_lsl-1_OP720/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
-                                "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml"
-                    };
-            NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
-            for (int i=0 ; i<files.length ; ++i){
-                nucFiles[i] = TrainingSet.readNucleusFile(new File(files[i]));
-                System.out.printf("Read file: %s\n",files[i]);
-            }
-            for (int i=4 ; i<5 ; ++i){
-                DivisionSet trainingSet = new DivisionSet(i*delTime-overlap,(i+1)*delTime+overlap);
-                for (int f=0 ; f<nucFiles.length ; ++f){
-                    trainingSet.addNucleiFrom(nucFiles[f],50.0,0.1);
-                }
-                trainingSet.formDecisionTree(0);
-                Element rootEle = trainingSet.toXML("Root");
-                String name = trainingSet.getClass().getName();
-                rootEle.setAttribute("training", name);             
-                DecisionTree decisionTree = new DecisionTree(rootEle,null);
-                decisionTree.reducedErrorPruning(trainingSet.getTestSet());
-                decisionTree.saveAsXML(String.format("/net/waterston/vol9/diSPIM/DivisionsTree%03d.xml",delTime*(i+1)));  
-            }
-        } catch (Exception exc){
-            exc.printStackTrace();
-        }
-    }
+
     @Override
     public TreeMap<String,Integer> getLabelsAsMap(){
         if (labelMap == null){
@@ -171,15 +131,61 @@ public class DivisionSet extends TrainingSet implements Runnable {
         }
         return labelMap;
     }    
-    static public void main(String[] args)throws Exception{
-        DivisionSet ds = new DivisionSet();
-        ds.run();
-    }    
     
-    static int overlap = 10;
-    static int delTime = 50;
-    static String[] labels ={"Class","Time","Cell","Distance1","Distance2","Distance12","Volume1","Volume2","Axis","ParentAxis",
-    "Ecc1","Ecc2","Ecc3","parentEcc1","parentEcc2","parentEcc3","Intensity1","Intensity2"};  
+    static public void main(String[] args)throws Exception {
+        String[] files = {"/net/waterston/vol9/diSPIM/20161214_vab-15_XIL099/pete3.xml",
+                           "/net/waterston/vol9/diSPIM/20161229_hmbx-1_OP656/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170103_B0310.2_OP642/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170105_M03D4.4_OP696/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170118_sptf-1_OP722/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170125_lsl-1_OP720/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170321_unc-130_OP76/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170329_cog-1_OP541/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170411_mls-2_OP645/pete.xml",
+                            "/net/waterston/vol9/diSPIM/20170509_tbx-7_OP331/pete.xml"
+                };
+        
+        String[] trainingSetClasses = {"org.rhwlab.machinelearning.TimeLinkageSet",
+                                        "org.rhwlab.machinelearning.DividingNucleusSet",
+                                        "org.rhwlab.machinelearning.DivisionLinkSet",
+                                        "org.rhwlab.machinelearning.DivisionSet"};
+        double[] radii = {100.0,50.0,50.0,30.0};
+        String[] names = {"TimeLinkageTree","DividingNucleusTree","DivisionLinkTree","DivisionsTree"};
+        int[] minCases = {20,20,20,20};
+        
+        NamedNucleusFile[] nucFiles = new NamedNucleusFile[files.length];
+        for (int i=0 ; i<files.length ; ++i){
+            nucFiles[i] = TrainingSet.readNucleusFile(new File(files[i]));
+        }
+        
+        int delTime = 50;
+        int overlap = 10;
+        
+        int c=3;
+            DecisionTreeSet decisionTreeSet = new DecisionTreeSet();
+            for (int i=0 ; i<6 ; ++i){
+                Constructor contruct =Class.forName(trainingSetClasses[c]).getConstructor(Integer.class,Integer.class);
+                TrainingSet trainingSet = (TrainingSet)contruct.newInstance(i * delTime - overlap, (i + 1) * delTime + overlap);
+                for (int f=0 ; f<nucFiles.length ; ++f){
+                    trainingSet.addNucleiFrom(nucFiles[f],radii[c],0.3);
+                }
+                trainingSet.formDecisionTree(minCases[c]);
+                Element rootEle = trainingSet.toXML("DecisionTree");
+                String name = trainingSet.getClass().getName();
+                rootEle.setAttribute("training", name);
+                int time = delTime * (i + 1);
+                rootEle.setAttribute("time", Integer.toString(time));
+                DecisionTree decisionTree = new DecisionTree(rootEle,null);
+                decisionTree.reducedErrorPruning(trainingSet.getTestSet());
+                decisionTreeSet.addDecisionTree(time, decisionTree);
+            
+            String fileName = String.format("/net/waterston/vol2/home/gevirl/NetBeansProjects/Ace-3D/src/org/rhwlab/machinelearning/trees/%s.xml",names[c]);
+            decisionTreeSet.saveAsXML(fileName);
+        }
+    }  
+    
+ 
     static TreeMap<String,Integer> labelMap;
 
     @Override

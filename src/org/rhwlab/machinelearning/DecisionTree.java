@@ -145,7 +145,7 @@ public class DecisionTree {
                                         "org.rhwlab.machinelearning.DividingNucleusSet",
                                         "org.rhwlab.machinelearning.DivisionLinkSet",
                                         "org.rhwlab.machinelearning.DivisionSet"};
-        double[] radii = {100.0,50.0,50.0,50.0};
+        double[] radii = {100.0,50.0,50.0,25.0};
         String[] names = {"TimeLinkageTree","DividingNucleusTree","DivisionLinkTree","DivisionsTree"};
         int[] minCases = {20,20,20,20};
         
@@ -158,25 +158,37 @@ public class DecisionTree {
         int overlap = 10;
         
         for (int c = 0 ; c<trainingSetClasses.length ; ++c){
-            DecisionTreeSet decisionTreeSet = new DecisionTreeSet();
-            for (int i=0 ; i<6 ; ++i){
-                Constructor contruct =Class.forName(trainingSetClasses[c]).getConstructor(Integer.class,Integer.class);
-                TrainingSet trainingSet = (TrainingSet)contruct.newInstance(i * delTime - overlap, (i + 1) * delTime + overlap);
-                for (int f=0 ; f<nucFiles.length ; ++f){
-                    trainingSet.addNucleiFrom(nucFiles[f],radii[c],0.3);
+            boolean process = false;
+            if (args.length == 0){
+                process = true;
+            } else {
+                for (String arg : args){
+                    if (names[c].equals(arg)){
+                        process = true;
+                    }
                 }
-                trainingSet.formDecisionTree(minCases[c]);
-                Element rootEle = trainingSet.toXML("DecisionTree");
-                String name = trainingSet.getClass().getName();
-                rootEle.setAttribute("training", name);
-                int time = delTime * (i + 1);
-                rootEle.setAttribute("time", Integer.toString(time));
-                DecisionTree decisionTree = new DecisionTree(rootEle,null);
-                decisionTree.reducedErrorPruning(trainingSet.getTestSet());
-                decisionTreeSet.addDecisionTree(time, decisionTree);
             }
-            String fileName = String.format("/net/waterston/vol2/home/gevirl/NetBeansProjects/Ace-3D/src/org/rhwlab/machinelearning/trees/%s.xml",names[c]);
-            decisionTreeSet.saveAsXML(fileName);
+            if (process){
+                DecisionTreeSet decisionTreeSet = new DecisionTreeSet();
+                for (int i=0 ; i<6 ; ++i){
+                    Constructor contruct =Class.forName(trainingSetClasses[c]).getConstructor(Integer.class,Integer.class);
+                    TrainingSet trainingSet = (TrainingSet)contruct.newInstance(i * delTime - overlap, (i + 1) * delTime + overlap);
+                    for (int f=0 ; f<nucFiles.length ; ++f){
+                        trainingSet.addNucleiFrom(nucFiles[f],radii[c],0.3);
+                    }
+                    trainingSet.formDecisionTree(minCases[c]);
+                    Element rootEle = trainingSet.toXML("DecisionTree");
+                    String name = trainingSet.getClass().getName();
+                    rootEle.setAttribute("training", name);
+                    int time = delTime * (i + 1);
+                    rootEle.setAttribute("time", Integer.toString(time));
+                    DecisionTree decisionTree = new DecisionTree(rootEle,null);
+                    decisionTree.reducedErrorPruning(trainingSet.getTestSet());
+                    decisionTreeSet.addDecisionTree(time, decisionTree);
+                }
+                String fileName = String.format("/net/waterston/vol2/home/gevirl/NetBeansProjects/Ace-3D/src/org/rhwlab/machinelearning/trees/%s.xml",names[c]);
+                decisionTreeSet.saveAsXML(fileName);
+            }
         }
     }    
     DecisionTreeNode root;
