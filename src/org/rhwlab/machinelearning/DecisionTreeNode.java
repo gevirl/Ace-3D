@@ -132,8 +132,7 @@ public class DecisionTreeNode {
             if (misClass < Math.min(testPos,testTotal-testPos)){
                 return misClass;  // do not prune this node - this children are doing a good job of classifiying
             } else {
-                // make this node a leaf
-                variable = null;
+                variable = null;   // makes it a leaf
                 if (getClassification().equals("+")){
                     return this.testTotal-this.testPos;
                 } else {

@@ -43,7 +43,24 @@ public class BHCSubmitDialog extends JDialog {
                 File bhcDir = new File(seriesDir,"BHC");
                 TreeMap<Integer,String[]> files = Nuclei_IdentificationCLI.getMVRFiles(seriesDir.getPath(),panel.getStartTime(),panel.getEndTime());
                 try {
-                    Nuclei_Identification.submitTimePoints(panel.isWaterston(),bhcDir,files,panel.getForce(),panel.getCores(),panel.getMemory(),panel.getAlpha(),panel.getVariance(),panel.getDegrees(),panel.getProb(),panel.getBoundingBox());
+                    if (panel.isLocal()){
+                        Thread thread = new Thread(new Runnable(){
+                            @Override
+                            public void run() {
+                                for (Integer t : files.keySet()){
+                                    String[] names = files.get(t);
+                                    Nuclei_Identification nucID = new Nuclei_Identification(
+                                        bhcDir.getPath(),names[0],names[1],panel.getForce(),panel.getAlpha(),panel.getVariance(),panel.getDegrees(),panel.getProb(),panel.getBoundingBox()
+                                    );
+                                    nucID.run();
+                                }
+                            }
+                        });
+                        thread.start();
+                    } 
+                    else {
+                        Nuclei_Identification.submitTimePoints(panel.isWaterston(),bhcDir,files,panel.getForce(),panel.getCores(),panel.getMemory(),panel.getAlpha(),panel.getVariance(),panel.getDegrees(),panel.getProb(),panel.getBoundingBox());
+                    }
                 }catch (Exception exc){
                     exc.printStackTrace();
                 }
