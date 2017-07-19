@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.rhwlab.ace3d;
 
 import ij.plugin.PlugIn;
@@ -68,7 +63,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
                 ChangeEvent event = new ChangeEvent(rootsTree);
                 treePanel.stateChanged(event);
             }
-        });      
+        });
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if(SwingUtilities.isRightMouseButton(e)){
@@ -141,24 +136,26 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         prefdim = deathInactiveSplit.getPreferredSize();
         prefdim.setSize(2*prefdim.width, prefdim.height);
         deathInactiveSplit.setPreferredSize(prefdim);
-        deathInactiveSplit.setDividerLocation(100);
+        deathInactiveSplit.setDividerLocation(200);
         
         JSplitPane triSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathInactiveSplit,rootsScroll);
         prefdim = triSplit.getPreferredSize();
         prefdim.setSize(prefdim.width, prefdim.height);
         triSplit.setPreferredSize(prefdim);        
-        triSplit.setDividerLocation(200);
+        triSplit.setDividerLocation(250);
         
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,nucsScroll,triSplit);
+        split.setDividerLocation(180);
         JSplitPane split2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,split,treeScroll);
+        split2.setDividerLocation(400);
         this.add(split2,BorderLayout.CENTER);
-
+        
         pack();
     }
 
     @Override
     public void run(String arg) {
-        this.setSize(1540, 531);
+        this.setSize(1920, 531);
         this.setLocation(0, 627);
         this.setVisible(true);
     }
