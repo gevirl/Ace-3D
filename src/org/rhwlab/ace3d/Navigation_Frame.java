@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javax.swing.JFrame;
@@ -54,32 +55,23 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         treePanel.setHeadPanel(headPanel);       
         this.add(headPanel,BorderLayout.NORTH); 
         
-        rootsRoot = new DefaultMutableTreeNode("Roots",true);
-        rootsTree = new JTree(rootsRoot);
-        rootsTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);    
-        rootsTree.addTreeSelectionListener(new TreeSelectionListener(){
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                ChangeEvent event = new ChangeEvent(rootsTree);
-                treePanel.stateChanged(event);
-            }
-        });
-        MouseListener ml = new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                if(SwingUtilities.isRightMouseButton(e)){
-                    int selRow = rootsTree.getRowForLocation(e.getX(), e.getY());
-                    TreePath selPath = rootsTree.getPathForLocation(e.getX(), e.getY());
-                    rootsTree.setSelectionPath(selPath); 
-                    if (selRow>-1){
-                        rootsTree.setSelectionRow(selRow);
-                    }
-                    DefaultMutableTreeNode node = (DefaultMutableTreeNode)rootsTree.getLastSelectedPathComponent();
-                    selectCell(node);
-                }
-            };
-        };
-        rootsTree.addMouseListener(ml);      
-        JScrollPane rootsScroll = new JScrollPane(rootsTree);
+
+//        MouseListener ml = new MouseAdapter() {
+//            public void mousePressed(MouseEvent e) {
+//                if(SwingUtilities.isRightMouseButton(e)){
+//                    int selRow = lineageTree.getRowForLocation(e.getX(), e.getY());
+//                    TreePath selPath = lineageTree.getPathForLocation(e.getX(), e.getY());
+//                    lineageTree.setSelectionPath(selPath); 
+//                    if (selRow>-1){
+//                        lineageTree.setSelectionRow(selRow);
+//                    }
+//                    DefaultMutableTreeNode node = (DefaultMutableTreeNode)lineageTree.getLastSelectedPathComponent();
+//                    selectCell(node);
+//                }
+//            };
+//        };
+//        lineageTree.addMouseListener(ml);      
+        JScrollPane rootsScroll = new JScrollPane(lineageTree);
        
         nucsRoot = new DefaultMutableTreeNode("All Nuclei",true);
         nucsTree = new JTree(nucsRoot);
@@ -97,6 +89,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         prefdim.setSize(200, 100);
         nucsScroll.setPreferredSize(prefdim);
         
+        // Terminal nuclei tree
         deathsRoot = new DefaultMutableTreeNode("Terminal Nuclei",true);  
         deathsTree = new JTree(deathsRoot);
         deathsTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION); 
@@ -115,34 +108,54 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         });
         JScrollPane deathsScroll = new JScrollPane(deathsTree);   
         
-        inactiveRoot = new DefaultMutableTreeNode("Unused Segmented Voxels",true);
-        inactiveTree = new JTree(inactiveRoot);
-        inactiveTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION); 
-        inactiveTree.addTreeSelectionListener(new TreeSelectionListener(){
+        // Root tree
+        allRoots = new DefaultMutableTreeNode("Roots", true);
+        allRootsTree = new JTree(allRoots);
+        allRootsTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        allRootsTree.addTreeSelectionListener(new TreeSelectionListener(){
             @Override
             public void valueChanged(TreeSelectionEvent e) {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode)inactiveTree.getLastSelectedPathComponent();
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode)allRootsTree.getLastSelectedPathComponent();
                 if (node == null)return;
                 if (node.isLeaf()){
                     Nucleus nuc = (Nucleus)node.getUserObject();
-                    panel.changeTime(nuc.getTime());
-                    panel.changePosition(nuc.getCenter());
+                    panel.embryo.setSelectedNucleus(nuc);                    
                 }                
             }
         });        
-        JScrollPane inactiveScroll = new JScrollPane(inactiveTree);
+        JScrollPane allScroll = new JScrollPane(allRootsTree); 
         
-        JSplitPane deathInactiveSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathsScroll,inactiveScroll);
+        // Sublineage tree
+        lineageRoot = new DefaultMutableTreeNode("Sublineage Tree Display",true);
+        lineageTree = new JTree(lineageRoot);
+        lineageTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);    
+        lineageTree.addTreeSelectionListener(new TreeSelectionListener(){
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                ChangeEvent event = new ChangeEvent(lineageTree);
+                treePanel.stateChanged(event);
+            }
+        });
+//        String[] lineages = {"P0","AB","P1","ABa","ABp","EMS","P2"};
+//        //DefaultMutableTreeNode lineageNode = null;
+//        for (int i = 0; i < lineages.length -1; i++) {
+//            DefaultMutableTreeNode node = new DefaultMutableTreeNode(lineages[i]);
+//            lineageRoot.add(node);
+//        }
+        lineageTree.setModel(new DefaultTreeModel(lineageRoot));
+        JScrollPane lineageScroll = new JScrollPane(lineageTree);
+
+        JSplitPane deathInactiveSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathsScroll,allScroll);
         prefdim = deathInactiveSplit.getPreferredSize();
         prefdim.setSize(2*prefdim.width, prefdim.height);
         deathInactiveSplit.setPreferredSize(prefdim);
         deathInactiveSplit.setDividerLocation(200);
         
-        JSplitPane triSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathInactiveSplit,rootsScroll);
+        JSplitPane triSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,deathInactiveSplit,lineageScroll);
         prefdim = triSplit.getPreferredSize();
         prefdim.setSize(prefdim.width, prefdim.height);
         triSplit.setPreferredSize(prefdim);        
-        triSplit.setDividerLocation(250);
+        triSplit.setDividerLocation(300);
         
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,nucsScroll,triSplit);
         split.setDividerLocation(180);
@@ -165,11 +178,11 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
     public void invalidated(Observable observable) {
         
         // get the selected roots
-        TreePath[] selectedPaths = rootsTree.getSelectionPaths();
+        TreePath[] selectedPaths = lineageTree.getSelectionPaths();
         nucsRoot.removeAllChildren();
-        rootsRoot.removeAllChildren();
+        //lineageRoot.removeAllChildren();
         deathsRoot.removeAllChildren();
-        inactiveRoot.removeAllChildren();
+        allRoots.removeAllChildren();
         
         NucleusFile nucFile = embryo.getNucleusFile();
         if (nucFile == null) { 
@@ -206,33 +219,41 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         nucsTree.setModel(nucsModel);        
         
         // making the roots tree
+        String reg = "[0-9]+";
+        Pattern pattern = Pattern.compile(reg);
         TreeMap<Integer,Set<Nucleus>> rootMap = embryo.getRootNuclei();
         for (Integer t : rootMap.keySet()){
             for (Nucleus root : rootMap.get(t)){
-                addFirstNucToNode(root,rootsRoot);
-            }
-        }
-        rootsTree.setModel(new DefaultTreeModel(rootsRoot));
-        
-        // reselect the previous selected nuclei
-        ArrayList<TreePath> foundList = new ArrayList<>();
-        if (selectedPaths != null){
-            for (TreePath path : selectedPaths){
-                DefaultMutableTreeNode lastNode= (DefaultMutableTreeNode)path.getLastPathComponent();
-                String nucName = ((Nucleus)lastNode.getUserObject()).getName();
-                DefaultMutableTreeNode found = (DefaultMutableTreeNode)this.findNucleus(nucName, rootsRoot);
-                if (found != null){
-                    foundList.add(new TreePath(found.getPath()));
+                if (pattern.matcher(Character.toString(root.getCellName().charAt(0))).matches()) {
+                    addFirstNucToNode(root, allRoots);
+                } else {
+                    addFirstNucToNode(root,lineageRoot);
                 }
             }
-            selectedPaths = foundList.toArray(new TreePath[0]);
-            rootsTree.setSelectionPaths(selectedPaths);
         }
+        allRootsTree.setModel(new DefaultTreeModel(allRoots));      
+        lineageTree.setModel(new DefaultTreeModel(lineageRoot));
+        
+        
+        // reselect the previous selected nuclei
+//        ArrayList<TreePath> foundList = new ArrayList<>();
+//        if (selectedPaths != null){
+//            for (TreePath path : selectedPaths){
+//                DefaultMutableTreeNode lastNode= (DefaultMutableTreeNode)path.getLastPathComponent();
+//                String nucName = ((Nucleus)lastNode.getUserObject()).getName();
+//                DefaultMutableTreeNode found = (DefaultMutableTreeNode)this.findNucleus(nucName, rootsRoot);
+//                if (found != null){
+//                    foundList.add(new TreePath(found.getPath()));
+//                }
+//            }
+//            selectedPaths = foundList.toArray(new TreePath[0]);
+//            rootsTree.setSelectionPaths(selectedPaths);
+//        }
         
         // making the terminal nuclei tree
         for (Integer time : times){
             Set<Nucleus> nucs = nucFile.getLeaves(time);
-            if (!nucs.isEmpty()){
+            if (!nucs.isEmpty() && time != nucFile.getAllTimes().size()){
                 DefaultMutableTreeNode timeNode = new DefaultMutableTreeNode(String.format("Time:%d",time));
                 deathsRoot.add(timeNode);
                 for (Nucleus nuc : nucs){
@@ -242,21 +263,26 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
             }
         }        
         deathsTree.setModel(new DefaultTreeModel(deathsRoot));
-        
+        for (int i = 0; i < deathsTree.getRowCount(); i++) {
+            deathsTree.expandRow(i);
+        }
+
         // making the inactive nuclei tree
-        for (Integer time : times){
-            Set<Nucleus> nucs=nucFile.getRemnants(time,500);
-            if (!nucs.isEmpty()){
-                DefaultMutableTreeNode timeNode = new DefaultMutableTreeNode(String.format("Time:%d",time));
-                inactiveRoot.add(timeNode);
-                for (Nucleus nuc : nucs){
-                    DefaultMutableTreeNode nucNode = new DefaultMutableTreeNode(nuc);
-                    timeNode.add(nucNode);                
-                }
-            }
-        }        
-        inactiveTree.setModel(new DefaultTreeModel(inactiveRoot));        
+//        for (Integer time : times){
+//            Set<Nucleus> nucs=nucFile.getRemnants(time,500);
+//            if (!nucs.isEmpty()){
+//                DefaultMutableTreeNode timeNode = new DefaultMutableTreeNode(String.format("Time:%d",time));
+//                inactiveRoot.add(timeNode);
+//                for (Nucleus nuc : nucs){
+//                    DefaultMutableTreeNode nucNode = new DefaultMutableTreeNode(nuc);
+//                    timeNode.add(nucNode);                
+//                }
+//            }
+//        }        
+//        inactiveTree.setModel(new DefaultTreeModel(inactiveRoot));        
         
+        
+
         // make the current time visible
         TreeNode[] nodes = null;
         if (selectedNode != null && currentTime==selectedNucleus.getTime()){
@@ -272,7 +298,7 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
             nucsTree.makeVisible(path);
             nucsTree.scrollPathToVisible(path);
         }
-        treePanel.stateChanged(new ChangeEvent(rootsTree));
+        treePanel.stateChanged(new ChangeEvent(lineageTree));
         this.invalidate();
         
     }
@@ -343,15 +369,18 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
     NavigationHeaderPanel headPanel;
     NavigationTreePanel treePanel;
     
-    DefaultMutableTreeNode rootsRoot;
+    //DefaultMutableTreeNode rootsRoot;
     DefaultMutableTreeNode nucsRoot;
     DefaultMutableTreeNode deathsRoot;
-    DefaultMutableTreeNode inactiveRoot;
+    //DefaultMutableTreeNode inactiveRoot;
+    DefaultMutableTreeNode allRoots;
+    DefaultMutableTreeNode lineageRoot;
     
-    JTree rootsTree;
     JTree nucsTree;
     JTree deathsTree;
     static JTree inactiveTree;
+    JTree allRootsTree;
+    JTree lineageTree;
     
     public class NucleusRenderer extends DefaultTreeCellRenderer {
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus){
