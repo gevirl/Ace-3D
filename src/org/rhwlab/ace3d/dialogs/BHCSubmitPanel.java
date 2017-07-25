@@ -237,6 +237,9 @@ public class BHCSubmitPanel extends JPanel {
     public boolean isWaterston(){
         return waterque.isSelected();
     }
+    public boolean isLocal(){
+        return runlocal.isSelected();
+    }
     int[] dims;
     JCheckBox forceKMeans = new JCheckBox();
     JCheckBox forceBHC = new JCheckBox();
