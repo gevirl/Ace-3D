@@ -180,10 +180,9 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         // get the selected roots
         TreePath[] selectedPaths = lineageTree.getSelectionPaths();
         nucsRoot.removeAllChildren();
-        //lineageRoot.removeAllChildren();
-        deathsRoot.removeAllChildren();
         allRoots.removeAllChildren();
-        
+        deathsRoot.removeAllChildren();
+        lineageRoot.removeAllChildren();
         NucleusFile nucFile = embryo.getNucleusFile();
         if (nucFile == null) { 
             return;
@@ -236,19 +235,19 @@ public class Navigation_Frame extends JFrame implements PlugIn,InvalidationListe
         
         
         // reselect the previous selected nuclei
-//        ArrayList<TreePath> foundList = new ArrayList<>();
-//        if (selectedPaths != null){
-//            for (TreePath path : selectedPaths){
-//                DefaultMutableTreeNode lastNode= (DefaultMutableTreeNode)path.getLastPathComponent();
-//                String nucName = ((Nucleus)lastNode.getUserObject()).getName();
-//                DefaultMutableTreeNode found = (DefaultMutableTreeNode)this.findNucleus(nucName, rootsRoot);
-//                if (found != null){
-//                    foundList.add(new TreePath(found.getPath()));
-//                }
-//            }
-//            selectedPaths = foundList.toArray(new TreePath[0]);
-//            rootsTree.setSelectionPaths(selectedPaths);
-//        }
+        ArrayList<TreePath> foundList = new ArrayList<>();
+        if (selectedPaths != null){
+            for (TreePath path : selectedPaths){
+                DefaultMutableTreeNode lastNode= (DefaultMutableTreeNode)path.getLastPathComponent();
+                String nucName = ((Nucleus)lastNode.getUserObject()).getName();
+                DefaultMutableTreeNode found = (DefaultMutableTreeNode)this.findNucleus(nucName, lineageRoot);
+                if (found != null){
+                    foundList.add(new TreePath(found.getPath()));
+                }
+            }
+            selectedPaths = foundList.toArray(new TreePath[0]);
+            lineageTree.setSelectionPaths(selectedPaths);
+        }
         
         // making the terminal nuclei tree
         for (Integer time : times){
