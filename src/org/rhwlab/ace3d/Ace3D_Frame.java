@@ -1,5 +1,7 @@
 package org.rhwlab.ace3d;
 
+import ij.ImagePlus;
+import ij.io.Opener;
 import ij.macro.Interpreter;
 import ij.plugin.PlugIn;
 import ij.process.LUT;
@@ -21,9 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.imageio.ImageIO;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -67,13 +72,15 @@ import org.rhwlab.dispim.nucleus.NucleusFile;
 // link a single nuc automatically after expanding size
 
 public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
-    public  Ace3D_Frame()  {
+    public  Ace3D_Frame(String[] args)  {
         InputStream[] xml = new InputStream[1];
 //        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/BHC/db/BHC.xml");
         xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/LMS/config/BHC.xml");
         try {
- //           labMan = new LabMan(xml);
- //           labMan.setVisible(true);
+            if (args.length > 0 && args[0].equals("LabMan")){
+                labMan = new LabMan(xml);
+                labMan.setVisible(true);
+            }
         } catch (Exception exc){
             exc.printStackTrace();
         }
@@ -435,8 +442,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         bhcTable.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                labMan.setVisible(true);
-
+                if (labMan != null) labMan.setVisible(true);
             }
         });
         
@@ -445,7 +451,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    backloadBHCTable();
+                    if (labMan != null)backloadBHCTable();
                 } catch (Exception exc){
                     exc.printStackTrace();
                 }
@@ -700,8 +706,9 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 ,Math.min(source.getMaxTime(),panel.getMaxTime()) );
         }
         imagedEmbryo.notifyListeners(); 
- //       BHCPanel sheet = (BHCPanel)labMan.getPanel("BHC");
- //       sheet.setEmbryo(bhc.getDirectory().getParentFile().getName());
+        if (labMan != null){
+            ((BHCPanel)labMan.getPanel("BHC")).setEmbryo(bhc.getDirectory().getParentFile().getName());
+        }
         Element dsEle = root.getChild("DataSets");
         for (Element props : dsEle.getChildren("DataSetProperties")){
             String name = props.getAttributeValue("Name");
@@ -792,14 +799,21 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 
    public void backloadBHCTable()throws Exception {
         String diSpimName = bhc.getDirectory().getParentFile().getName();
-        PreparedStatement state = MySql.getMySql().getStatement("insert into BHC (LogConcentration,Variance,DegreesFreedom,diSPIMName,BHCTime,SegmentationThreshold,BHCID) "
-                + "values (?,?,?,?,?,?,?)");
+        PreparedStatement state = MySql.getMySql().getStatement("insert into BHC (LogConcentration,Variance,DegreesFreedom,diSPIMName,BHCTime,SegmentationThreshold,BHCID,BoundingBox) "
+                + "values (?,?,?,?,?,?,?,?)");
         PreparedStatement trackState = MySql.getMySql().getStatement("insert into LMSTracking (ID,DBTable,Project,Status) values (?,?,?,?) ");
         LinkedNucleusFile nucFile = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
+        boolean first = true;
+        String bounding = null;
         for (int time : bhc.getTimes()){
             Integer probUsed = nucFile.getThresholdProb(time);
             for (int prob : bhc.getThresholdProbs(time)){
                 File file = bhc.getTreeFile(time, prob);
+                if (first){
+                    first = false;
+                    bounding = boundingBox(file);
+                }
+                
                 BufferedReader reader = new BufferedReader(new FileReader(file));
                 String line = reader.readLine();
                 String[] tokens= line.split(" ");
@@ -808,6 +822,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 state.setString(6,Integer.toString(prob));
                 String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, time, prob);
                 state.setString(7,id);
+                state.setString(8, bounding);
                 
                 trackState.setString(1,id);
                 trackState.setString(2,"BHC");
@@ -835,6 +850,47 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 trackState.execute();
             }
         }
+    }
+   // determine the bounding box used for micro clustering, given the bhc tree file 
+    private String boundingBox(File bhcFile)throws Exception {
+        
+        TreeMap<String,Integer> boxMap = new TreeMap<>();
+        
+        // open the micro cluster xml and see if it contains the bounding box
+        File clusterFile = new File(bhcFile.getParent(),bhcFile.getName().replace("BHCTree","Clusters"));
+        BufferedReader reader = new BufferedReader(new FileReader(clusterFile));
+        String line = reader.readLine();
+        reader.close();
+        
+        String[] tokens = line.split(" ");
+        for (String token : tokens){
+            if (token.startsWith("xmin")||token.startsWith("ymin")||token.startsWith("zmin")||token.startsWith("xmax")||token.startsWith("ymax")||token.startsWith("zmax")){
+                String[] vals = token.split("\"");
+                boxMap.put(vals[0],new Integer(vals[1]));
+            }
+        }
+        if (boxMap.isEmpty()){
+            // did not find a bounding box in the micro cluster file, using 0.05 tohead  0.95 of the dimensions of the images
+            File MVR = new File(bhcFile.getParentFile().getParentFile(),"MVR_STACKS");
+            String tiff = new File(MVR,bhcFile.getName().substring(0,bhcFile.getName().indexOf("_Probabilities"))+".tif").getPath();
+            tiff = tiff.replace("0_90","0,90");
+            ImagePlus ip = new Opener().openImage(tiff);
+            boxMap.put("xmin",(int)(0.05*ip.getWidth()));
+            boxMap.put("xmax",(int)(0.95*ip.getWidth()));
+            boxMap.put("ymin",(int)(0.05*ip.getHeight()));
+            boxMap.put("ymax",(int)(0.95*ip.getHeight()));
+            boxMap.put("zmin",(int)(0.05*ip.getNSlices()));
+            boxMap.put("zmax",(int)(0.95*ip.getNSlices()));   
+            ip.close();
+        }
+        
+        //make a json object of the bounding box
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        for (Entry<String,Integer> entry : boxMap.entrySet()){
+            builder.add(entry.getKey(),entry.getValue());
+        }
+        return builder.build().toString();
+        
     }
     @Override
     public void stateChanged(ChangeEvent e) {
@@ -976,7 +1032,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                 Interpreter.batchMode=true;
                 //ImageJ ij = new ImageJ(ImageJ.NO_SHOW);
                 try {
-                    Ace3D_Frame frame = new Ace3D_Frame();
+                    Ace3D_Frame frame = new Ace3D_Frame(args);
                     frame.run(null);
                 } catch (Exception exc){
                     exc.printStackTrace();

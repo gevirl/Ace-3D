@@ -138,6 +138,14 @@ public class Nuclei_IdentificationCLI extends CommandLine {
         }
         return null;        
     }
+    public String logAlpha(String s){
+        try {
+            alpha = Math.pow(10.0,Double.valueOf(s));
+        } catch (Exception exc){
+            return String.format("Error in option -logAlpha %s", s);
+        }
+        return null;          
+    }
     public String segThresh(String s){
         try {
             segThresh = Integer.valueOf(s);

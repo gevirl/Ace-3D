@@ -71,7 +71,11 @@ public class TiffDataSource extends DataSourceBase implements VoxelDataSource{
     
     
     static public void main(String[] args) throws Exception {
-        
+        ImagePlus ip = new Opener().openImage("/net/waterston/vol9/diSPIM/20170405_irx-1_OP536/MVR_STACKS/TP1_Ch1_Ill0_Ang0,90.tif");
+        int slices = ip.getNSlices();
+        int w = ip.getWidth();
+        int h = ip.getHeight();
+        int uiahsdfui=0;
         
  /*       
         TiffDataSource source = new TiffDataSource("/nfs/waterston/pete/Segmentation/Cherryimg75_SimpleSegmentation.tiff");
