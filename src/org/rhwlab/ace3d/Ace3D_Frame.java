@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -798,9 +799,16 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         LinkedNucleusFile nucFile = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
         boolean first = true;
         String bounding = null;
+        int lastTime = 0;
+        int lastProb = 0;
         for (int time : bhc.getTimes()){
+
             Integer probUsed = nucFile.getThresholdProb(time);
             for (int prob : bhc.getThresholdProbs(time)){
+                if (time > lastTime){
+                    lastTime = time;
+                    lastProb = prob;
+                }                
                 File file = bhc.getTreeFile(time, prob);
                 if (first){
                     first = false;
@@ -840,6 +848,22 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     }
                 }
                 state.execute();
+                trackState.execute();
+            }
+        }
+        
+        String sql = String.format("Select TimePoints from diSPIM where Name = \"%s\"", diSpimName);
+        ResultSet rs = MySql.getMySql().execute(sql);
+        if (rs.next()){
+            int timepoints = rs.getInt("TimePoints");
+            for (int t=lastTime+1; t<=timepoints ; ++t){
+                String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, t, lastProb);
+                state.setInt(5,t);
+                state.setString(7,id);
+                state.execute();
+                
+                
+                trackState.setString(1,id);
                 trackState.execute();
             }
         }
