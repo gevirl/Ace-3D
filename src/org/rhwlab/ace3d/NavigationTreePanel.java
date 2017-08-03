@@ -154,7 +154,8 @@ public class NavigationTreePanel extends JPanel implements ChangeListener{
         int W = 0;
         int H = -1;
         for (int i=0 ; i<treePaths.length ; ++i){
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode)treePaths[i].getPathComponent(1);
+            
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode)treePaths[i].getLastPathComponent();
             roots[i] = (Nucleus)node.getUserObject();
             cellImage[i] = new CellImage();
             buffered[i] = cellImage[i].getImage(roots[i],headPanel.getMaxTime(),lut,headPanel.labelNodes(),headPanel.labelLeaves(),
