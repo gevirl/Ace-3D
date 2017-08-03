@@ -74,7 +74,6 @@ public class NavigationTreePanel extends JPanel implements ChangeListener{
             }
         });
 
-        
         this.addMouseMotionListener(new MouseMotionAdapter(){
             @Override
             public void mouseMoved(MouseEvent e){
@@ -154,7 +153,6 @@ public class NavigationTreePanel extends JPanel implements ChangeListener{
         int W = 0;
         int H = -1;
         for (int i=0 ; i<treePaths.length ; ++i){
-            
             DefaultMutableTreeNode node = (DefaultMutableTreeNode)treePaths[i].getLastPathComponent();
             roots[i] = (Nucleus)node.getUserObject();
             cellImage[i] = new CellImage();

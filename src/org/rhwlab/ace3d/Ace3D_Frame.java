@@ -64,6 +64,13 @@ import org.rhwlab.dispim.nucleus.NucleusFile;
  *
  * @author gevirl
  */
+
+// To do: 
+// fix listeners
+// write diagnostic for cascading false divisions
+// be able to view subtrees in the tree display
+// link a single nuc automatically after expanding size
+
 public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     public  Ace3D_Frame(String[] args)  {
         InputStream[] xml = new InputStream[1];
