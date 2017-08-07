@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFrame;
@@ -61,7 +62,7 @@ public class BHCDirectory {
     }
     public Set<Integer> getThresholdProbs(int time){
         if (treeFiles.get(time) == null) {
-            JOptionPane.showMessageDialog(new JFrame(), "Missing BHC file for timepoint " + time);
+            return new TreeSet<Integer>();
         }
         return  treeFiles.get(time).keySet();
     }
@@ -149,6 +150,9 @@ public class BHCDirectory {
                 }
             }
         }
+    }
+    public File firstBHCFile(){
+        return treeFiles.firstEntry().getValue().firstEntry().getValue();
     }
     static public void main(String[] args)throws Exception {
         

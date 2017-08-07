@@ -175,6 +175,9 @@ public class LinkedNucleusFile implements NucleusFile {
         }
         return builder;
     }   
+    public int getLastTime(){
+        return this.byTime.lastKey();
+    }
 
     @Override
     public Set<Nucleus> getNuclei(int time) {

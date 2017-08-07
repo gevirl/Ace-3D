@@ -74,11 +74,12 @@ import org.rhwlab.dispim.nucleus.NucleusFile;
 
 public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
     public  Ace3D_Frame(String[] args)  {
-        InputStream[] xml = new InputStream[1];
-//        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/BHC/db/BHC.xml");
-        xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/LMS/config/BHC.xml");
+
         try {
             if (args.length > 0 && args[0].equals("LabMan")){
+                InputStream[] xml = new InputStream[2];
+                xml[1]=this.getClass().getResourceAsStream("/org/rhwlab/LMS/config/BHC.xml");
+                xml[0]=this.getClass().getResourceAsStream("/org/rhwlab/LMS/config/diSPIM.xml");                
                 labMan = new LabMan(xml);
                 labMan.setVisible(true);
             }
@@ -219,6 +220,8 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
                     File sel = fileChooser.getSelectedFile();
                     try {
                         openSession(sel);
+
+                        
 //                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).divisionReport(System.out);
 //                        ((NamedNucleusFile)imagedEmbryo.getNucleusFile()).timeLinkageReport(System.out);
                     } catch (Exception exc){
@@ -421,7 +424,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         });
         //segmenting.add(removeAll); 
         segmenting.addSeparator();
-        
+/*        
         JMenuItem submitBHC = new JMenuItem("Submit to Grid");
         segmenting.add(submitBHC);
         submitBHC.addActionListener(new ActionListener(){
@@ -443,11 +446,13 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         bhcTable.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (labMan != null) labMan.setVisible(true);
+                if (labMan != null){
+                    labMan.setVisible(true);
+                }
             }
         });
-        
-        JMenuItem backload = new JMenuItem("Backload BHC table");
+ */       
+        JMenuItem backload = new JMenuItem("Sync BHC table");
         backload.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -721,6 +726,7 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         if (imagedEmbryo.getNucleusFile().getAllTimes().size() > 0) {
             panel.changeTime(imagedEmbryo.getNucleusFile().getAllTimes().size());
         }
+        update_diSPIM_Status(xml);
 //        imagedEmbryo.reportDivisionEccengtricty();
     }
     private void saveAsSession()throws Exception {
@@ -766,7 +772,23 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         stream.close();
         props.setProperty("Session",xml.getPath());
         sessionXML = xml;
+        update_diSPIM_Status(xml);
 
+    }
+    private void update_diSPIM_Status(File xml)throws Exception{
+        // update the active session for the series in the db
+        if (labMan != null){
+            int maxTime = ((LinkedNucleusFile)this.imagedEmbryo.getNucleusFile()).getLastTime();
+            Set<Nucleus> nucs = this.imagedEmbryo.getNuclei(maxTime);
+            String dispimName = bhc.getDirectory().getParentFile().getName();
+            PreparedStatement state = MySql.getMySql().getStatement(
+                    "Update diSPIM set Session = ? , EditedToTime=? , EditedToCells=? where Name = ?");
+            state.setString(1, xml.getPath());
+            state.setInt(2, maxTime);
+            state.setInt(3, nucs.size());
+            state.setString(4,dispimName);
+            state.execute();
+        }        
     }
     
     private void submitAllTimePoints()throws Exception {
@@ -799,79 +821,119 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
 
 
    public void backloadBHCTable()throws Exception {
-        String diSpimName = bhc.getDirectory().getParentFile().getName();
-        PreparedStatement state = MySql.getMySql().getStatement("insert into BHC (LogConcentration,Variance,DegreesFreedom,diSPIMName,BHCTime,SegmentationThreshold,BHCID,BoundingBox) "
-                + "values (?,?,?,?,?,?,?,?)");
-        PreparedStatement trackState = MySql.getMySql().getStatement("insert into LMSTracking (ID,DBTable,Project,Status) values (?,?,?,?) ");
         LinkedNucleusFile nucFile = (LinkedNucleusFile)imagedEmbryo.getNucleusFile();
-        boolean first = true;
-        String bounding = null;
-        int lastTime = 0;
-        int lastProb = 0;
-        for (int time : bhc.getTimes()){
-
-            Integer probUsed = nucFile.getThresholdProb(time);
-            for (int prob : bhc.getThresholdProbs(time)){
-                if (time > lastTime){
-                    lastTime = time;
-                    lastProb = prob;
-                }                
-                File file = bhc.getTreeFile(time, prob);
-                if (first){
-                    first = false;
-                    bounding = boundingBox(file);
-                }
-                
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-                String line = reader.readLine();
-                String[] tokens= line.split(" ");
-                state.setString(4, diSpimName);
-                state.setInt(5,time);
-                state.setString(6,Integer.toString(prob));
-                String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, time, prob);
-                state.setString(7,id);
-                state.setString(8, bounding);
-                
-                trackState.setString(1,id);
-                trackState.setString(2,"BHC");
-                trackState.setString(3, "Imaging");
-                
-                if (probUsed != null && prob == probUsed){
-                    trackState.setString(4, "Active");
-                } else {
-                    trackState.setString(4,"Complete");
-                }
-                for (int i=0 ; i<tokens.length; ++i){
-                    if (tokens[i].startsWith("nu=")){
-                        String[] values = tokens[i].split("\"");
-                        state.setInt(3, Integer.valueOf(values[1]));
-                    }
-                    else if (tokens[i].startsWith("alpha")){
-                        String[] values = tokens[i].split("\"");
-                        state.setInt(1, (int)Math.log10(Double.valueOf(values[1])));
-                    }
-                    else if (tokens[i].startsWith("s=")){
-                        state.setDouble(2, Double.valueOf(tokens[i+1]));
-                    }
-                }
-                state.execute();
-                trackState.execute();
-            }
-        }
-        
-        String sql = String.format("Select TimePoints from diSPIM where Name = \"%s\"", diSpimName);
+        String diSpimName = bhc.getDirectory().getParentFile().getName();
+        String sql = String.format("Select * from diSPIM where Name=\"%s\"",diSpimName);
         ResultSet rs = MySql.getMySql().execute(sql);
-        if (rs.next()){
-            int timepoints = rs.getInt("TimePoints");
-            for (int t=lastTime+1; t<=timepoints ; ++t){
-                String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, t, lastProb);
-                state.setInt(5,t);
-                state.setString(7,id);
-                state.execute();
-                
-                
-                trackState.setString(1,id);
-                trackState.execute();
+        if (!rs.next()) return;
+        int timePoints = rs.getInt("TimePoints");
+        
+        PreparedStatement insertBHC = MySql.getMySql().getStatement("insert into BHC (LogConcentration,Variance,DegreesFreedom,diSPIMName,BHCTime,SegmentProbThresh,BHCID,BoundingBox) "
+                + "values (?,?,?,?,?,?,?,?)");
+        insertBHC.setString(4,diSpimName)
+                ;
+        PreparedStatement insertLMS = MySql.getMySql().getStatement("insert into LMSTracking (ID,DBTable,Project,Status) values (?,?,?,?) ");
+           insertLMS.setString(2,"BHC");
+           insertLMS.setString(3, "Imaging");        
+        
+        PreparedStatement updateState = MySql.getMySql().getStatement("update LMSTracking set Status=? where ID=? and DBTable=? and Project=? ");
+        updateState.setString(3, "BHC");
+        updateState.setString(4, "Imaging");
+        
+        PreparedStatement selectState = MySql.getMySql().getStatement("select * from BHC B left join LMSTracking T on B.BHCID=T.ID where B.BHCTime=? and B.diSPIMName = ?");
+        selectState.setString(2, diSpimName);
+        
+        String bounding = null;
+        
+        for (int t =1 ; t<=timePoints ; ++t){
+            if (t==251){
+                int aushdf=0;
+            }
+            insertBHC.setInt(5,t);
+            selectState.setInt(1, t);
+            ResultSet selectRS = selectState.executeQuery();
+            if (selectRS.next()){
+                // process each exisiting BHC record for the timepoint
+                do {
+                    int probThresh = selectRS.getInt("SegmentProbThresh");
+                    String bhcID = selectRS.getString("BHCID");
+                    updateState.setString(2, bhcID);
+                    File file = bhc.getTreeFile(t, probThresh);
+                    if (!file.exists()){
+                        updateState.setString(1, "Pending");
+                    }else {
+                        Integer probUsed = nucFile.getThresholdProb(t);
+                        if (probUsed != null && probThresh == probUsed){
+                            updateState.setString(1, "Active");
+                        } else{
+                            updateState.setString(1, "Complete");
+                        }
+                    }
+                    updateState.execute();
+                } while (selectRS.next());
+            }else {
+                // no BHC records for this timepoint , backfill the BHC table
+                Set<Integer> probs = bhc.getThresholdProbs(t);
+                if (probs.isEmpty()){
+                    // no BHC runs to backfill for this timepoint, add a default record
+                    int p = 50;
+                    File bhcFile = bhc.firstBHCFile();
+                    if (bounding==null){
+                        bounding = boundingBox(bhcFile);
+                    }                     
+                    String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, t, p);
+                    insertLMS.setString(1,id);
+                    insertLMS.setString(4, "Pending");
+                    insertLMS.execute();
+                    
+                    insertBHC.setString(6,Integer.toString(p));
+                    insertBHC.setString(7,id);
+                    insertBHC.setString(8, bounding);
+                    insertBHC.setInt(3,10); 
+                    insertBHC.setInt(1,10);
+                    insertBHC.setDouble(2, 20.0);
+                    insertBHC.execute();
+                }
+                else {
+                    // backfilling previous BHC runs
+                    for (int p : probs){
+                        File bhcFile = bhc.getTreeFile(t, p);
+                        if (bounding==null){
+                            bounding = boundingBox(bhcFile);
+                        }                        
+                        BufferedReader reader = new BufferedReader(new FileReader(bhcFile));
+                        String line = reader.readLine();
+                        String[] tokens= line.split(" ");                        
+                        
+                        insertBHC.setString(6,Integer.toString(p));
+                        String id = org.rhwlab.LMS.diSPIM.BHCID.formID(diSpimName, t, p);
+                        insertBHC.setString(7,id);
+                        insertBHC.setString(8, bounding);
+
+                        insertLMS.setString(1,id);
+                        Integer probUsed = nucFile.getThresholdProb(t);
+                        if (probUsed != null && p == probUsed){
+                            insertLMS.setString(4, "Active");
+                        } else {
+                            insertLMS.setString(4,"Complete");
+                        }
+                        for (int i=0 ; i<tokens.length; ++i){
+                            if (tokens[i].startsWith("nu=")){
+                                String[] values = tokens[i].split("\"");
+                                insertBHC.setInt(3, Integer.valueOf(values[1]));
+                            }
+                            else if (tokens[i].startsWith("alpha")){
+                                String[] values = tokens[i].split("\"");
+                                insertBHC.setInt(1, (int)Math.log10(Double.valueOf(values[1])));
+                            }
+                            else if (tokens[i].startsWith("s=")){
+                                insertBHC.setDouble(2, Double.valueOf(tokens[i+1]));
+                            }
+                        }
+                        insertBHC.execute();
+                        insertLMS.execute();
+                    }
+                }
             }
         }
     }
@@ -882,17 +944,20 @@ public class Ace3D_Frame extends JFrame implements PlugIn,ChangeListener  {
         
         // open the micro cluster xml and see if it contains the bounding box
         File clusterFile = new File(bhcFile.getParent(),bhcFile.getName().replace("BHCTree","Clusters"));
-        BufferedReader reader = new BufferedReader(new FileReader(clusterFile));
-        String line = reader.readLine();
-        reader.close();
-        
-        String[] tokens = line.split(" ");
-        for (String token : tokens){
-            if (token.startsWith("xmin")||token.startsWith("ymin")||token.startsWith("zmin")||token.startsWith("xmax")||token.startsWith("ymax")||token.startsWith("zmax")){
-                String[] vals = token.split("\"");
-                boxMap.put(vals[0],new Integer(vals[1]));
+        if (clusterFile.exists()){
+            BufferedReader reader = new BufferedReader(new FileReader(clusterFile));
+            String line = reader.readLine();
+            reader.close();
+
+            String[] tokens = line.split(" ");
+            for (String token : tokens){
+                if (token.startsWith("xmin")||token.startsWith("ymin")||token.startsWith("zmin")||token.startsWith("xmax")||token.startsWith("ymax")||token.startsWith("zmax")){
+                    String[] vals = token.split("\"");
+                    boxMap.put(vals[0],new Integer(vals[1]));
+                }
             }
         }
+        
         if (boxMap.isEmpty()){
             // did not find a bounding box in the micro cluster file, using 0.05 tohead  0.95 of the dimensions of the images
             File MVR = new File(bhcFile.getParentFile().getParentFile(),"MVR_STACKS");
